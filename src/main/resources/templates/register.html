@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>College ERP Registration</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* Background Gradient */
+    body {
+      background: linear-gradient(135deg, #4e73df, #1cc88a);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Card */
+    .card {
+      width: 100%;
+      max-width: 900px;
+      border-radius: 15px;
+      padding: 40px;
+      box-shadow: 0 15px 25px rgba(0,0,0,0.2);
+      background: #ffffff;
+      transition: transform 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    h3 {
+      font-weight: 700;
+      color: #343a40;
+    }
+
+    .form-label {
+      font-weight: 600;
+    }
+
+    .form-section {
+      display: none;
+      margin-top: 20px;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+
+    /* Buttons */
+    .btn-primary {
+      background-color: #1cc88a;
+      border: none;
+      border-radius: 10px;
+      padding: 0.8rem;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    .btn-primary:hover {
+      background-color: #17a673;
+      transform: translateY(-2px);
+    }
+
+    /* Form Inputs */
+    .form-control, .form-select {
+      border-radius: 10px;
+      padding: 1rem;
+      font-size: 0.95rem;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: #1cc88a;
+      box-shadow: 0 0 8px rgba(28, 200, 138, 0.4);
+    }
+
+    .role-select {
+      width: 50%;
+      margin: 0 auto 30px;
+    }
+
+    /* Optional placeholder style */
+    .optional::placeholder {
+      color: #999;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h3 class="text-center mb-4">College ERP Registration</h3>
+
+  <form method="post" action="/register" id="regForm">
+    <!-- Role Select -->
+    <div class="text-center mb-4">
+      <label for="roleSelect" class="form-label">Select Role</label>
+      <select class="form-select role-select" id="roleSelect" name="role" required>
+        <option value="" selected disabled>Select Role</option>
+        <option value="STUDENT">Student</option>
+        <option value="TEACHER">Teacher</option>
+      </select>
+    </div>
+
+    <!-- Student Fields -->
+    <div id="studentFields" class="form-section">
+      <h5 class="mb-3 text-secondary">Student Details</h5>
+      <div class="row g-3">
+        <div class="col-md-6"><input type="text" class="form-control" name="student_name" placeholder="Full Name" required></div>
+        <div class="col-md-6"><input type="text" class="form-control" name="rollNo" placeholder="Roll Number" required></div>
+        <div class="col-md-6"><input type="text" class="form-control optional" name="fatherName" placeholder="Father Name "></div>
+        <div class="col-md-6"><input type="text" class="form-control optional" name="motherName" placeholder="Mother Name "></div>
+        <div class="col-md-6"><input type="email" class="form-control" name="email" placeholder="Email" required></div>
+        <div class="col-md-6"><input type="password" class="form-control" name="password" placeholder="Password" required></div>
+        
+        <!-- Branch Dropdown -->
+        <div class="col-md-6">
+          <select class="form-select optional" name="branch">
+            <option value="" selected disabled>Branch </option>
+            <option value="CSE">CSE</option>
+            <option value="ECE">ECE</option>
+            <option value="MECH">Mechanical</option>
+            <option value="CIVIL">Civil</option>
+            <option value="IT">IT</option>
+          </select>
+        </div>
+
+        <!-- Year Dropdown -->
+        <div class="col-md-6">
+          <select class="form-select optional" name="year">
+            <option value="" selected disabled>Year </option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+          </select>
+        </div>
+
+        <!-- Gender Dropdown -->
+        <div class="col-md-6">
+          <select class="form-select optional" name="gender">
+            <option value="" selected disabled>Gender </option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="col-md-6"><input type="text" class="form-control optional" name="contactNo" placeholder="Contact Number "></div>
+        <div class="col-12"><input type="text" class="form-control optional" name="address" placeholder="Address "></div>
+      </div>
+    </div>
+
+    <!-- Teacher Fields -->
+    <div id="teacherFields" class="form-section">
+      <h5 class="mb-3 text-secondary">Teacher Details</h5>
+      <div class="row g-3">
+        <div class="col-md-6"><input type="text" class="form-control" name="teacher_name" placeholder="Full Name" required></div>
+        <div class="col-md-6"><input type="email" class="form-control" name="email" placeholder="Email" required></div>
+        <div class="col-md-6"><input type="password" class="form-control" name="password" placeholder="Password" required></div>
+       <!-- Department Dropdown -->
+<div class="col-md-6">
+  <select class="form-select optional" name="department">
+    <option value="" selected disabled>Department</option>
+    <option value="CSE">CSE</option>
+    <option value="ECE">ECE</option>
+    <option value="MECH">Mechanical</option>
+    <option value="CIVIL">Civil</option>
+    <option value="IT">IT</option>
+    <option value="EEE">EEE</option>
+    <option value="OTHER">Other</option>
+  </select>
+</div>
+     <!-- Designation Dropdown -->
+<div class="col-md-6">
+  <select class="form-select optional" name="designation">
+    <option value="" selected disabled>Designation</option>
+    <option value="Professor">Professor</option>
+    <option value="Assistant Professor">Assistant Professor</option>
+    <option value="Lecturer">Lecturer</option>
+    <option value="Lab Instructor">Lab Instructor</option>
+    <option value="HOD">Head of Department (HOD)</option>
+    <option value="Administrator">Administrator</option>
+  </select>
+</div>
+
+<!-- Qualification Dropdown -->
+<div class="col-md-6">
+  <select class="form-select optional" name="qualification">
+    <option value="" selected disabled>Qualification</option>
+    <option value="B.Tech">B.Tech / B.E.</option>
+    <option value="M.Tech">M.Tech / M.E.</option>
+    <option value="B.Sc">B.Sc</option>
+    <option value="M.Sc">M.Sc</option>
+    <option value="Ph.D">Ph.D</option>
+    <option value="M.A">M.A</option>
+    <option value="B.A">B.A</option>
+    <option value="Diploma">Diploma</option>
+  </select>
+</div>
+        <div class="col-md-6"><input type="number" class="form-control optional" name="experience" placeholder="Experience (Years) "></div>
+        
+        <!-- Teacher Gender Dropdown -->
+        <div class="col-md-6">
+          <select class="form-select optional" name="gender">
+            <option value="" selected disabled>Gender </option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="col-md-6"><input type="text" class="form-control optional" name="contactNo" placeholder="Contact Number "></div>
+        <div class="col-md-6"><input type="text" class="form-control optional" name="address" placeholder="Address "></div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100 mt-4 py-2">Register</button>
+  </form>
+
+  <!-- Login Link -->
+  <div class="text-center mt-3">
+    <p class="mb-0">Already have an account? <a href="/" class="text-decoration-none fw-bold">Login here</a></p>
+  </div>
+</div>
+
+<input type="hidden" id="serverMessage" th:value="${msg != null ? msg : (success != null ? success : '')}" />
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  const roleSelect = document.getElementById('roleSelect');
+  const studentFields = document.getElementById('studentFields');
+  const teacherFields = document.getElementById('teacherFields');
+
+  function enableFields(section, enable) {
+      const inputs = section.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => input.disabled = !enable);
+  }
+
+  roleSelect.addEventListener('change', function() {
+    if (this.value === 'STUDENT') {
+      studentFields.style.display = 'block';
+      teacherFields.style.display = 'none';
+      enableFields(studentFields, true);
+      enableFields(teacherFields, false);
+    } else if (this.value === 'TEACHER') {
+      teacherFields.style.display = 'block';
+      studentFields.style.display = 'none';
+      enableFields(teacherFields, true);
+      enableFields(studentFields, false);
+    }
+  });
+
+  enableFields(studentFields, false);
+  enableFields(teacherFields, false);
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const serverMessage = document.getElementById("serverMessage")?.value;
+    if (serverMessage && serverMessage.trim() !== "") {
+        const lowerMsg = serverMessage.toLowerCase();
+        const isError = lowerMsg.includes('error') || lowerMsg.includes('please') || lowerMsg.includes('already');
+
+        Swal.fire({
+            title: 'Notification',
+            text: serverMessage,
+            icon: isError ? 'error' : 'success',
+            confirmButtonColor: '#2575fc',
+            background: '#f9f9f9',
+            color: '#333',
+            timer: 4000,
+            timerProgressBar: true
+        });
+    }
+  });
+</script>
+
+</body>
+</html>
