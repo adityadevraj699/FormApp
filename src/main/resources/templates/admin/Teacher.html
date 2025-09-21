@@ -1,0 +1,65 @@
+<html th:replace="~{Adminbase::layout(~{::main})}">
+<body>
+<main class="container mt-4">
+    <h2>Registered Teachers</h2>
+
+    <!-- Filter & Search Form -->
+    <form th:action="@{/admin/teacher}" method="get" class="row g-3 mb-3">
+        <div class="col-auto">
+            <select name="status" class="form-select">
+                <option value="ALL" th:selected="${selectedStatus == 'ALL'}">All</option>
+                <option value="APPROVED" th:selected="${selectedStatus == 'APPROVED'}">APPROVED</option>
+                <option value="PENDING" th:selected="${selectedStatus == 'PENDING'}">PENDING</option>
+                <option value="DISABLED" th:selected="${selectedStatus == 'DISABLED'}">DISABLED</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <input type="text" name="employeeId" placeholder="Search Employee ID"
+                   class="form-control" th:value="${searchEmployeeId}">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+
+    <!-- Teacher Table -->
+    <table border="1" class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Employee ID</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="teacher : ${teachers}">
+                <td th:text="${teacher.name}"></td>
+                <td th:text="${teacher.employeeId}"></td>
+                <td th:text="${teacher.email}"></td>
+                <td th:text="${teacher.status}"></td>
+                <td class="d-flex gap-2">
+                    <!-- Update Status -->
+                    <form th:action="@{'/admin/teacher/updateStatus/' + ${teacher.id}}" method="post" style="display:inline-block;">
+                        <select name="status" class="form-select form-select-sm">
+                            <option th:value="PENDING" th:selected="${teacher.status == 'PENDING'}">PENDING</option>
+                            <option th:value="APPROVED" th:selected="${teacher.status == 'APPROVED'}">APPROVED</option>
+                            <option th:value="DISABLED" th:selected="${teacher.status == 'DISABLED'}">DISABLED</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary mt-1">Update</button>
+                    </form>
+
+                    <!-- Details Button -->
+<a th:href="@{'/admin/teacher/details/' + ${teacher.id}}" 
+   class="btn btn-info text-white"
+   style="height: 38px; display: flex; align-items: center; justify-content: center;">
+    Details
+</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

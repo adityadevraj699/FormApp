@@ -1,0 +1,25 @@
+<html th:replace="~{Adminbase::layout(~{::main})}">
+<body>
+<main class="container mt-4">
+    <h2>Teacher Details</h2>
+
+    <div class="card shadow-sm p-4 mb-3">
+        <p class="mb-2"><strong>Name:</strong> <span th:text="${teacher.name}"></span></p>
+        <p class="mb-2"><strong>Employee ID:</strong> <span th:text="${teacher.employeeId}"></span></p>
+        <p class="mb-2"><strong>Email:</strong> <span th:text="${teacher.email}"></span></p>
+        <p class="mb-2"><strong>Contact No:</strong> <span th:text="${teacher.contactNo}"></span></p>
+        <p class="mb-2"><strong>Gender:</strong> <span th:text="${teacher.gender}"></span></p>
+        <p class="mb-2"><strong>Address:</strong> <span th:text="${teacher.address}"></span></p>
+        <p class="mb-2"><strong>Department:</strong> <span th:text="${teacher.department}"></span></p>
+        <p class="mb-2"><strong>Designation:</strong> <span th:text="${teacher.designation}"></span></p>
+        <p class="mb-2"><strong>Qualification:</strong> <span th:text="${teacher.qualification}"></span></p>
+        <p class="mb-2"><strong>Experience:</strong> <span th:text="${teacher.experience}"></span> years</p>
+        <p class="mb-2"><strong>Role:</strong> <span th:text="${teacher.role}"></span></p>
+        <p class="mb-2"><strong>Status:</strong> <span th:text="${teacher.status}"></span></p>
+        <p class="mb-2"><strong>Registration Date:</strong> <span th:text="${teacher.regDate}"></span></p>
+    </div>
+
+    <a th:href="@{/admin/teacher}" class="btn btn-secondary">Back to Teacher List</a>
+</main>
+</body>
+</html>
