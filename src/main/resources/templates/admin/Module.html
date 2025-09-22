@@ -7,47 +7,40 @@
         <div class="card shadow-sm">
           <!-- Card Header -->
           <div class="card-header bg-primary text-white text-center">
-            <h4 class="fw-bold m-0">Training Program</h4>
+            <h4 class="fw-bold m-0">Module Management</h4>
           </div>
+
           <!-- Card Body -->
           <div class="card-body">
-            <form method="post" th:action="@{/admin/program}">
+            <form th:action="@{/admin/module}" method="post">
 
-              <!-- Program Name -->
+              <!-- Program Select -->
               <div class="mb-4">
-                <label for="trainingProgram" class="form-label fw-bold">Program Name</label>
+                <label for="trainingProgram" class="form-label fw-bold">Select Program</label>
+                <select class="form-select" id="trainingProgram" name="trainingProgram" required>
+                  <option value="">-- Select Program --</option>
+                  <option th:each="p : ${programs}" 
+                          th:value="${p.id}" 
+                          th:text="${p.trainingProgram}">
+                  </option>
+                </select>
+              </div>
+
+              <!-- Module Name Input -->
+              <div class="mb-4">
+                <label for="moduleName" class="form-label fw-bold">Module Name</label>
                 <input type="text" 
                        class="form-control" 
-                       id="trainingProgram" 
-                       name="trainingProgram" 
-                       placeholder="Enter Training Program..." 
-                       required>
-              </div>
-
-              <!-- Start Date -->
-              <div class="mb-4">
-                <label for="startDate" class="form-label fw-bold">Start Date</label>
-                <input type="date" 
-                       class="form-control" 
-                       id="startDate" 
-                       name="startDate" 
-                       required>
-              </div>
-
-              <!-- End Date -->
-              <div class="mb-4">
-                <label for="endDate" class="form-label fw-bold">End Date</label>
-                <input type="date" 
-                       class="form-control" 
-                       id="endDate" 
-                       name="endDate" 
+                       id="moduleName" 
+                       name="moduleName" 
+                       placeholder="Enter Module Name..." 
                        required>
               </div>
 
               <!-- Submit Button -->
               <div class="d-grid">
                 <button type="submit" class="btn btn-success btn-lg fw-bold">
-                  <i class="bi bi-save2 me-2"></i> Create Program
+                  <i class="bi bi-save2 me-2"></i> Save Module
                 </button>
               </div>
 
@@ -58,7 +51,9 @@
     </div>
   </div>
 
-  <input type="hidden" id="serverMessage" th:value="${serverMessage}">
+  <!-- Hidden input for server message -->
+  <input type="hidden" id="serverMessage" th:value="${serverMessageModule}">
+
 
   <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -71,6 +66,7 @@
                         lowerMsg.includes('disabled') || 
                         lowerMsg.includes('pending') || 
                         lowerMsg.includes('not found');
+
         Swal.fire({
           title: 'Notification',
           text: serverMessage,

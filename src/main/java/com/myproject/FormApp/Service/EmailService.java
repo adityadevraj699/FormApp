@@ -43,6 +43,19 @@ public class EmailService {
                    + "Regards,\nAdmin Team";
         sendEmail(to, subject, msg);
     }
+    
+ // ------------------- Teacher Program Assignment -------------------
+    public void sendTeacherProgramAssignment(String to, String teacherName, String programName, String programDetails) {
+        String subject = "You Have Been Assigned to a New Program";
+        String msg = "Hello " + teacherName + ",\n\n"
+                   + "You have been successfully assigned to the program: " + programName + ".\n\n"
+                   + "Program Details:\n" + programDetails + "\n\n"
+                   + "Please check your dashboard for more information.\n\n"
+                   + "Regards,\nAdmin Team";
+
+        sendEmail(to, subject, msg);
+    }
+
 
 
 }

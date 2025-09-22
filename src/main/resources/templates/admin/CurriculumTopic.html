@@ -5,49 +5,43 @@
     <div class="row justify-content-center">
       <div class="col-md-6">
         <div class="card shadow-sm">
+
           <!-- Card Header -->
           <div class="card-header bg-primary text-white text-center">
-            <h4 class="fw-bold m-0">Training Program</h4>
+            <h4 class="fw-bold m-0">Curriculum Topic Management</h4>
           </div>
+
           <!-- Card Body -->
           <div class="card-body">
-            <form method="post" th:action="@{/admin/program}">
+            <form th:action="@{/admin/curriculumTopic}" method="post">
 
-              <!-- Program Name -->
+              <!-- Module Select -->
               <div class="mb-4">
-                <label for="trainingProgram" class="form-label fw-bold">Program Name</label>
+                <label for="moduleSelect" class="form-label fw-bold">Select Module</label>
+                <select class="form-select" id="moduleSelect" name="moduleId" required>
+                  <option value="">-- Select Module --</option>
+                  <option th:each="m : ${modules}" 
+                          th:value="${m.id}" 
+                          th:text="${m.moduleName}">
+                  </option>
+                </select>
+              </div>
+
+              <!-- Curriculum Topic Name Input -->
+              <div class="mb-4">
+                <label for="topicName" class="form-label fw-bold">Curriculum Topic Name</label>
                 <input type="text" 
                        class="form-control" 
-                       id="trainingProgram" 
-                       name="trainingProgram" 
-                       placeholder="Enter Training Program..." 
-                       required>
-              </div>
-
-              <!-- Start Date -->
-              <div class="mb-4">
-                <label for="startDate" class="form-label fw-bold">Start Date</label>
-                <input type="date" 
-                       class="form-control" 
-                       id="startDate" 
-                       name="startDate" 
-                       required>
-              </div>
-
-              <!-- End Date -->
-              <div class="mb-4">
-                <label for="endDate" class="form-label fw-bold">End Date</label>
-                <input type="date" 
-                       class="form-control" 
-                       id="endDate" 
-                       name="endDate" 
+                       id="topicName" 
+                       name="topicName" 
+                       placeholder="Enter Curriculum Topic..." 
                        required>
               </div>
 
               <!-- Submit Button -->
               <div class="d-grid">
                 <button type="submit" class="btn btn-success btn-lg fw-bold">
-                  <i class="bi bi-save2 me-2"></i> Create Program
+                  <i class="bi bi-save2 me-2"></i> Save Curriculum Topic
                 </button>
               </div>
 
@@ -58,10 +52,12 @@
     </div>
   </div>
 
+  <!-- Hidden input for server message -->
   <input type="hidden" id="serverMessage" th:value="${serverMessage}">
 
   <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const serverMessage = document.getElementById("serverMessage")?.value;
@@ -71,6 +67,7 @@
                         lowerMsg.includes('disabled') || 
                         lowerMsg.includes('pending') || 
                         lowerMsg.includes('not found');
+
         Swal.fire({
           title: 'Notification',
           text: serverMessage,
