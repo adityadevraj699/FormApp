@@ -1,0 +1,72 @@
+<html th:replace="~{Adminbase::layout(~{::main})}">
+<body>
+<main>
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <!-- Card Header -->
+          <div class="card-header bg-primary text-white text-center">
+            <h4 class="fw-bold m-0">Create Feedback Phase</h4>
+          </div>
+
+          <!-- Card Body -->
+          <div class="card-body">
+            <form method="post" th:action="@{/admin/feedbackphase}">
+              
+              <!-- Phase Name -->
+              <div class="mb-4">
+                <label for="feedbackPhase" class="form-label fw-bold">Phase Name</label>
+                <input type="text" 
+                       class="form-control" 
+                       id="feedbackPhase" 
+                       name="feedbackPhase" 
+                       placeholder="Enter Feedback Phase..." 
+                       required>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="d-grid">
+                <button type="submit" class="btn btn-success btn-lg fw-bold">
+                  <i class="bi bi-save2 me-2"></i> Create Phase
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Optional server message for SweetAlert2 -->
+  <input type="hidden" id="serverMessage" th:value="${serverMessage}">
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const serverMessage = document.getElementById("serverMessage")?.value;
+      if (serverMessage && serverMessage.trim() !== "") {
+        const lowerMsg = serverMessage.toLowerCase();
+        const isError = lowerMsg.includes('invalid') || 
+                        lowerMsg.includes('disabled') || 
+                        lowerMsg.includes('pending') || 
+                        lowerMsg.includes('not found');
+        Swal.fire({
+          title: 'Notification',
+          text: serverMessage,
+          icon: isError ? 'error' : 'success',
+          confirmButtonColor: '#2575fc',
+          background: '#f9f9f9',
+          color: '#333',
+          timer: 4000,
+          timerProgressBar: true
+        });
+      }
+    });
+  </script>
+
+</main>
+</body>
+</html>

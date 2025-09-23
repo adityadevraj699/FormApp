@@ -2,6 +2,7 @@ package com.myproject.FormApp.Controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.myproject.FormApp.Model.Admin;
 import com.myproject.FormApp.Model.CurriculumTopic;
 import com.myproject.FormApp.Model.Module;
 import com.myproject.FormApp.Model.Program;
@@ -289,4 +290,30 @@ public class AdminController {
     }
 
 
+    @GetMapping("/feedbackPhase")
+    public String showFeedbackPhase() {
+    	return "admin/feedbackPhase";
+    }
+    
+    @GetMapping("/question")
+    public String showQuestion() {
+    	return "admin/question";
+    }
+    
+    
+    
+    @GetMapping("/questionCategories")
+    public String showQuestionCategories() {
+    	return "admin/questionCategories";
+    }
+    
+    
+    
+    @GetMapping("/ViewProfile")
+    public String showViewProfile(Model model) {
+    	if (!isLoggedIn()) return redirectIfNotLoggedIn();
+    	Admin admin =  (Admin) session.getAttribute("loggedInAdmin");
+    	model.addAttribute("admin", admin);
+    	return "admin/ViewProfile";
+    }
 }

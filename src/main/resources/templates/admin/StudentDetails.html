@@ -1,32 +1,92 @@
 <html th:replace="~{Adminbase::layout(~{::main})}">
-<head>
-    <!-- Bootstrap CSS CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
 <body>
-<main class="container mt-4">
-    <h2 class="mb-4 text-primary">Student Details</h2>
+<main>
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-md-10">
+        <div class="card shadow-sm">
+          <!-- Card Header -->
+          <div class="card-header bg-primary text-white text-center">
+            <h4 class="fw-bold m-0">Student Details</h4>
+          </div>
 
-    <div class="card shadow-sm p-4 mb-3">
-        <p class="mb-2"><strong>Name:</strong> <span th:text="${student.name}"></span></p>
-        <p class="mb-2"><strong>Roll No:</strong> <span th:text="${student.rollNo}"></span></p>
-        <p class="mb-2"><strong>Father's Name:</strong> <span th:text="${student.fatherName}"></span></p>
-        <p class="mb-2"><strong>Mother's Name:</strong> <span th:text="${student.motherName}"></span></p>
-        <p class="mb-2"><strong>Gender:</strong> <span th:text="${student.gender}"></span></p>
-        <p class="mb-2"><strong>Address:</strong> <span th:text="${student.address}"></span></p>
-        <p class="mb-2"><strong>Branch:</strong> <span th:text="${student.branch}"></span></p>
-        <p class="mb-2"><strong>Year:</strong> <span th:text="${student.year}"></span></p>
-        <p class="mb-2"><strong>Contact No:</strong> <span th:text="${student.contactNo}"></span></p>
-        <p class="mb-2"><strong>Email:</strong> <span th:text="${student.email}"></span></p>
-        <p class="mb-2"><strong>Role:</strong> <span th:text="${student.role}"></span></p>
-        <p class="mb-2"><strong>Status:</strong> <span th:text="${student.status}"></span></p>
-        <p class="mb-2"><strong>Registration Date:</strong> <span th:text="${student.regDate}"></span></p>
+          <!-- Card Body -->
+          <div class="card-body">
+            <div class="row">
+              <!-- Column 1 -->
+              <div class="col-md-6 mb-3">
+                <label class="fw-bold">Name:</label>
+                <p th:text="${student.name}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="fw-bold">Roll No:</label>
+                <p th:text="${student.rollNo}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="fw-bold">Father's Name:</label>
+                <p th:text="${student.fatherName}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="fw-bold">Mother's Name:</label>
+                <p th:text="${student.motherName}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="fw-bold">Gender:</label>
+                <p th:text="${student.gender}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="fw-bold">Address:</label>
+                <p th:text="${student.address}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="fw-bold">Branch:</label>
+                <p th:text="${student.branch}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="fw-bold">Year:</label>
+                <p th:text="${student.year}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="fw-bold">Contact No:</label>
+                <p th:text="${student.contactNo}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="fw-bold">Email:</label>
+                <p th:text="${student.email}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label class="fw-bold">Role:</label>
+                <p th:text="${student.role}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="fw-bold">Status:</label>
+                <p th:text="${student.status}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+              </div>
+
+              <div class="col-md-6 mb-4">
+                <label class="fw-bold">Registration Date:</label>
+                <p th:text="${student.regDate}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <a th:href="@{/admin/student}" class="btn btn-secondary fw-bold">
+                <i class="bi bi-arrow-left-circle me-1"></i> Back to Student List
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <a th:href="@{/admin/student}" class="btn btn-secondary">Back to Student List</a>
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </main>
-
-<!-- Bootstrap JS Bundle -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

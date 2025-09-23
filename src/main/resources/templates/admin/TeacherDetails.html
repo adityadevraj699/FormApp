@@ -1,25 +1,92 @@
 <html th:replace="~{Adminbase::layout(~{::main})}">
 <body>
-<main class="container mt-4">
-    <h2>Teacher Details</h2>
+<main class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <div class="card shadow-sm">
+        <!-- Card Header -->
+        <div class="card-header bg-primary text-white text-center">
+          <h4 class="fw-bold m-0">Teacher Details</h4>
+        </div>
 
-    <div class="card shadow-sm p-4 mb-3">
-        <p class="mb-2"><strong>Name:</strong> <span th:text="${teacher.name}"></span></p>
-        <p class="mb-2"><strong>Employee ID:</strong> <span th:text="${teacher.employeeId}"></span></p>
-        <p class="mb-2"><strong>Email:</strong> <span th:text="${teacher.email}"></span></p>
-        <p class="mb-2"><strong>Contact No:</strong> <span th:text="${teacher.contactNo}"></span></p>
-        <p class="mb-2"><strong>Gender:</strong> <span th:text="${teacher.gender}"></span></p>
-        <p class="mb-2"><strong>Address:</strong> <span th:text="${teacher.address}"></span></p>
-        <p class="mb-2"><strong>Department:</strong> <span th:text="${teacher.department}"></span></p>
-        <p class="mb-2"><strong>Designation:</strong> <span th:text="${teacher.designation}"></span></p>
-        <p class="mb-2"><strong>Qualification:</strong> <span th:text="${teacher.qualification}"></span></p>
-        <p class="mb-2"><strong>Experience:</strong> <span th:text="${teacher.experience}"></span> years</p>
-        <p class="mb-2"><strong>Role:</strong> <span th:text="${teacher.role}"></span></p>
-        <p class="mb-2"><strong>Status:</strong> <span th:text="${teacher.status}"></span></p>
-        <p class="mb-2"><strong>Registration Date:</strong> <span th:text="${teacher.regDate}"></span></p>
+        <!-- Card Body -->
+        <div class="card-body">
+          <div class="row g-4">
+            <div class="col-md-6">
+              <label class="fw-bold">Name:</label>
+              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.name}"></p>
+            </div>
+            <div class="col-md-6">
+              <label class="fw-bold">Employee ID:</label>
+              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.employeeId}"></p>
+            </div>
+
+            <div class="col-md-6">
+              <label class="fw-bold">Email:</label>
+              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.email}"></p>
+            </div>
+            <div class="col-md-6">
+              <label class="fw-bold">Contact No:</label>
+              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.contactNo}"></p>
+            </div>
+
+            <div class="col-md-6">
+              <label class="fw-bold">Gender:</label>
+              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.gender}"></p>
+            </div>
+            <div class="col-md-6">
+              <label class="fw-bold">Address:</label>
+              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.address}"></p>
+            </div>
+
+            <div class="col-md-6">
+              <label class="fw-bold">Department:</label>
+              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.department}"></p>
+            </div>
+            <div class="col-md-6">
+              <label class="fw-bold">Designation:</label>
+              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.designation}"></p>
+            </div>
+
+            <div class="col-md-6">
+              <label class="fw-bold">Qualification:</label>
+              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.qualification}"></p>
+            </div>
+            <div class="col-md-6">
+              <label class="fw-bold">Experience:</label>
+              <p class="form-control-plaintext border p-2 rounded bg-light">
+                <span th:text="${teacher.experience}"></span> years
+              </p>
+            </div>
+
+            <div class="col-md-6">
+              <label class="fw-bold">Role:</label>
+              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.role}"></p>
+            </div>
+            <div class="col-md-6">
+              <label class="fw-bold">Status:</label>
+              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.status}"></p>
+            </div>
+
+            <div class="col-md-12">
+              <label class="fw-bold">Registration Date:</label>
+              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.regDate}"></p>
+            </div>
+          </div>
+
+          <!-- Back Button -->
+          <div class="text-center mt-4">
+            <a th:href="@{/admin/teacher}" class="btn btn-secondary fw-bold">
+              <i class="bi bi-arrow-left-circle me-1"></i> Back to Teacher List
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <a th:href="@{/admin/teacher}" class="btn btn-secondary">Back to Teacher List</a>
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </main>
 </body>
 </html>

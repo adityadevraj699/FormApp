@@ -1,0 +1,50 @@
+<html th:replace="~{Adminbase::layout(~{::main})}">
+<body>
+<main>
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <!-- Card Header -->
+          <div class="card-header bg-primary text-white text-center">
+            <h4 class="fw-bold m-0">Admin Profile</h4>
+          </div>
+
+          <!-- Card Body -->
+          <div class="card-body">
+            <div class="mb-3">
+              <label class="fw-bold">Name:</label>
+              <p th:text="${admin.name}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+            </div>
+
+            <div class="mb-3">
+              <label class="fw-bold">Email:</label>
+              <p th:text="${admin.email}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+            </div>
+
+            <div class="mb-3">
+              <label class="fw-bold">Phone Number:</label>
+              <p th:text="${admin.number}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+            </div>
+
+            <div class="mb-3">
+              <label class="fw-bold">Role:</label>
+              <p th:text="${admin.role}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+            </div>
+
+            <div class="mb-3">
+              <label class="fw-bold">Status:</label>
+              <p th:text="${admin.status}" class="form-control-plaintext border p-2 rounded bg-light"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+</main>
+</body>
+</html>
