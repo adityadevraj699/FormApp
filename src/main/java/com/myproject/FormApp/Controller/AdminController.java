@@ -6,6 +6,8 @@ import com.myproject.FormApp.Model.Admin;
 import com.myproject.FormApp.Model.CurriculumTopic;
 import com.myproject.FormApp.Model.Module;
 import com.myproject.FormApp.Model.Program;
+import com.myproject.FormApp.Model.Question;
+import com.myproject.FormApp.Model.QuestionCatrgories;
 import com.myproject.FormApp.Model.Student;
 import com.myproject.FormApp.Model.Teacher;
 import com.myproject.FormApp.Model.Teacher.Status;
@@ -13,11 +15,14 @@ import com.myproject.FormApp.Model.TeacherAssign;
 import com.myproject.FormApp.Repository.CurriculumTopicRepository;
 import com.myproject.FormApp.Repository.ModuleRepository;
 import com.myproject.FormApp.Repository.ProgramRepository;
+import com.myproject.FormApp.Repository.QuestionCatrgoriesRepository;
+import com.myproject.FormApp.Repository.QuestionRepository;
 import com.myproject.FormApp.Repository.StudentsRepository;
 import com.myproject.FormApp.Repository.TeacherAssignRepository;
 import com.myproject.FormApp.Repository.TeacherRepository;
 import com.myproject.FormApp.Service.EmailService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +56,12 @@ public class AdminController {
     private HttpSession session;
     @Autowired
     private TeacherAssignRepository teacherAssignRepo;
+    
+    @Autowired
+    private QuestionCatrgoriesRepository questionCategoryRepo;
+    
+    @Autowired
+    private QuestionRepository questionRepo;
 
 
     public AdminController(StudentsRepository studentRepository, TeacherRepository teacherRepository, EmailService emailService) {
@@ -267,6 +278,7 @@ public class AdminController {
                                     @RequestParam Long programId,
                                     RedirectAttributes redirectAttributes) {
 
+    	if (!isLoggedIn()) return redirectIfNotLoggedIn();
         Teacher teacher = teacherRepository.findById(teacherId).orElseThrow();
         Program program = programRepo.findById(programId).orElseThrow();
 
@@ -292,19 +304,112 @@ public class AdminController {
 
     @GetMapping("/feedbackPhase")
     public String showFeedbackPhase() {
+    	if (!isLoggedIn()) return redirectIfNotLoggedIn();
     	return "admin/feedbackPhase";
     }
     
     @GetMapping("/question")
-    public String showQuestion() {
-    	return "admin/question";
+    public String showQuestion(Model model) {
+        if (!isLoggedIn()) return redirectIfNotLoggedIn();
+
+       
+        List<QuestionCatrgories> categories = questionCategoryRepo.findAll();
+        model.addAttribute("categories", categories);
+
+       
+        Question.AnswerType[] answerTypes = Question.AnswerType.values();
+        model.addAttribute("answerTypes", answerTypes);
+
+        return "admin/question";
     }
+    
+    @PostMapping("/question")
+    public String saveQuestions(
+            @RequestParam("categoryId") Long categoryId,
+            @RequestParam("questions[]") List<String> questions,
+            @RequestParam("answerTypes[]") List<String> answerTypes,
+            RedirectAttributes redirectAttributes) {
+
+        if (!isLoggedIn()) return redirectIfNotLoggedIn();
+
+        try {
+            // 1. Fetch selected category
+            QuestionCatrgories category = questionCategoryRepo.findById(categoryId)
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid category ID"));
+
+            // 2. Validate questions and answerTypes
+            if (questions == null || questions.isEmpty()) {
+                redirectAttributes.addFlashAttribute("msg", "Please add at least one question!");
+                return "redirect:/admin/question";
+            }
+
+            if (questions.size() != answerTypes.size()) {
+                redirectAttributes.addFlashAttribute("msg", "Mismatch in questions and answer types!");
+                return "redirect:/admin/question";
+            }
+
+            // 3. Save each question
+            for (int i = 0; i < questions.size(); i++) {
+                String text = questions.get(i).trim();
+                if (!text.isEmpty()) {
+                    Question.AnswerType type;
+                    try {
+                        type = Question.AnswerType.valueOf(answerTypes.get(i));
+                    } catch (IllegalArgumentException e) {
+                        type = Question.AnswerType.TEXT; // default to TEXT if invalid
+                    }
+
+                    Question question = new Question(category, text, type);
+                    questionRepo.save(question);
+                }
+            }
+
+            redirectAttributes.addFlashAttribute("msg", "Questions saved successfully!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("msg", "Something went wrong while saving questions!");
+        }
+
+        return "redirect:/admin/question";
+    }
+
+
     
     
     
     @GetMapping("/questionCategories")
     public String showQuestionCategories() {
+    	if (!isLoggedIn()) return redirectIfNotLoggedIn();
     	return "admin/questionCategories";
+    }
+    
+    @PostMapping("/questionCategories")
+    public String saveQuestionCategories(
+            @RequestParam("categories[]") List<String> categories,
+            RedirectAttributes redirectAttributes) {
+    	if (!isLoggedIn()) return redirectIfNotLoggedIn();
+
+        try {
+          
+            if (categories == null || categories.isEmpty()) {
+                redirectAttributes.addFlashAttribute("msg", "Please add at least one category!");
+                return "redirect:/admin/questionCategories";
+            }
+
+           
+            for (String name : categories) {
+                if (name != null && !name.trim().isEmpty()) {
+                    QuestionCatrgories category = new QuestionCatrgories(name.trim());
+                    questionCategoryRepo.save(category);
+                }
+            }
+
+            redirectAttributes.addFlashAttribute("msg", "Categories saved successfully!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("msg", "Something went wrong!");
+        }
+        return "redirect:/admin/questionCategories";
     }
     
     

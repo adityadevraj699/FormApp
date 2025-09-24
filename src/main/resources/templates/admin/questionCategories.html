@@ -12,8 +12,7 @@
 
           <!-- Card Body -->
           <div class="card-body">
-            <form method="post" th:action="@{/admin/categories}">
-
+            <form method="post" th:action="@{/admin/questionCategories}">
               <!-- Dynamic Categories Container -->
               <div id="categoriesContainer">
                 <div class="input-group mb-3 category-item">
@@ -41,7 +40,6 @@
                   <i class="bi bi-save2 me-2"></i> Save Categories
                 </button>
               </div>
-
             </form>
           </div>
         </div>
@@ -49,8 +47,15 @@
     </div>
   </div>
 
+  <!-- Server Message Hidden Field -->
+  <input type="hidden" id="serverMessage" th:value="${msg}">
+
+
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <!-- JavaScript for Dynamic Fields -->
   <script>
@@ -75,6 +80,28 @@
       const item = button.closest('.category-item');
       item.remove();
     }
+
+    // SweetAlert Notification
+    document.addEventListener("DOMContentLoaded", function () {
+      const serverMessage = document.getElementById("serverMessage")?.value;
+      if (serverMessage && serverMessage.trim() !== "") {
+        const lowerMsg = serverMessage.toLowerCase();
+        const isError = lowerMsg.includes('invalid') ||
+                        lowerMsg.includes('error') ||
+                        lowerMsg.includes('not found') ||
+                        lowerMsg.includes('failed');
+        Swal.fire({
+          title: 'Notification',
+          text: serverMessage,
+          icon: isError ? 'error' : 'success',
+          confirmButtonColor: '#2575fc',
+          background: '#f9f9f9',
+          color: '#333',
+          timer: 4000,
+          timerProgressBar: true
+        });
+      }
+    });
   </script>
 </main>
 </body>

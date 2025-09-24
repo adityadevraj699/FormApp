@@ -12,23 +12,38 @@
 
           <!-- Card Body -->
           <div class="card-body">
-            <form method="post" th:action="@{/admin/questions}">
-              
+            <form method="post" th:action="@{/admin/question}">
+
+              <!-- Category Dropdown (single for all questions) -->
+              <div class="mb-3">
+                <label for="categorySelect" class="form-label fw-bold">Select Category:</label>
+                <select id="categorySelect" name="categoryId" class="form-select" required>
+                  <option value="" disabled selected>-- Choose Category --</option>
+                  <th:block th:each="cat : ${categories}">
+                    <option th:value="${cat.id}" th:text="${cat.categoryName}"></option>
+                  </th:block>
+                </select>
+              </div>
+
               <!-- Dynamic Questions Container -->
               <div id="questionsContainer">
                 <div class="input-group mb-3 question-item">
-                  <input type="text" 
-                         name="questions[]" 
-                         class="form-control" 
-                         placeholder="Enter Question..." 
-                         required>
-                  <button type="button" class="btn btn-danger remove-btn" onclick="removeQuestion(this)">
+                  <input type="text" name="questions[]" class="form-control" placeholder="Enter Question..." required>
+
+                  <!-- Answer Type Dropdown -->
+                  <select name="answerTypes[]" class="form-select ms-2" required>
+                    <th:block th:each="type : ${answerTypes}">
+                      <option th:value="${type}" th:text="${type}"></option>
+                    </th:block>
+                  </select>
+
+                  <button type="button" class="btn btn-danger ms-2" onclick="removeQuestion(this)">
                     <i class="bi bi-dash-circle"></i>
                   </button>
                 </div>
               </div>
 
-              <!-- Add Button -->
+              <!-- Add Question Button -->
               <div class="mb-3">
                 <button type="button" class="btn btn-secondary fw-bold" onclick="addQuestion()">
                   <i class="bi bi-plus-circle me-1"></i> Add Question
@@ -49,22 +64,32 @@
     </div>
   </div>
 
+  <!-- Hidden field for server message -->
+  <input type="hidden" id="serverMessage" th:value="${msg}">
+
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-  <!-- JavaScript for Dynamic Fields -->
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <script>
     function addQuestion() {
       const container = document.getElementById('questionsContainer');
       const div = document.createElement('div');
       div.classList.add('input-group', 'mb-3', 'question-item');
+
+      // Copy answer type options from first dropdown
+      const answerOptions = [...document.querySelectorAll('select[name="answerTypes[]"]')[0].options].map(opt => 
+        `<option value="${opt.value}">${opt.text}</option>`
+      ).join('');
+
       div.innerHTML = `
-        <input type="text" 
-               name="questions[]" 
-               class="form-control" 
-               placeholder="Enter Question..." 
-               required>
-        <button type="button" class="btn btn-danger remove-btn" onclick="removeQuestion(this)">
+        <input type="text" name="questions[]" class="form-control" placeholder="Enter Question..." required>
+        <select name="answerTypes[]" class="form-select ms-2" required>
+          ${answerOptions}
+        </select>
+        <button type="button" class="btn btn-danger ms-2" onclick="removeQuestion(this)">
           <i class="bi bi-dash-circle"></i>
         </button>
       `;
@@ -75,6 +100,26 @@
       const item = button.closest('.question-item');
       item.remove();
     }
+
+    // SweetAlert Notification
+    document.addEventListener("DOMContentLoaded", function () {
+      const serverMessage = document.getElementById("serverMessage")?.value;
+      if (serverMessage && serverMessage.trim() !== "") {
+        const lowerMsg = serverMessage.toLowerCase();
+        const isError = lowerMsg.includes('invalid') || lowerMsg.includes('error') || lowerMsg.includes('failed');
+
+        Swal.fire({
+          title: 'Notification',
+          text: serverMessage,
+          icon: isError ? 'error' : 'success',
+          confirmButtonColor: '#2575fc',
+          background: '#f9f9f9',
+          color: '#333',
+          timer: 4000,
+          timerProgressBar: true
+        });
+      }
+    });
   </script>
 </main>
 </body>
