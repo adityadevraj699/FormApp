@@ -4,6 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myproject.FormApp.Model.Admin;
 import com.myproject.FormApp.Model.CurriculumTopic;
+import com.myproject.FormApp.Model.FeedBackPhase;
+import com.myproject.FormApp.Model.Feedback;
+import com.myproject.FormApp.Model.FeedbackQuestionCategory;
 import com.myproject.FormApp.Model.Module;
 import com.myproject.FormApp.Model.Program;
 import com.myproject.FormApp.Model.Question;
@@ -13,6 +16,9 @@ import com.myproject.FormApp.Model.Teacher;
 import com.myproject.FormApp.Model.Teacher.Status;
 import com.myproject.FormApp.Model.TeacherAssign;
 import com.myproject.FormApp.Repository.CurriculumTopicRepository;
+import com.myproject.FormApp.Repository.FeedBackPhaseRepository;
+import com.myproject.FormApp.Repository.FeedbackQuestionCategoryRepository;
+import com.myproject.FormApp.Repository.FeedbackRepository;
 import com.myproject.FormApp.Repository.ModuleRepository;
 import com.myproject.FormApp.Repository.ProgramRepository;
 import com.myproject.FormApp.Repository.QuestionCatrgoriesRepository;
@@ -31,6 +37,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -62,6 +69,16 @@ public class AdminController {
     
     @Autowired
     private QuestionRepository questionRepo;
+    
+    @Autowired
+    private FeedBackPhaseRepository feedbackRepo;
+    
+    @Autowired
+    private FeedbackRepository feedRepo;
+    
+    @Autowired
+    private FeedbackQuestionCategoryRepository FeedbackQuestionCategoryRepo;
+    
 
 
     public AdminController(StudentsRepository studentRepository, TeacherRepository teacherRepository, EmailService emailService) {
@@ -308,6 +325,26 @@ public class AdminController {
     	return "admin/feedbackPhase";
     }
     
+    @PostMapping("/feedbackPhase")
+    public String createFeedbackPhase(String feedbackPhase, RedirectAttributes redirectAttributes) {
+        if (!isLoggedIn()) {
+            return redirectIfNotLoggedIn();
+        }
+
+        try {
+            FeedBackPhase phase = new FeedBackPhase();
+            phase.setPhaseName(feedbackPhase);
+            feedbackRepo.save(phase);
+
+            redirectAttributes.addFlashAttribute("mgs", "Feedback Phase created successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("mgs", "Error creating Feedback Phase: " + e.getMessage());
+        }
+
+        return "redirect:/admin/feedbackPhase"; // reload same page
+    }
+
+    
     @GetMapping("/question")
     public String showQuestion(Model model) {
         if (!isLoggedIn()) return redirectIfNotLoggedIn();
@@ -421,4 +458,91 @@ public class AdminController {
     	model.addAttribute("admin", admin);
     	return "admin/ViewProfile";
     }
+    
+    
+    @GetMapping("/feedback")
+    public String showFeedback(Model model) {
+    	if (!isLoggedIn()) return redirectIfNotLoggedIn();
+    	
+    	 List<QuestionCatrgories> categories = questionCategoryRepo.findAll();
+         model.addAttribute("categories", categories);
+         
+         List<Program> program = programRepo.findAll();
+         model.addAttribute("program", program);
+         
+         List<FeedBackPhase> phase = feedbackRepo.findAll();
+         model.addAttribute("phase", phase);
+         
+    	return "admin/feedback";
+    }
+    
+    @PostMapping("/feedback")
+public String saveFeedback(@RequestParam Long programId,
+                           @RequestParam Long phaseId,
+                           @RequestParam("categoryIds") List<Long> categoryIds,
+                           @RequestParam String startDate,
+                           @RequestParam String endDate,
+                           RedirectAttributes redirectAttributes) {
+
+    if (!isLoggedIn()) return redirectIfNotLoggedIn();
+
+    try {
+        // 1. Parse dates
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+        LocalDate today = LocalDate.now();
+
+        // 2. Validate dates
+        if (start.isBefore(today)) {
+            redirectAttributes.addFlashAttribute("serverMessage", "Start date cannot be before today's date!");
+            return "redirect:/admin/feedback";
+        }
+
+        if (end.isBefore(start)) {
+            redirectAttributes.addFlashAttribute("serverMessage", "End date cannot be before start date!");
+            return "redirect:/admin/feedback";
+        }
+
+        // 3. Fetch Program and Feedback Phase
+        Program program = programRepo.findById(programId).orElseThrow();
+        FeedBackPhase phase = feedbackRepo.findById(phaseId).orElseThrow();
+
+        // 4. Create Feedback
+        Feedback feedback = new Feedback();
+        feedback.setProgram(program);
+        feedback.setFeedbackPhase(phase);
+        feedback.setStartDate(start);
+        feedback.setEndDate(end);
+        feedRepo.save(feedback);
+
+        // 5. Save FeedbackQuestionCategory for each selected category
+        for (Long catId : categoryIds) {
+            QuestionCatrgories category = questionCategoryRepo.findById(catId).orElseThrow();
+            FeedbackQuestionCategory fqc = new FeedbackQuestionCategory();
+            fqc.setFeedback(feedback);
+            fqc.setQuestionCategory(category);
+            FeedbackQuestionCategoryRepo.save(fqc);
+        }
+
+        redirectAttributes.addFlashAttribute("serverMessage", "Feedback created successfully!");
+    } catch (Exception e) {
+        e.printStackTrace();
+        redirectAttributes.addFlashAttribute("serverMessage", "Error creating feedback: " + e.getMessage());
+    }
+
+    return "redirect:/admin/feedback";
+}
+
+    
+    @GetMapping("/totalFeedback")
+    public String totalFeedback(Model model) {
+        List<Feedback> feedbacks = feedRepo.findAll(); // LAZY fetch hoga
+        model.addAttribute("feedbacks", feedbacks);
+        return "admin/totalFeedback";
+    }
+
+
+
+
+
 }

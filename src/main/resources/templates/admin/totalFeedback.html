@@ -1,0 +1,140 @@
+<html th:replace="~{Adminbase::layout(~{::main})}">
+<body>
+<main class="container my-5">
+
+  <h2 class="mb-4">All Feedbacks</h2>
+
+  <!-- Filter by Status -->
+  <div class="mb-3">
+    <label for="statusFilter" class="form-label">Filter by Status:</label>
+    <select id="statusFilter" class="form-select w-auto">
+        <option value="All">All</option>
+        <option value="Upcoming">Upcoming</option>
+        <option value="Ongoing">Ongoing</option>
+        <option value="Expired">Expired</option>
+    </select>
+  </div>
+
+  <!-- Feedback Table -->
+  <table class="table table-bordered table-striped" id="feedbackTable">
+    <thead class="table-primary">
+      <tr>
+        <th>Program</th>
+        <th>Feedback Phase</th>
+        <th>Start Date</th>
+        <th>End Date</th>
+        <th>Status</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="fb : ${feedbacks}">
+        <td th:text="${fb.program.trainingProgram}"></td>
+        <td th:text="${fb.feedbackPhase.phaseName}"></td>
+        <td th:text="${fb.startDate}" class="startDate"></td>
+        <td th:text="${fb.endDate}" class="endDate"></td>
+        <td class="statusCell"></td>
+        <td>
+          <!-- Details Button -->
+          <button class="btn btn-sm btn-outline-primary" type="button"
+                  data-bs-toggle="collapse"
+                  th:attr="data-bs-target='#details__${fb.id}'">
+            Show Details
+          </button>
+
+          <!-- Collapsible Details -->
+          <div class="collapse mt-2" th:id="'details__' + ${fb.id}">
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item" th:each="fqc : ${fb.feedbackQuestionCategories}">
+                <strong th:text="'[' + fqc.questionCategory.id + '] ' + fqc.questionCategory.categoryName"></strong>
+                <ul>
+                  <li th:each="q : ${fqc.questionCategory.questions}" 
+                      th:text="${q.questionText}"></li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  
+  
+  
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Status Calculation -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const rows = document.querySelectorAll("#feedbackTable tbody tr");
+
+    rows.forEach(row => {
+        // Get date strings from table
+        const startStr = row.querySelector(".startDate").textContent.trim();
+        const endStr   = row.querySelector(".endDate").textContent.trim();
+
+        // Parse to JS Date at local midnight
+        const startParts = startStr.split('-'); // ["2025","09","25"]
+        const endParts = endStr.split('-');
+
+        const startDate = new Date(
+            parseInt(startParts[0]), // year
+            parseInt(startParts[1]) - 1, // month 0-indexed
+            parseInt(startParts[2]), // day
+            0,0,0 // midnight
+        );
+
+        const endDate = new Date(
+            parseInt(endParts[0]),
+            parseInt(endParts[1]) - 1,
+            parseInt(endParts[2]),
+            23,59,59 // end of day
+        );
+
+        const now = new Date();
+
+        let status = "";
+        let color = "";
+
+        if (now < startDate) {
+            status = "Upcoming";
+            color = "blue";
+        } else if (now > endDate) {
+            status = "Expired";
+            color = "red";
+        } else {
+            status = "Ongoing";
+            color = "green";
+        }
+
+        const statusCell = row.querySelector(".statusCell");
+        statusCell.textContent = status;
+        statusCell.style.color = color;
+        statusCell.style.fontWeight = "bold";
+        row.setAttribute("data-status", status);
+    });
+});
+
+</script>
+
+
+<!-- Filter Logic -->
+<script>
+const filterSelect = document.getElementById("statusFilter");
+filterSelect.addEventListener("change", function() {
+    const selected = this.value;
+    const rows = document.querySelectorAll("#feedbackTable tbody tr");
+
+    rows.forEach(row => {
+        const status = row.getAttribute("data-status");
+        row.style.display = (selected === "All" || status === selected) ? "" : "none";
+    });
+});
+</script>
+
+</main>
+
+
+</body>
+</html>

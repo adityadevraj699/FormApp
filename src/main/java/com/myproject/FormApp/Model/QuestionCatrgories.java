@@ -1,5 +1,7 @@
 package com.myproject.FormApp.Model;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -19,8 +21,20 @@ public class QuestionCatrgories {
     public QuestionCatrgories(String categoryName) {
         this.categoryName = categoryName;
     }
+    
+    @OneToMany(mappedBy = "category", fetch = FetchType.EAGER)
+    private List<Question> questions;
 
-    // ---- Getters and Setters ----
+
+    public List<Question> getQuestions() {
+		return questions;
+	}
+
+	public void setQuestions(List<Question> questions) {
+		this.questions = questions;
+	}
+
+	// ---- Getters and Setters ----
     public Long getId() {
         return id;
     }

@@ -1,0 +1,104 @@
+<html th:replace="~{Adminbase::layout(~{::main})}">
+<body>
+<main>
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card shadow-sm">
+
+          <!-- Card Header -->
+          <div class="card-header bg-primary text-white text-center">
+            <h4 class="fw-bold m-0">Create Feedback</h4>
+          </div>
+
+          <!-- Card Body -->
+          <div class="card-body">
+            <form th:action="@{/admin/feedback}" method="post">
+
+              <!-- Program Select -->
+              <div class="mb-3">
+                <label for="programSelect" class="form-label fw-bold">Select Program</label>
+                <select class="form-select" id="programSelect" name="programId" required>
+                  <option value="">-- Select Program --</option>
+                  <option th:each="p : ${program}" 
+                          th:value="${p.id}" 
+                          th:text="${p.trainingProgram}"></option>
+                </select>
+              </div>
+
+              <!-- Feedback Phase Select -->
+              <div class="mb-3">
+                <label for="phaseSelect" class="form-label fw-bold">Select Feedback Phase</label>
+                <select class="form-select" id="phaseSelect" name="phaseId" required>
+                  <option value="">-- Select Phase --</option>
+                  <option th:each="ph : ${phase}" 
+                          th:value="${ph.id}" 
+                          th:text="${ph.phaseName}"></option>
+                </select>
+              </div>
+
+              <!-- Question Categories Checkboxes -->
+              <div class="mb-3">
+                <label class="form-label fw-bold">Select Question Categories</label>
+                <div th:each="cat : ${categories}" class="form-check">
+                  <input class="form-check-input" type="checkbox" th:id="${'cat_' + cat.id}" 
+                         th:name="categoryIds" th:value="${cat.id}">
+                  <label class="form-check-label" th:for="${'cat_' + cat.id}" 
+                         th:text="${cat.categoryName}"></label>
+                </div>
+              </div>
+
+              <!-- Start & End Date -->
+              <div class="mb-3">
+                <label class="form-label fw-bold">Start Date</label>
+                <input type="date" class="form-control" name="startDate" required>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">End Date</label>
+                <input type="date" class="form-control" name="endDate" required>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="d-grid">
+                <button type="submit" class="btn btn-success btn-lg fw-bold">
+                  <i class="bi bi-save2 me-2"></i> Create Feedback
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- Hidden input for server message -->
+<input type="hidden" id="serverMessage" th:value="${serverMessage}">
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const serverMessage = document.getElementById("serverMessage")?.value;
+    if (serverMessage && serverMessage.trim() !== "") {
+        // Decide icon type (success or error)
+        const lowerMsg = serverMessage.toLowerCase();
+        const isError = lowerMsg.includes('error') || lowerMsg.includes('cannot') || lowerMsg.includes('failed');
+
+        Swal.fire({
+            title: 'Notification',
+            text: serverMessage,
+            icon: isError ? 'error' : 'success',
+            confirmButtonColor: '#2575fc',
+            background: '#f9f9f9',
+            color: '#333',
+            timer: 4000,
+            timerProgressBar: true
+        });
+    }
+});
+</script>
+</main>
+</body>
+</html>
