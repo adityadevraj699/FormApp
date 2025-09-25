@@ -5,16 +5,14 @@
     <div class="row justify-content-center">
       <div class="col-md-8">
         <div class="card shadow-sm">
-          <!-- Card Header -->
           <div class="card-header bg-primary text-white text-center">
             <h4 class="fw-bold m-0">Add Questions</h4>
           </div>
 
-          <!-- Card Body -->
           <div class="card-body">
             <form method="post" th:action="@{/admin/question}">
-
-              <!-- Category Dropdown (single for all questions) -->
+              
+              <!-- Category Dropdown -->
               <div class="mb-3">
                 <label for="categorySelect" class="form-label fw-bold">Select Category:</label>
                 <select id="categorySelect" name="categoryId" class="form-select" required>
@@ -30,12 +28,13 @@
                 <div class="input-group mb-3 question-item">
                   <input type="text" name="questions[]" class="form-control" placeholder="Enter Question..." required>
 
-                  <!-- Answer Type Dropdown -->
-                  <select name="answerTypes[]" class="form-select ms-2" required>
-                    <th:block th:each="type : ${answerTypes}">
-                      <option th:value="${type}" th:text="${type}"></option>
-                    </th:block>
+                  <select name="answerTypes[]" class="form-select ms-2" onchange="updateRangeInput(this)" required>
+                    <option value="TEXT">TEXT</option>
+                    <option value="NUMBER">NUMBER</option>
                   </select>
+
+                  <!-- Range placeholder -->
+                  <div class="ms-2 range-input"></div>
 
                   <button type="button" class="btn btn-danger ms-2" onclick="removeQuestion(this)">
                     <i class="bi bi-dash-circle"></i>
@@ -64,31 +63,35 @@
     </div>
   </div>
 
-  <!-- Hidden field for server message -->
   <input type="hidden" id="serverMessage" th:value="${msg}">
-
-  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
-  <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script>
+    function updateRangeInput(select) {
+      const container = select.closest('.question-item');
+      const rangeDiv = container.querySelector('.range-input');
+      rangeDiv.innerHTML = '';
+      if (select.value === 'NUMBER') {
+        rangeDiv.innerHTML = `
+          <input type="number" name="rangeStart[]" class="form-control mt-1" placeholder="Start Range" required>
+          <input type="number" name="rangeEnd[]" class="form-control mt-1" placeholder="End Range" required>
+        `;
+      }
+    }
+
     function addQuestion() {
       const container = document.getElementById('questionsContainer');
       const div = document.createElement('div');
       div.classList.add('input-group', 'mb-3', 'question-item');
 
-      // Copy answer type options from first dropdown
-      const answerOptions = [...document.querySelectorAll('select[name="answerTypes[]"]')[0].options].map(opt => 
-        `<option value="${opt.value}">${opt.text}</option>`
-      ).join('');
-
       div.innerHTML = `
         <input type="text" name="questions[]" class="form-control" placeholder="Enter Question..." required>
-        <select name="answerTypes[]" class="form-select ms-2" required>
-          ${answerOptions}
+        <select name="answerTypes[]" class="form-select ms-2" onchange="updateRangeInput(this)" required>
+          <option value="TEXT">TEXT</option>
+          <option value="NUMBER">NUMBER</option>
         </select>
+        <div class="ms-2 range-input"></div>
         <button type="button" class="btn btn-danger ms-2" onclick="removeQuestion(this)">
           <i class="bi bi-dash-circle"></i>
         </button>
@@ -97,17 +100,14 @@
     }
 
     function removeQuestion(button) {
-      const item = button.closest('.question-item');
-      item.remove();
+      button.closest('.question-item').remove();
     }
 
-    // SweetAlert Notification
     document.addEventListener("DOMContentLoaded", function () {
       const serverMessage = document.getElementById("serverMessage")?.value;
       if (serverMessage && serverMessage.trim() !== "") {
         const lowerMsg = serverMessage.toLowerCase();
         const isError = lowerMsg.includes('invalid') || lowerMsg.includes('error') || lowerMsg.includes('failed');
-
         Swal.fire({
           title: 'Notification',
           text: serverMessage,

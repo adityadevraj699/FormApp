@@ -1,0 +1,39 @@
+<html th:replace="~{Adminbase::layout(~{::main})}">
+<body>
+<main>
+<h2>Feedback Details</h2>
+    <div class="card p-3 mb-4">
+        <p><strong>Program:</strong> <span th:text="${feedback.program.trainingProgram}"></span></p>
+        <p><strong>Phase:</strong> <span th:text="${feedback.feedbackPhase.phaseName}"></span></p>
+        <p><strong>Start Date:</strong> <span th:text="${feedback.startDate}"></span></p>
+        <p><strong>End Date:</strong> <span th:text="${feedback.endDate}"></span></p>
+    </div>
+
+    <h4>Question Categories</h4>
+<table class="table table-bordered table-striped">
+    <thead class="table-primary">
+        <tr>
+            <th>ID</th>
+            <th>Category Name</th>
+            <th>Action</th> <!-- नया column -->
+        </tr>
+    </thead>
+    <tbody>
+        <tr th:each="cat : ${categories}">
+            <td th:text="${cat.id}"></td>
+            <td th:text="${cat.questionCategory.categoryName}"></td>
+            <td>
+                <a th:href="@{'/admin/category/details/' + ${cat.id}}" 
+                   class="btn btn-sm btn-outline-info">
+                    Details
+                </a>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+    <a th:href="@{/admin/totalFeedback}" class="btn btn-secondary mt-3">Back</a>
+</main>
+</body>
+</html>

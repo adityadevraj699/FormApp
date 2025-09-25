@@ -1,0 +1,44 @@
+<html th:replace="~{Adminbase::layout(~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<body>
+<main class="container my-4">
+
+    <h2>Category Details</h2>
+
+    <!-- Category Info -->
+    <div class="card p-3 mb-4">
+        <p><strong>ID:</strong> <span th:text="${category.id}"></span></p>
+        <p><strong>Name:</strong> <span th:text="${category.categoryName}"></span></p>
+    </div>
+
+    <!-- Questions Table -->
+    <h4>Questions</h4>
+    <table class="table table-bordered table-striped">
+        <thead class="table-primary">
+            <tr>
+                <th>#</th>
+                <th>Question Text</th>
+                <th>Answer Type</th>
+                <th>Range</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="q, iterStat : ${questions}">
+                <td th:text="${iterStat.count}"></td>
+                <td th:text="${q.questionText}"></td>
+                <td th:text="${q.answerType}"></td>
+                <td>
+                    <span th:if="${q.answerType.name() == 'NUMBER'}" 
+                          th:text="${q.rangeStart} + ' - ' + ${q.rangeEnd}"></span>
+                    <span th:if="${q.answerType.name() == 'TEXT'}">N/A</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Back Button -->
+    <a th:href="@{/admin/feedback/details/{id}(id=${feedbackId})}" 
+       class="btn btn-secondary mt-3">Back</a>
+
+</main>
+</body>
+</html>

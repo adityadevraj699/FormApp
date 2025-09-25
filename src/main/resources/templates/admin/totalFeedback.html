@@ -35,26 +35,13 @@
         <td th:text="${fb.endDate}" class="endDate"></td>
         <td class="statusCell"></td>
         <td>
-          <!-- Details Button -->
-          <button class="btn btn-sm btn-outline-primary" type="button"
-                  data-bs-toggle="collapse"
-                  th:attr="data-bs-target='#details__${fb.id}'">
-            Show Details
-          </button>
+  <a th:href="@{'/admin/feedback/details/' + ${fb.id}}" 
+     class="btn btn-sm btn-outline-primary">
+      Details
+  </a>
+</td>
 
-          <!-- Collapsible Details -->
-          <div class="collapse mt-2" th:id="'details__' + ${fb.id}">
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item" th:each="fqc : ${fb.feedbackQuestionCategories}">
-                <strong th:text="'[' + fqc.questionCategory.id + '] ' + fqc.questionCategory.categoryName"></strong>
-                <ul>
-                  <li th:each="q : ${fqc.questionCategory.questions}" 
-                      th:text="${q.questionText}"></li>
-                </ul>
-              </li>
-            </ul>
-          </div>
-        </td>
+
       </tr>
     </tbody>
   </table>

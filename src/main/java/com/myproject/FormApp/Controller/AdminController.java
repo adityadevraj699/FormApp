@@ -38,8 +38,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -98,10 +100,49 @@ public class AdminController {
 
     // ---------------------- DASHBOARD ----------------------
     @GetMapping("/dashboard")
-    public String showDashboard() {
+    public String showDashboard(Model model) {
         if (!isLoggedIn()) return redirectIfNotLoggedIn();
-        return "admin/Dashboard";
+
+        // DB से सभी TeacherAssign records लाओ
+        List<TeacherAssign> programList = teacherAssignRepo.findAll();
+
+        // Model में डालो
+        model.addAttribute("programList", programList);
+
+        return "admin/Dashboard"; // Thymeleaf template
     }
+
+    
+    @GetMapping("/programDetail/{id}")
+    public String programDetail(@PathVariable Long id, Model model) {
+
+        Program program = programRepo.findById(id)
+                            .orElseThrow(() -> new RuntimeException("Program not found"));
+
+        List<Module> modules = moduleRepo.findByProgramId(id);
+
+      
+        Map<Long, List<CurriculumTopic>> moduleTopicsMap = new HashMap<>();
+        for (Module module : modules) {
+            List<CurriculumTopic> topics = curriculumTopicRepo.findByModuleId(module.getId());
+            moduleTopicsMap.put(module.getId(), topics);
+        }
+
+        List<TeacherAssign> teacherAssignments = teacherAssignRepo.findAllByProgramId(id);
+
+        model.addAttribute("program", program);
+        model.addAttribute("modules", modules);
+        model.addAttribute("teacherAssignments", teacherAssignments);
+        model.addAttribute("moduleTopicsMap", moduleTopicsMap);
+
+        return "admin/programDetail";
+    }
+
+
+
+
+
+
 
     // ---------------------- PROGRAM ----------------------
     @GetMapping("/program")
@@ -349,67 +390,50 @@ public class AdminController {
     public String showQuestion(Model model) {
         if (!isLoggedIn()) return redirectIfNotLoggedIn();
 
-       
         List<QuestionCatrgories> categories = questionCategoryRepo.findAll();
         model.addAttribute("categories", categories);
 
-       
-        Question.AnswerType[] answerTypes = Question.AnswerType.values();
+        // Only TEXT and NUMBER
+        Question.AnswerType[] answerTypes = {Question.AnswerType.TEXT, Question.AnswerType.NUMBER};
         model.addAttribute("answerTypes", answerTypes);
 
         return "admin/question";
     }
-    
+
     @PostMapping("/question")
     public String saveQuestions(
             @RequestParam("categoryId") Long categoryId,
             @RequestParam("questions[]") List<String> questions,
             @RequestParam("answerTypes[]") List<String> answerTypes,
+            @RequestParam(value = "rangeStart[]", required = false) List<Integer> rangeStarts,
+            @RequestParam(value = "rangeEnd[]", required = false) List<Integer> rangeEnds,
             RedirectAttributes redirectAttributes) {
 
-        if (!isLoggedIn()) return redirectIfNotLoggedIn();
-
         try {
-            // 1. Fetch selected category
             QuestionCatrgories category = questionCategoryRepo.findById(categoryId)
                     .orElseThrow(() -> new IllegalArgumentException("Invalid category ID"));
 
-            // 2. Validate questions and answerTypes
-            if (questions == null || questions.isEmpty()) {
-                redirectAttributes.addFlashAttribute("msg", "Please add at least one question!");
-                return "redirect:/admin/question";
-            }
-
-            if (questions.size() != answerTypes.size()) {
-                redirectAttributes.addFlashAttribute("msg", "Mismatch in questions and answer types!");
-                return "redirect:/admin/question";
-            }
-
-            // 3. Save each question
             for (int i = 0; i < questions.size(); i++) {
                 String text = questions.get(i).trim();
-                if (!text.isEmpty()) {
-                    Question.AnswerType type;
-                    try {
-                        type = Question.AnswerType.valueOf(answerTypes.get(i));
-                    } catch (IllegalArgumentException e) {
-                        type = Question.AnswerType.TEXT; // default to TEXT if invalid
-                    }
+                Question.AnswerType type = Question.AnswerType.valueOf(answerTypes.get(i));
+                Question q = new Question(category, text, type);
 
-                    Question question = new Question(category, text, type);
-                    questionRepo.save(question);
+                if (type == Question.AnswerType.NUMBER) {
+                    q.setRangeStart(rangeStarts.get(i));
+                    q.setRangeEnd(rangeEnds.get(i));
                 }
+
+                questionRepo.save(q);
             }
 
             redirectAttributes.addFlashAttribute("msg", "Questions saved successfully!");
         } catch (Exception e) {
             e.printStackTrace();
-            redirectAttributes.addFlashAttribute("msg", "Something went wrong while saving questions!");
+            redirectAttributes.addFlashAttribute("msg", "Error saving questions!");
         }
 
         return "redirect:/admin/question";
     }
-
 
     
     
@@ -542,7 +566,32 @@ public String saveFeedback(@RequestParam Long programId,
     }
 
 
+    @GetMapping("/category/details/{id}")
+    public String categoryDetail(@PathVariable Long id, Model model) {
 
+        // 1️⃣ FeedbackQuestionCategory से category निकालो
+        QuestionCatrgories category = FeedbackQuestionCategoryRepo.findCategoryByFqcId(id);
+
+        if (category == null) {
+            throw new IllegalArgumentException("Invalid FeedbackQuestionCategory id: " + id);
+        }
+
+        // 2️⃣ Category id से questions लाओ
+        List<Question> questions = questionRepo.findByCategoryId(category.getId());
+
+        // 3️⃣ Feedback id निकालो (Back button के लिए)
+        Long feedbackId = FeedbackQuestionCategoryRepo.findById(id)
+                               .map(FeedbackQuestionCategory::getFeedback)
+                               .map(Feedback::getId)
+                               .orElse(null);
+
+        // 4️⃣ Model में डालो
+        model.addAttribute("category", category);
+        model.addAttribute("questions", questions);
+        model.addAttribute("feedbackId", feedbackId);  // ✅ यहाँ add करना है
+
+        return "admin/categoryDetail";
+    }
 
 
 }
