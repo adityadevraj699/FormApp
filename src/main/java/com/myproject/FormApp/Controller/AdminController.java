@@ -336,28 +336,48 @@ public class AdminController {
                                     @RequestParam Long programId,
                                     RedirectAttributes redirectAttributes) {
 
-    	if (!isLoggedIn()) return redirectIfNotLoggedIn();
+        if (!isLoggedIn()) return redirectIfNotLoggedIn();
+
         Teacher teacher = teacherRepository.findById(teacherId).orElseThrow();
         Program program = programRepo.findById(programId).orElseThrow();
 
+        // check if program already assigned
+        List<TeacherAssign> existingAssigns = teacherAssignRepo.findByProgramId(programId);
+
+        if (!existingAssigns.isEmpty()) {
+            TeacherAssign already = existingAssigns.get(0);
+            redirectAttributes.addFlashAttribute("serverMessage",
+                    "Program '" + program.getTrainingProgram() + "' is already assigned to Teacher '"
+                            + already.getTeacher().getName() + "'.");
+            return "redirect:/admin/teacherManage";
+        }
+
+        // create new assign
         TeacherAssign assign = new TeacherAssign();
         assign.setTeacher(teacher);
         assign.setProgram(program);
         teacherAssignRepo.save(assign);
 
         // Prepare program details
-        String programDetails = "Program Name: " + program.getTrainingProgram() 
-                              + "\nDuration: " + program.getStartDate()  // example field
-                              + "\nDescription: " + program.getEndDate(); // example field
+        String programDetails = "Program Name: " + program.getTrainingProgram()
+                              + "\nDuration: " + program.getStartDate()
+                              + "\nDescription: " + program.getEndDate();
 
         // Send email
-        emailService.sendTeacherProgramAssignment(teacher.getEmail(), teacher.getName(), program.getTrainingProgram(), programDetails);
+        emailService.sendTeacherProgramAssignment(
+                teacher.getEmail(),
+                teacher.getName(),
+                program.getTrainingProgram(),
+                programDetails
+        );
 
         redirectAttributes.addFlashAttribute("serverMessage",
-            "Teacher " + teacher.getName() + " assigned to Program " + program.getTrainingProgram() + " successfully!");
+                "Teacher " + teacher.getName() + " assigned to Program " + program.getTrainingProgram() + " successfully!");
 
         return "redirect:/admin/teacherManage";
     }
+
+
 
 
     @GetMapping("/feedbackPhase")

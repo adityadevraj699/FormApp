@@ -1,0 +1,26 @@
+<html th:replace="~{Student/Studentbase::layout(~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<body>
+<main class="container my-4">
+
+    <h1 class="mb-4">All Programs</h1>
+
+    <div class="row g-4">
+        <!-- Loop over each program -->
+        <div class="col-md-4" th:each="assign : ${programList}">
+            <div class="card h-100 shadow-sm border-primary">
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${assign.program.trainingProgram}">Program Name</h5>
+                    <p class="card-text mb-1"><strong>Teacher:</strong> <span th:text="${assign.teacher.name}">Teacher Name</span></p>
+                    <p class="card-text mb-1"><strong>Start Date:</strong> <span th:text="${assign.program.startDate}">2025-09-25</span></p>
+                    <p class="card-text mb-3"><strong>End Date:</strong> <span th:text="${assign.program.endDate}">2025-10-25</span></p>
+                    <a th:href="@{/Student/programDetail/{id}(id=${assign.program.id})}" class="btn btn-primary w-100">
+                        Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+</body>
+</html>

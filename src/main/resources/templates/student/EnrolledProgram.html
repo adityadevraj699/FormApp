@@ -1,0 +1,31 @@
+<html th:replace="~{Student/Studentbase::layout(~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<body>
+<main class="container my-4">
+
+    <h2 class="mb-4">My Enrolled Programs</h2>
+
+    <div th:if="${#lists.isEmpty(enrolledPrograms)}">
+        <p class="text-center text-muted">No programs enrolled yet.</p>
+    </div>
+
+    <div class="row g-4" th:if="${!#lists.isEmpty(enrolledPrograms)}">
+        <div class="col-md-4" th:each="assign : ${enrolledPrograms}">
+            <div class="card h-100 shadow-sm border-success">
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${assign.program.trainingProgram}">Program Name</h5>
+                    <p class="card-text mb-1"><strong>Start Date:</strong> <span th:text="${assign.program.startDate}">2025-09-25</span></p>
+                    <p class="card-text mb-3"><strong>End Date:</strong> <span th:text="${assign.program.endDate}">2025-10-25</span></p>
+
+                    <!-- Enrolled Button (green) -->
+                    <a th:href="@{/Student/programDetail/{id}(id=${assign.program.id})}" 
+                       class="btn btn-success w-100">
+                        Enrolled
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+</body>
+</html>

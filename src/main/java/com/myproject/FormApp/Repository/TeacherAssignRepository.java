@@ -16,5 +16,7 @@ public interface TeacherAssignRepository extends JpaRepository<TeacherAssign, Lo
 
     // Optional: किसी teacher के assigned programs देखने के लिए
     List<TeacherAssign> findByTeacherId(Long teacherId);
+
+	List<TeacherAssign> findByProgramId(Long programId);
 }
 

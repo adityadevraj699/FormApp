@@ -54,7 +54,7 @@ public class MainController {
                 if(st.getPassword().equals(password)) {
                     if(st.getStatus() == Student.Status.APPROVED) {
                         session.setAttribute("loggedInStudent", st);
-                        return "redirect:/student/dashboard";
+                        return "redirect:/Student/Dashboard";
                     } else if(st.getStatus() == Student.Status.PENDING) {
                         attr.addFlashAttribute("msg","Login Pending, Wait for Approval!");
                     } else {
@@ -67,7 +67,7 @@ public class MainController {
                 if(t.getPassword().equals(password)) {
                     if(t.getStatus() == Teacher.Status.APPROVED) {
                         session.setAttribute("loggedInTeacher", t);
-                        return "redirect:/teacher/dashboard";
+                        return "redirect:/Teacher/Dashboard";
                     } else if(t.getStatus() == Teacher.Status.PENDING) {
                         attr.addFlashAttribute("msg","Login Pending, Wait for Approval!");
                     } else {
