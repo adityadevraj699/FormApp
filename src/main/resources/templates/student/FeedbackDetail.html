@@ -1,0 +1,68 @@
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{Student/Studentbase::layout(~{::main})}">
+<body class="bg-light">
+<main>
+<div class="container my-5">
+    <div class="card shadow-sm p-4">
+        <h2 class="mb-4" th:text="${feedback.program.trainingProgram}"></h2>
+        <form th:action="@{'/Student/feedbackDetail/' + ${feedback.id}}" method="post">
+            
+            <div th:each="fqc : ${feedback.feedbackQuestionCategories}" class="mb-4">
+                <h4 class="text-primary mb-3" th:text="${fqc.questionCategory.categoryName}"></h4>
+
+                <div th:each="q : ${fqc.questionCategory.questions}" class="mb-3">
+                    <label class="form-label fw-semibold" th:text="${q.questionText}"></label>
+
+                    <!-- Answer type TEXT -->
+                    <div th:if="${q.answerType.name() == 'TEXT'}">
+                        <input type="text" class="form-control" th:name="${'q_' + q.id}" required/>
+                    </div>
+
+                    <!-- Answer type NUMBER -->
+                    <div th:if="${q.answerType.name() == 'NUMBER' and q.rangeStart != null and q.rangeEnd != null}">
+                        <select class="form-select" th:name="${'q_' + q.id}">
+                            <option th:each="i : ${#numbers.sequence(q.rangeStart, q.rangeEnd)}"
+                                    th:value="${i}" th:text="${i}"></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit Feedback</button>
+        </form>
+    </div>
+</div>
+
+<!-- Hidden input for server message -->
+<input type="hidden" id="serverMessage" th:value="${serverMessage}"/>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.8.2/dist/sweetalert2.all.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const serverMessage = document.getElementById("serverMessage")?.value;
+
+  if (serverMessage && serverMessage.trim() !== "") {
+    const lowerMsg = serverMessage.toLowerCase();
+    const isError = lowerMsg.includes('invalid') || 
+                    lowerMsg.includes('disabled') || 
+                    lowerMsg.includes('not found');
+
+    Swal.fire({
+      title: 'Notification',
+      text: serverMessage,
+      icon: isError ? 'error' : 'success',
+      confirmButtonColor: '#2575fc',
+      background: '#f9f9f9',
+      color: '#333',
+      timer: 4000,
+      timerProgressBar: true
+    });
+  }
+});
+</script>
+</main>
+</body>
+</html>

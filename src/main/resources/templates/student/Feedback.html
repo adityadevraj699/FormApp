@@ -1,7 +1,64 @@
 <html th:replace="~{Student/Studentbase::layout(~{::main})}">
 <body>
-<main>
-<h1> This Is Student Total Feedback</h1>
+<main class="container my-4">
+    <h2 class="mb-3">My Feedbacks</h2>
+
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>Program</th>
+            <th>Phase</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="feedback : ${feedbacks}">
+            <td th:text="${feedback.program.trainingProgram}"></td>
+            <td th:text="${feedback.feedbackPhase.phaseName}"></td>
+            <td th:text="${feedback.startDate}"></td>
+            <td th:text="${feedback.endDate}"></td>
+            <td>
+                <a th:href="@{/Student/feedbackDetail/{id}(id=${feedback.id})}" 
+                   class="btn btn-primary btn-sm">Details</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    
+    <!-- somewhere inside <body>, ideally at top -->
+<input type="hidden" id="serverMessage" th:value="${serverMessage}" />
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const serverMessage = document.getElementById("serverMessage")?.value;
+
+  if (serverMessage && serverMessage.trim() !== "") {
+    const lowerMsg = serverMessage.toLowerCase();
+
+    // Error ya success detect
+    const isError = lowerMsg.includes('invalid') || 
+                    lowerMsg.includes('disabled') || 
+                    lowerMsg.includes('not found') ||
+                    lowerMsg.includes('expired!') ||
+                    lowerMsg.includes('already submitted');
+
+    Swal.fire({
+      title: 'Notification',
+      text: serverMessage,
+      icon: isError ? 'error' : 'success',
+      confirmButtonColor: '#2575fc',
+      background: '#f9f9f9',
+      color: '#333',
+      timer: 4000,
+      timerProgressBar: true
+    });
+  }
+});
+</script>
+    
 </main>
 </body>
 </html>

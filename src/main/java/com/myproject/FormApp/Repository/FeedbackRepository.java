@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import com.myproject.FormApp.Model.Feedback;
+import com.myproject.FormApp.Model.Program;
 
 public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
 
@@ -14,6 +15,8 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
 		       "LEFT JOIN FETCH fqc.questionCategory qc " +
 		       "LEFT JOIN FETCH qc.questions")
 		List<Feedback> findAllWithCategoriesAndQuestions();
+
+	List<Feedback> findByProgramIn(List<Program> programs);
 
 
 }
