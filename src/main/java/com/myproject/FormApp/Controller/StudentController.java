@@ -10,12 +10,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.myproject.FormApp.Model.CurriculumTopic;
 import com.myproject.FormApp.Model.EnrolledProgram;
 import com.myproject.FormApp.Model.Feedback;
@@ -35,10 +39,12 @@ import com.myproject.FormApp.Repository.ProgramRepository;
 import com.myproject.FormApp.Repository.QuestionCatrgoriesRepository;
 import com.myproject.FormApp.Repository.QuestionRepository;
 import com.myproject.FormApp.Repository.StudentFeedbackAnswerRepository;
+import com.myproject.FormApp.Repository.StudentsRepository;
 import com.myproject.FormApp.Repository.TeacherAssignRepository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 @Controller
@@ -83,16 +89,49 @@ public class StudentController {
     private StudentFeedbackAnswerRepository studentFeedbackAnswerRepo;
     
     
+    @Autowired
+    private StudentsRepository studentRepo;
+    
+    
+    public StudentController(Cloudinary cloudinary) {
+        this.cloudinary = cloudinary;
+    }
+    
+    @Autowired
+    private final Cloudinary cloudinary;
+    
     @PersistenceContext
     private EntityManager entityManager;
 	
-	@GetMapping("/Dashboard")
-	public String showDashboard() {
-		if(session.getAttribute("loggedInStudent") == null) {
-			return "redirect:/";
-		}
-		return "Student/Dashboard";
-	}
+    @GetMapping("/Dashboard")
+    public String showDashboard(Model model) {
+        Student student = (Student) session.getAttribute("loggedInStudent");
+        if(student == null) return "redirect:/";
+
+        // 1️⃣ Enrolled Programs
+        List<EnrolledProgram> enrolledPrograms = enrolledProgramRepo.findByStudentId(student.getId());
+        model.addAttribute("enrolledPrograms", enrolledPrograms);
+
+        // 2️⃣ Pending Feedbacks
+        List<Long> answeredFeedbackIds = studentFeedbackAnswerRepo.findAnsweredFeedbackIdsByStudent(student.getId());
+        List<Feedback> pendingFeedbacks = answeredFeedbackIds.isEmpty()
+            ? feedRepo.findByProgramIn(enrolledPrograms.stream().map(EnrolledProgram::getProgram).toList())
+            : feedRepo.findByProgramInAndIdNotIn(
+                enrolledPrograms.stream().map(EnrolledProgram::getProgram).toList(),
+                answeredFeedbackIds
+            );
+        model.addAttribute("pendingFeedbacks", pendingFeedbacks);
+
+        // 3️⃣ Recent Programs (last 5)
+        List<EnrolledProgram> recentPrograms = enrolledPrograms.stream()
+                .sorted((a,b) -> b.getRegDate().compareTo(a.getRegDate()))
+                .limit(5)
+                .toList();
+        model.addAttribute("recentPrograms", recentPrograms);
+
+        return "Student/Dashboard";
+    }
+
 	
 	@GetMapping("/TotalProgram")
 	public String showTotalProgram(Model model) {
@@ -191,31 +230,39 @@ public class StudentController {
 	}
 
 	
-	// Feedback list page
-    @GetMapping("/Feedback")
-    public String showFeedback(Model model) {
-        Student loggedInStudent = (Student) session.getAttribute("loggedInStudent");
-        if (loggedInStudent == null) {
-            return "redirect:/"; // अगर login नहीं किया
-        }
+	@GetMapping("/Feedback")
+	public String showFeedback(Model model) {
+	    Student loggedInStudent = (Student) session.getAttribute("loggedInStudent");
+	    if (loggedInStudent == null) {
+	        return "redirect:/"; // अगर login नहीं किया
+	    }
 
-        // Student के enrolled programs लाओ
-        List<EnrolledProgram> enrolledPrograms =
-        		enrolledProgramRepo.findByStudentId(loggedInStudent.getId());
+	    // Student के enrolled programs लाओ
+	    List<EnrolledProgram> enrolledPrograms =
+	            enrolledProgramRepo.findByStudentId(loggedInStudent.getId());
 
-        // Program list निकालो
-        List<Program> programs = enrolledPrograms.stream()
-                .map(EnrolledProgram::getProgram)
-                .toList();
+	    // Program list निकालो
+	    List<Program> programs = enrolledPrograms.stream()
+	            .map(EnrolledProgram::getProgram)
+	            .toList();
 
-        // Feedbacks सिर्फ उन्हीं programs के लाओ
-        List<Feedback> feedbacks = programs.isEmpty()
-                ? List.of()
-                : feedRepo.findByProgramIn(programs);
+	    if (programs.isEmpty()) {
+	        model.addAttribute("feedbacks", List.of());
+	        return "Student/Feedback";
+	    }
 
-        model.addAttribute("feedbacks", feedbacks);
-        return "Student/Feedback";
-    }
+	    // 1️⃣ student ne kaunse feedbacks pehle hi de diye hain
+	    List<Long> answeredFeedbackIds = studentFeedbackAnswerRepo.findAnsweredFeedbackIdsByStudent(loggedInStudent.getId());
+
+	    // 2️⃣ ab enrolled programs ke feedbacks lao (excluding answered ones)
+	    List<Feedback> feedbacks = answeredFeedbackIds.isEmpty()
+	            ? feedRepo.findByProgramIn(programs)
+	            : feedRepo.findByProgramInAndIdNotIn(programs, answeredFeedbackIds);
+
+	    model.addAttribute("feedbacks", feedbacks);
+	    return "Student/Feedback";
+	}
+
     
     
     @GetMapping("/feedbackDetail/{id}")
@@ -303,14 +350,138 @@ public class StudentController {
 
 
     
-	@GetMapping("/HistoryFeedback")
-	public String showHistoryFeedback() {
-		if(session.getAttribute("loggedInStudent") == null) {
-			return "redirect:/";
-		}
-		return "Student/HistoryFeedback";
-	}
-	
+    @GetMapping("/HistoryFeedback")
+    public String showHistoryFeedback(Model model) {
+        Student loggedInStudent = (Student) session.getAttribute("loggedInStudent");
+        if (loggedInStudent == null) {
+            return "redirect:/"; // agar login nahi hai
+        }
+
+        // Student ke diye gaye feedbacks
+        List<Feedback> filledFeedbacks = studentFeedbackAnswerRepo.findDistinctFeedbacksByStudentId(
+                loggedInStudent.getId()
+        );
+
+        model.addAttribute("feedbacks", filledFeedbacks);
+        return "Student/HistoryFeedback";
+    }
+    
+    
+    
+    @GetMapping("/viewProfile")
+    public String showProfile(Model model) {
+        Student student = (Student) session.getAttribute("loggedInStudent");
+        if (student == null) {
+            return "redirect:/";
+        }
+        
+        model.addAttribute("student", student);
+        return "Student/viewProfile"; // matches folder and file name
+    }
+
+    
+    
+ // ✅ GET mapping to show the change password page
+    @GetMapping("/changePassword")
+    public String showChangePassword() {
+        if(session.getAttribute("loggedInStudent") == null) {
+            return "redirect:/";
+        }
+        return "Student/ChangePassword"; // Must match your Thymeleaf template path
+    }
+
+    // ✅ POST mapping to handle the form submission
+    @PostMapping("/changePassword")
+    public String changePassword(RedirectAttributes attributes, HttpServletRequest request) {
+        String oldPassword = request.getParameter("oldPassword");
+        String newPassword = request.getParameter("newPassword");
+        String confirmPassword = request.getParameter("confirmPassword");
+
+        Student student = (Student) session.getAttribute("loggedInStudent");
+        if(student == null) {
+            return "redirect:/";
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            attributes.addFlashAttribute("msg", "New Password and Confirm Password are not same.");
+            return "redirect:/Student/changePassword";
+        }
+
+        if (oldPassword.equals(student.getPassword())) {
+            if(oldPassword.equals(newPassword)) {
+                attributes.addFlashAttribute("msg", "New Password cannot be same as Old Password.");
+                return "redirect:/Student/changePassword";
+            }
+
+            student.setPassword(confirmPassword);
+            studentRepo.save(student);
+            session.invalidate();
+            attributes.addFlashAttribute("msg", "Password Successfully Changed. Please login again.");
+            return "redirect:/";
+        } else {
+            attributes.addFlashAttribute("msg", "Invalid Old Password!!!");
+            return "redirect:/Student/changePassword"; 
+        }
+    }
+
+
+    
+    
+    @GetMapping("/EditProfile")
+    public String editProfile(Model model, HttpSession session) {
+        Student student = (Student) session.getAttribute("loggedInStudent");
+        if (student == null) {
+            return "redirect:/";
+        }
+        model.addAttribute("student", student);
+        return "Student/editProfile";
+    }
+
+    @PostMapping("/EditProfile")
+    public String updateProfile(@ModelAttribute("student") Student updatedStudent,
+                                @RequestParam("profileImageFile") MultipartFile file,
+                                HttpSession session,
+                                RedirectAttributes redirectAttrs) {
+        Student student = (Student) session.getAttribute("loggedInStudent");
+        if (student == null) {
+            return "redirect:/";
+        }
+
+        // Email को unchanged रखें
+        updatedStudent.setEmail(student.getEmail());
+
+        // Profile Image Upload (अगर file दिया है)
+        try {
+            if (file != null && !file.isEmpty()) {
+                Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
+                        ObjectUtils.asMap("folder", "student_profiles"));
+                String imageUrl = (String) uploadResult.get("secure_url");
+                student.setProfileImage(imageUrl);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttrs.addFlashAttribute("error", "Image upload failed!");
+        }
+
+        // बाकी fields update
+        student.setName(updatedStudent.getName());
+        student.setContactNo(updatedStudent.getContactNo());
+        student.setBranch(updatedStudent.getBranch());
+        student.setYear(updatedStudent.getYear());
+        student.setFatherName(updatedStudent.getFatherName());
+        student.setMotherName(updatedStudent.getMotherName());
+        student.setGender(updatedStudent.getGender());
+        student.setAddress(updatedStudent.getAddress());
+
+        // DB save
+        studentRepo.save(student);
+
+        // session में update
+        session.setAttribute("loggedInStudent", student);
+
+        redirectAttrs.addFlashAttribute("success", "Profile updated successfully!");
+        return "redirect:/Student/viewProfile";
+    }
 	
 	
 }

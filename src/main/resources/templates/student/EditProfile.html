@@ -1,0 +1,111 @@
+<html th:replace="~{Student/Studentbase::layout(~{::main})}">
+<body>
+<main class="container my-5">
+
+       <h2 class="mb-3">Edit Profile</h2>
+
+    <!-- Flash Messages -->
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <form th:action="@{/Student/EditProfile}" method="post" enctype="multipart/form-data" th:object="${student}">
+        <div class="row">
+            <!-- Left Column: Profile Image -->
+            <div class="col-md-4 text-center">
+                <img th:src="${student.profileImage != null ? student.profileImage : '/images/default-avatar.png'}"
+                     alt="Profile Image"
+                     class="img-thumbnail mb-3"
+                     style="width: 200px; height: 200px; object-fit: cover;">
+
+                <input type="file" name="profileImageFile" class="form-control">
+            </div>
+
+            <!-- Right Column: Info -->
+            <div class="col-md-8">
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" th:field="*{name}" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Contact No</label>
+                    <input type="text" th:field="*{contactNo}" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Branch</label>
+                    <input type="text" th:field="*{branch}" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Year</label>
+                    <input type="text" th:field="*{year}" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Father's Name</label>
+                    <input type="text" th:field="*{fatherName}" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Mother's Name</label>
+                    <input type="text" th:field="*{motherName}" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Gender</label>
+                    <select th:field="*{gender}" class="form-select">
+                        <option value="">-- Select --</option>
+                        <option value="Male" th:selected="${student.gender == 'Male'}">Male</option>
+                        <option value="Female" th:selected="${student.gender == 'Female'}">Female</option>
+                        <option value="Other" th:selected="${student.gender == 'Other'}">Other</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Address</label>
+                    <textarea th:field="*{address}" class="form-control" rows="3"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a th:href="@{/Student/viewProfile}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </div>
+    </form>
+</div>
+<!-- Hidden input to pass flash message -->
+<input type="hidden" id="serverMessage" 
+       th:value="${success != null ? success : (error != null ? error : '')}" />
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const serverMessage = document.getElementById("serverMessage")?.value;
+
+  if (serverMessage && serverMessage.trim() !== "") {
+    // Lowercase version for easy keyword matching
+    const lowerMsg = serverMessage.toLowerCase();
+
+    // Error check (keywords)
+    const isError = lowerMsg.includes('invalid') || 
+                    lowerMsg.includes('failed') || 
+                    lowerMsg.includes('error') || 
+                    lowerMsg.includes('not found');
+
+    Swal.fire({
+      title: isError ? 'Error' : 'Success',
+      text: serverMessage,
+      icon: isError ? 'error' : 'success',
+      confirmButtonColor: '#2575fc',
+      background: '#f9f9f9',
+      color: '#333',
+      timer: 4000,
+      timerProgressBar: true
+    });
+  }
+});
+</script>
+
+<link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+</main>
+</body>
+</html>

@@ -1,7 +1,31 @@
 <html th:replace="~{Student/Studentbase::layout(~{::main})}">
 <body>
-<main>
-<h1> This Is Student History Feedback</h1>
+<main class="container mt-4">
+    <h2 class="mb-4 text-center text-primary">Your Submitted Feedbacks</h2>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Program Name</th>
+                <th>Phase Name</th>
+                <th>Feedback Start Date</th>
+                <th>Feedback End Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="fb, iStat : ${feedbacks}">
+                <td th:text="${iStat.index + 1}"></td>
+                <td th:text="${fb.program.trainingProgram}"></td>
+                <td th:text="${fb.feedbackPhase.phaseName}"></td>
+                <td th:text="${fb.startDate}"></td>
+                <td th:text="${fb.endDate}"></td>
+            </tr>
+            <tr th:if="${feedbacks.isEmpty()}">
+                <td colspan="5" class="text-center text-muted">No feedback submitted yet.</td>
+            </tr>
+        </tbody>
+    </table>
 </main>
 </body>
 </html>

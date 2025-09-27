@@ -1,7 +1,128 @@
 <html th:replace="~{Student/Studentbase::layout(~{::main})}">
 <body>
-<main>
-<h1> This Is Student DashBoard</h1>
+<main class="container my-4">
+
+    <!-- Welcome Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Welcome, <span th:text="${session.loggedInStudent.name}">Student</span>!</h2>
+        <a th:href="@{/logout}" class="btn btn-outline-danger">Logout</a>
+    </div>
+
+    <!-- Row 1: Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary h-100 card-hover">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-journal-check summary-icon me-3"></i>
+                    <div>
+                        <h5 class="card-title">Enrolled Programs</h5>
+                        <h3 class="card-text" th:text="${enrolledPrograms.size()}">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-warning h-100 card-hover">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-clipboard-data summary-icon me-3"></i>
+                    <div>
+                        <h5 class="card-title">Pending Feedbacks</h5>
+                        <h3 class="card-text" th:text="${pendingFeedbacks.size()}">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-success h-100 card-hover">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-lightning-charge summary-icon me-3"></i>
+                    <div>
+                        <h5 class="card-title">Recent Programs</h5>
+                        <h3 class="card-text" th:text="${recentPrograms.size()}">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2: Pending Feedbacks -->
+    <h4 class="mb-3">Pending Feedbacks</h4>
+    <div th:if="${pendingFeedbacks.isEmpty()}" class="alert alert-info">
+        No pending feedbacks!
+    </div>
+    <div th:if="${!pendingFeedbacks.isEmpty()}">
+        <ul class="list-group mb-4">
+            <li class="list-group-item d-flex justify-content-between align-items-center list-group-item-action"
+                th:each="fb : ${pendingFeedbacks}">
+                <span th:text="${fb.program.trainingProgram}">Program Name</span>
+                <a th:href="@{/Student/feedbackDetail/{id}(id=${fb.id})}" class="btn btn-sm btn-primary">Submit Feedback</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Row 3: Active Programs -->
+    <h4 class="mb-3">Active Programs</h4>
+    <div class="row g-4">
+        <div class="col-md-4" th:each="ep : ${enrolledPrograms}">
+            <div class="card h-100 card-hover shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title" th:text="${ep.program.trainingProgram}">Program Name</h5>
+                    <p class="card-text mb-2">
+                        <strong>Start:</strong> <span th:text="${ep.program.startDate}">2025-01-01</span><br>
+                        <strong>End:</strong> <span th:text="${ep.program.endDate}">2025-12-31</span>
+                    </p>
+                    <a th:href="@{/Student/programDetail/{id}(id=${ep.program.id})}" 
+                       class="btn btn-outline-success mt-auto w-100">View Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    
+    <!-- Row 4: Tips for Student -->
+<h4 class="mt-5 mb-3">Quick Tips</h4>
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card border-info h-100 shadow-sm card-hover">
+            <div class="card-body">
+                <h5 class="card-title text-info"><i class="bi bi-lightbulb-fill me-2"></i>Enrollment Tips</h5>
+                <ul class="mb-0">
+                    <li>Enroll in programs before the start date to avoid missing sessions.</li>
+                    <li>Check program details before enrolling.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-warning h-100 shadow-sm card-hover">
+            <div class="card-body">
+                <h5 class="card-title text-warning"><i class="bi bi-pencil-square me-2"></i>Feedback Tips</h5>
+                <ul class="mb-0">
+                    <li>Submit feedback on completed modules to help us improve.</li>
+                    <li>View your past feedback under ‘History Feedback’.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+    
+ <style>
+        /* Hover effects for cards */
+        .card-hover:hover {
+            transform: translateY(-5px);
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        /* Summary card icons */
+        .summary-icon {
+            font-size: 2.5rem;
+            opacity: 0.7;
+        }
+    </style>
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </main>
+
+
 </body>
 </html>

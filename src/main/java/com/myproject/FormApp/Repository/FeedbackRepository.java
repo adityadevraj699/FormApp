@@ -18,5 +18,7 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
 
 	List<Feedback> findByProgramIn(List<Program> programs);
 
+	List<Feedback> findByProgramInAndIdNotIn(List<Program> programs, List<Long> answeredFeedbackIds);
+
 
 }

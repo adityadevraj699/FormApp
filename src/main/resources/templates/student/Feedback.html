@@ -1,64 +1,117 @@
 <html th:replace="~{Student/Studentbase::layout(~{::main})}">
 <body>
 <main class="container my-4">
-    <h2 class="mb-3">My Feedbacks</h2>
+    <h2 class="mb-4 text-center text-primary">My Feedbacks</h2>
 
-    <table class="table table-bordered">
-        <thead>
-        <tr>
-            <th>Program</th>
-            <th>Phase</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Action</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="feedback : ${feedbacks}">
-            <td th:text="${feedback.program.trainingProgram}"></td>
-            <td th:text="${feedback.feedbackPhase.phaseName}"></td>
-            <td th:text="${feedback.startDate}"></td>
-            <td th:text="${feedback.endDate}"></td>
-            <td>
-                <a th:href="@{/Student/feedbackDetail/{id}(id=${feedback.id})}" 
-                   class="btn btn-primary btn-sm">Details</a>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-    
-    <!-- somewhere inside <body>, ideally at top -->
-<input type="hidden" id="serverMessage" th:value="${serverMessage}" />
-    
+    <!-- Add FontAwesome in <head> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <div class="row" th:if="${feedbacks != null}">
+        <div class="col-md-4 mb-4" th:each="feedback : ${feedbacks}">
+            <div class="card feedback-card shadow-sm h-100">
+                <div class="card-body position-relative text-white">
+
+                    <!-- Icon Section -->
+                    <div class="icon-circle d-inline-flex align-items-center justify-content-center mb-3">
+                        <i class="fas fa-graduation-cap fa-lg"></i>
+                    </div>
+
+                    <h5 class="card-title fw-bold" th:text="${feedback.program.trainingProgram}"></h5>
+                    <h6 class="card-subtitle mb-2">
+                        <i class="fas fa-layer-group"></i> 
+                        Phase: <span th:text="${feedback.feedbackPhase.phaseName}"></span>
+                    </h6>
+                    <p class="card-text mb-1">
+                        <i class="fas fa-calendar-day"></i>
+                        <strong> Start Date:</strong> <span th:text="${feedback.startDate}"></span>
+                    </p>
+                    <p class="card-text">
+                        <i class="fas fa-calendar-check"></i>
+                        <strong> End Date:</strong> <span th:text="${feedback.endDate}"></span>
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-0 text-end">
+                    <a th:href="@{/Student/feedbackDetail/{id}(id=${feedback.id})}"
+                       class="btn btn-light btn-sm fw-bold">
+                       <i class="fas fa-eye"></i> View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- If no feedbacks -->
+    <div th:if="${feedbacks.isEmpty()}" class="text-center text-muted mt-5">
+        <p>No feedback submitted yet.</p>
+    </div>
+
+    <!-- hidden message from server -->
+    <input type="hidden" id="serverMessage" th:value="${serverMessage}" />
+
+    <!-- SweetAlert2 script -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const serverMessage = document.getElementById("serverMessage")?.value;
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const serverMessage = document.getElementById("serverMessage")?.value;
 
-  if (serverMessage && serverMessage.trim() !== "") {
-    const lowerMsg = serverMessage.toLowerCase();
+      if (serverMessage && serverMessage.trim() !== "") {
+        const lowerMsg = serverMessage.toLowerCase();
+        const isError = lowerMsg.includes('invalid') || 
+                        lowerMsg.includes('disabled') || 
+                        lowerMsg.includes('not found') ||
+                        lowerMsg.includes('expired!') ||
+                        lowerMsg.includes('already submitted');
 
-    // Error ya success detect
-    const isError = lowerMsg.includes('invalid') || 
-                    lowerMsg.includes('disabled') || 
-                    lowerMsg.includes('not found') ||
-                    lowerMsg.includes('expired!') ||
-                    lowerMsg.includes('already submitted');
-
-    Swal.fire({
-      title: 'Notification',
-      text: serverMessage,
-      icon: isError ? 'error' : 'success',
-      confirmButtonColor: '#2575fc',
-      background: '#f9f9f9',
-      color: '#333',
-      timer: 4000,
-      timerProgressBar: true
+        Swal.fire({
+          title: 'Notification',
+          text: serverMessage,
+          icon: isError ? 'error' : 'success',
+          confirmButtonColor: '#2575fc',
+          background: '#f9f9f9',
+          color: '#333',
+          timer: 4000,
+          timerProgressBar: true
+        });
+      }
     });
-  }
-});
-</script>
-    
+    </script>
+
+   <!-- Custom CSS -->
+<style>
+.feedback-card {
+    border-radius: 15px;
+    /* Lightened gradient: softer blue → lighter purple */
+    background: linear-gradient(135deg, rgba(37, 117, 252, 0.85), rgba(106, 17, 203, 0.85));
+    color: #fff;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feedback-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.icon-circle {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15); /* lighter than before */
+    font-size: 22px;
+    color: #fff;
+}
+
+.card-footer .btn {
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.card-footer .btn:hover {
+    background-color: #fff;
+    color: #2575fc;
+    transform: scale(1.05);
+}
+</style>
+
 </main>
 </body>
 </html>

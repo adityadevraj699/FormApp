@@ -103,14 +103,24 @@ public class AdminController {
     public String showDashboard(Model model) {
         if (!isLoggedIn()) return redirectIfNotLoggedIn();
 
-        // DB से सभी TeacherAssign records लाओ
+        // Teacher Assignments
         List<TeacherAssign> programList = teacherAssignRepo.findAll();
-
-        // Model में डालो
         model.addAttribute("programList", programList);
 
-        return "admin/Dashboard"; // Thymeleaf template
+        // Quick Stats
+        long totalStudents = studentRepository.count();
+        long approvedTeachers = teacherRepository.findByStatus(Teacher.Status.APPROVED).size();
+        long activeFeedbacks = feedRepo.findAll().stream()
+                .filter(f -> !f.getStartDate().isAfter(LocalDate.now()) && !f.getEndDate().isBefore(LocalDate.now()))
+                .count();
+
+        model.addAttribute("totalStudents", totalStudents);
+        model.addAttribute("approvedTeachers", approvedTeachers);
+        model.addAttribute("activeFeedbacks", activeFeedbacks);
+
+        return "admin/Dashboard";
     }
+
 
     
     @GetMapping("/programDetail/{id}")

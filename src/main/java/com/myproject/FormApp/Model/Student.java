@@ -16,8 +16,19 @@ public class Student {
 
     @Column(nullable = false)
     private String name;
+    
+    // Add this for profile image
+    private String profileImage;
+    
 
-    private String fatherName;
+    public String getProfileImage() {
+		return profileImage;
+	}
+
+	public void setProfileImage(String profileImage) {
+		this.profileImage = profileImage;
+	}
+	private String fatherName;
     private String motherName;
     private String gender;
     private String address;
