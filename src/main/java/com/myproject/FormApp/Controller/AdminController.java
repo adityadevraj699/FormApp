@@ -15,6 +15,7 @@ import com.myproject.FormApp.Model.Student;
 import com.myproject.FormApp.Model.Teacher;
 import com.myproject.FormApp.Model.Teacher.Status;
 import com.myproject.FormApp.Model.TeacherAssign;
+import com.myproject.FormApp.Repository.AdminRepository;
 import com.myproject.FormApp.Repository.CurriculumTopicRepository;
 import com.myproject.FormApp.Repository.FeedBackPhaseRepository;
 import com.myproject.FormApp.Repository.FeedbackQuestionCategoryRepository;
@@ -80,6 +81,9 @@ public class AdminController {
     
     @Autowired
     private FeedbackQuestionCategoryRepository FeedbackQuestionCategoryRepo;
+    
+    @Autowired
+    private AdminRepository adminRepo;
     
 
 
@@ -623,5 +627,46 @@ public String saveFeedback(@RequestParam Long programId,
         return "admin/categoryDetail";
     }
 
+    
+    
+    @GetMapping("/ChangePassword")
+    public String showChangePassword() {
+    	return "/admin/ChangePassword";
+    }
+    
+    
+    
+    @PostMapping("/ChangePassword")
+    public String changePassword(RedirectAttributes attributes, HttpServletRequest request) {
+        String oldPassword = request.getParameter("oldPassword");
+        String newPassword = request.getParameter("newPassword");
+        String confirmPassword = request.getParameter("confirmPassword");
+
+        Admin admin = (Admin) session.getAttribute("loggedInAdmin");
+        if(admin == null) {
+            return "redirect:/";
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            attributes.addFlashAttribute("msg", "New Password and Confirm Password are not same.");
+            return "redirect:/admin/ChangePassword";
+        }
+
+        if (oldPassword.equals(admin.getPassword())) {
+            if(oldPassword.equals(newPassword)) {
+                attributes.addFlashAttribute("msg", "New Password cannot be same as Old Password.");
+                return "redirect:/admin/ChangePassword";
+            }
+
+            admin.setPassword(confirmPassword);
+            adminRepo.save(admin);
+            session.invalidate();
+            attributes.addFlashAttribute("msg", "Password Successfully Changed. Please login again.");
+            return "redirect:/";
+        } else {
+            attributes.addFlashAttribute("msg", "Invalid Old Password!!!");
+            return "redirect:/admin/ChangePassword"; 
+        }
+    }
 
 }
