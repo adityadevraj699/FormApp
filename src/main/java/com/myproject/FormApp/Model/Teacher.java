@@ -31,8 +31,18 @@ public class Teacher {
     private String designation;
     private String qualification;
     private int experience; // years
+    
+    private String profileImage;
 
-    private LocalDateTime regDate;
+    public String getProfileImage() {
+		return profileImage;
+	}
+
+	public void setProfileImage(String profileImage) {
+		this.profileImage = profileImage;
+	}
+
+	private LocalDateTime regDate;
 
     @Enumerated(EnumType.STRING)
     private Role role;

@@ -1,0 +1,105 @@
+<html th:replace="~{Teacher/Teacherbase::layout(~{::main})}">
+<body>
+<main class="container my-5">
+
+    <h2 class="mb-3">Edit Profile</h2>
+
+    <!-- Flash Messages -->
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <form th:action="@{/Teacher/EditProfile}" method="post" enctype="multipart/form-data" th:object="${teacher}">
+        <div class="row">
+            <!-- Left Column: Profile Image -->
+            <div class="col-md-4 text-center">
+                <img th:src="${teacher.profileImage != null ? teacher.profileImage : '/images/default-avatar.png'}"
+                     alt="Profile Image"
+                     class="img-thumbnail mb-3"
+                     style="width: 200px; height: 200px; object-fit: cover;">
+
+                <input type="file" name="profileImageFile" class="form-control">
+            </div>
+
+            <!-- Right Column: Info -->
+            <div class="col-md-8">
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" th:field="*{name}" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Contact No</label>
+                    <input type="text" th:field="*{contactNo}" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Department</label>
+                    <input type="text" th:field="*{department}" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Designation</label>
+                    <input type="text" th:field="*{designation}" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Qualification</label>
+                    <input type="text" th:field="*{qualification}" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Experience (Years)</label>
+                    <input type="number" th:field="*{experience}" class="form-control" min="0">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Gender</label>
+                    <select th:field="*{gender}" class="form-select">
+                        <option value="">-- Select --</option>
+                        <option value="Male" th:selected="${teacher.gender == 'Male'}">Male</option>
+                        <option value="Female" th:selected="${teacher.gender == 'Female'}">Female</option>
+                        <option value="Other" th:selected="${teacher.gender == 'Other'}">Other</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Address</label>
+                    <textarea th:field="*{address}" class="form-control" rows="3"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a th:href="@{/Teacher/ViewProfile}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Flash message (SweetAlert) -->
+    <input type="hidden" id="serverMessage" 
+           th:value="${success != null ? success : (error != null ? error : '')}" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const serverMessage = document.getElementById("serverMessage")?.value;
+      if (serverMessage && serverMessage.trim() !== "") {
+        const lowerMsg = serverMessage.toLowerCase();
+        const isError = lowerMsg.includes('invalid') || 
+                        lowerMsg.includes('failed') || 
+                        lowerMsg.includes('error') || 
+                        lowerMsg.includes('not found');
+        Swal.fire({
+          title: isError ? 'Error' : 'Success',
+          text: serverMessage,
+          icon: isError ? 'error' : 'success',
+          confirmButtonColor: '#2575fc',
+          background: '#f9f9f9',
+          color: '#333',
+          timer: 4000,
+          timerProgressBar: true
+        });
+      }
+    });
+    </script>
+
+</main>
+</body>
+</html>

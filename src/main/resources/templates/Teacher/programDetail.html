@@ -68,6 +68,40 @@
             </tr>
         </tbody>
     </table>
+    
+    
+    <h4>Enrolled Students (Total: <span th:text="${enrolledCount}"></span>)</h4>
+    
+    
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Roll No</th>
+            <th>Name</th>
+            <th>Branch</th>
+            <th>Year</th>
+            <th>Contact</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr th:each="student : ${enrolledStudents}">
+            <td th:text="${student.rollNo}"></td>
+            <td>
+                <img th:src="${student.profileImage != null} ? ${student.profileImage} : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'"
+                     alt="profile" width="32" height="32" class="rounded-circle me-1" />
+                <span th:text="${student.name}"></span>
+            </td>
+            <td th:text="${student.branch}"></td>
+            <td th:text="${student.year}"></td>
+            <td th:text="${student.contactNo}"></td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(enrolledStudents)}">
+            <td colspan="5" class="text-center">No students enrolled in this program yet.</td>
+        </tr>
+    </tbody>
+</table>
+    
+    
 
 </main>
 </body>

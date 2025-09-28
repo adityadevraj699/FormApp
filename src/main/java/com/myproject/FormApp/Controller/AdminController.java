@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myproject.FormApp.Model.Admin;
 import com.myproject.FormApp.Model.CurriculumTopic;
+import com.myproject.FormApp.Model.EnrolledProgram;
 import com.myproject.FormApp.Model.FeedBackPhase;
 import com.myproject.FormApp.Model.Feedback;
 import com.myproject.FormApp.Model.FeedbackQuestionCategory;
@@ -17,6 +18,7 @@ import com.myproject.FormApp.Model.Teacher.Status;
 import com.myproject.FormApp.Model.TeacherAssign;
 import com.myproject.FormApp.Repository.AdminRepository;
 import com.myproject.FormApp.Repository.CurriculumTopicRepository;
+import com.myproject.FormApp.Repository.EnrolledProgramRepository;
 import com.myproject.FormApp.Repository.FeedBackPhaseRepository;
 import com.myproject.FormApp.Repository.FeedbackQuestionCategoryRepository;
 import com.myproject.FormApp.Repository.FeedbackRepository;
@@ -85,6 +87,9 @@ public class AdminController {
     @Autowired
     private AdminRepository adminRepo;
     
+    @Autowired
+    private EnrolledProgramRepository enrolledProgramRepo;
+    
 
 
     public AdminController(StudentsRepository studentRepository, TeacherRepository teacherRepository, EmailService emailService) {
@@ -135,7 +140,6 @@ public class AdminController {
 
         List<Module> modules = moduleRepo.findByProgramId(id);
 
-      
         Map<Long, List<CurriculumTopic>> moduleTopicsMap = new HashMap<>();
         for (Module module : modules) {
             List<CurriculumTopic> topics = curriculumTopicRepo.findByModuleId(module.getId());
@@ -144,14 +148,19 @@ public class AdminController {
 
         List<TeacherAssign> teacherAssignments = teacherAssignRepo.findAllByProgramId(id);
 
+        // Enrolled students
+        List<EnrolledProgram> enrolledStudents = enrolledProgramRepo.findByProgramId(id);
+        long enrolledCount = enrolledProgramRepo.countByProgramId(id);
+
         model.addAttribute("program", program);
         model.addAttribute("modules", modules);
         model.addAttribute("teacherAssignments", teacherAssignments);
         model.addAttribute("moduleTopicsMap", moduleTopicsMap);
+        model.addAttribute("enrolledStudents", enrolledStudents);
+        model.addAttribute("enrolledCount", enrolledCount);
 
         return "admin/programDetail";
     }
-
 
 
 

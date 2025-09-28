@@ -16,4 +16,6 @@ public interface EnrolledProgramRepository extends JpaRepository<EnrolledProgram
 
 	long countByProgramId(Long id);
 
+	List<EnrolledProgram> findByProgramId(Long id);
+
 }
