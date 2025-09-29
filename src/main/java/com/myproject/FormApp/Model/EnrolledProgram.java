@@ -23,6 +23,20 @@ public class EnrolledProgram {
     private Program program;
     
     private LocalDateTime regDate;
+    
+    @Enumerated(EnumType.STRING)
+    private ProgramStatus status;
+    
+    public ProgramStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(ProgramStatus status) {
+		this.status = status;
+	}
+	public enum ProgramStatus{
+    	PENDING, APPROVED
+    }
 
     public LocalDateTime getRegDate() {
 		return regDate;

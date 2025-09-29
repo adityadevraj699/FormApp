@@ -22,6 +22,7 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.myproject.FormApp.Model.CurriculumTopic;
 import com.myproject.FormApp.Model.EnrolledProgram;
+import com.myproject.FormApp.Model.EnrolledProgram.ProgramStatus;
 import com.myproject.FormApp.Model.Feedback;
 import com.myproject.FormApp.Model.Module;
 import com.myproject.FormApp.Model.Program;
@@ -200,6 +201,7 @@ public class StudentController {
 	            EnrolledProgram ep = new EnrolledProgram();
 	            ep.setStudent(student);
 	            ep.setProgram(program);
+	            ep.setStatus(ProgramStatus.PENDING);
 	            ep.setRegDate(LocalDateTime.now());
 	            enrolledProgramRepo.save(ep);
 	            redirectAttributes.addFlashAttribute("serverMessage", 

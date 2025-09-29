@@ -18,5 +18,7 @@ public interface TeacherAssignRepository extends JpaRepository<TeacherAssign, Lo
     List<TeacherAssign> findByTeacherId(Long teacherId);
 
 	List<TeacherAssign> findByProgramId(Long programId);
+
+	boolean existsByProgramIdAndTeacherId(Long id, Long id2);
 }
 

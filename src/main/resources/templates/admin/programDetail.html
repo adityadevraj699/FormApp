@@ -91,6 +91,7 @@
               <th>Branch</th>
               <th>Year</th>
               <th>Email</th>
+              <th>Action</th>
           </tr>
       </thead>
       <tbody>
@@ -100,6 +101,25 @@
               <td th:text="${ep.student.branch}"></td>
               <td th:text="${ep.student.year}"></td>
               <td th:text="${ep.student.email}"></td>
+               <!-- Status Button -->
+    <!-- Action buttons -->
+    <td>
+        <!-- Update Status -->
+        <form th:action="@{/admin/updateStatus/{id}(id=${ep.id})}" method="post">
+           <button type="submit"
+            th:text="${ep.status}"
+            th:classappend="${#strings.equals(ep.status.toString(), 'PENDING') 
+                             ? 'btn btn-warning btn-sm' 
+                             : 'btn btn-success btn-sm'}">
+            </button>
+        </form>
+
+        <!-- Delete Enrollment -->
+        <form th:action="@{/admin/deleteEnrollment/{id}(id=${ep.id})}" method="post">
+            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+        </form>
+    </td>
+
           </tr>
       </tbody>
   </table>

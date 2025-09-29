@@ -58,4 +58,17 @@ public class Feedback {
     public void setFeedbackQuestionCategories(List<FeedbackQuestionCategory> feedbackQuestionCategories) {
         this.feedbackQuestionCategories = feedbackQuestionCategories;
     }
+    
+    
+    @OneToMany(mappedBy = "feedback", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StudentFeedbackAnswer> studentFeedbackAnswers;
+
+    public List<StudentFeedbackAnswer> getStudentFeedbackAnswers() {
+        return studentFeedbackAnswers;
+    }
+
+    public void setStudentFeedbackAnswers(List<StudentFeedbackAnswer> studentFeedbackAnswers) {
+        this.studentFeedbackAnswers = studentFeedbackAnswers;
+    }
+
 }

@@ -70,9 +70,8 @@
     </table>
     
     
-    <h4>Enrolled Students (Total: <span th:text="${enrolledCount}"></span>)</h4>
-    
-    
+   <h4>Enrolled Students (Total: <span th:text="${enrolledCount}"></span>)</h4>
+
 <table class="table table-bordered table-hover">
     <thead class="table-dark">
         <tr>
@@ -81,27 +80,52 @@
             <th>Branch</th>
             <th>Year</th>
             <th>Contact</th>
+            <th>Status</th>
+            <th>Action</th>
         </tr>
     </thead>
     <tbody>
-        <tr th:each="student : ${enrolledStudents}">
-            <td th:text="${student.rollNo}"></td>
+        <!-- ✅ EnrolledProgram loop -->
+        <tr th:each="ep : ${enrolledStudents}">
+            <td th:text="${ep.student.rollNo}"></td>
             <td>
-                <img th:src="${student.profileImage != null} ? ${student.profileImage} : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'"
+                <img th:src="${ep.student.profileImage != null} ? ${ep.student.profileImage} : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'"
                      alt="profile" width="32" height="32" class="rounded-circle me-1" />
-                <span th:text="${student.name}"></span>
+                <span th:text="${ep.student.name}"></span>
             </td>
-            <td th:text="${student.branch}"></td>
-            <td th:text="${student.year}"></td>
-            <td th:text="${student.contactNo}"></td>
+            <td th:text="${ep.student.branch}"></td>
+            <td th:text="${ep.student.year}"></td>
+            <td th:text="${ep.student.contactNo}"></td>
+
+            <!-- Status -->
+            <td>
+               <!-- Status Button -->
+<form th:action="@{/Teacher/updateStatus/{id}(id=${ep.id})}" method="post">
+    <button type="submit"
+        th:text="${ep.status}"
+        th:classappend="${#strings.equals(ep.status.toString(), 'PENDING') 
+                         ? 'btn btn-warning btn-sm' 
+                         : 'btn btn-success btn-sm'}">
+    </button>
+</form>
+</td>
+<td>
+<!-- Delete Enrollment -->
+<form th:action="@{/Teacher/deleteEnrollment/{id}(id=${ep.id})}" method="post">
+    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+</form>
+</td>
+
+            </td>
         </tr>
+
+        <!-- No students -->
         <tr th:if="${#lists.isEmpty(enrolledStudents)}">
-            <td colspan="5" class="text-center">No students enrolled in this program yet.</td>
+            <td colspan="7" class="text-center">No students enrolled in this program yet.</td>
         </tr>
     </tbody>
 </table>
-    
-    
+
 
 </main>
 </body>

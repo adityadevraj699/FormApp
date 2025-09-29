@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -23,7 +25,9 @@ import com.myproject.FormApp.Model.CurriculumTopic;
 import com.myproject.FormApp.Model.EnrolledProgram;
 import com.myproject.FormApp.Model.Feedback;
 import com.myproject.FormApp.Model.Program;
+import com.myproject.FormApp.Model.Question;
 import com.myproject.FormApp.Model.Student;
+import com.myproject.FormApp.Model.StudentFeedbackAnswer;
 import com.myproject.FormApp.Model.Module;
 import com.myproject.FormApp.Model.Teacher;
 import com.myproject.FormApp.Model.TeacherAssign;
@@ -32,6 +36,7 @@ import com.myproject.FormApp.Repository.EnrolledProgramRepository;
 import com.myproject.FormApp.Repository.FeedbackRepository;
 import com.myproject.FormApp.Repository.ModuleRepository;
 import com.myproject.FormApp.Repository.ProgramRepository;
+import com.myproject.FormApp.Repository.StudentFeedbackAnswerRepository;
 import com.myproject.FormApp.Repository.TeacherAssignRepository;
 import com.myproject.FormApp.Repository.TeacherRepository;
 
@@ -55,6 +60,9 @@ public class TeacherController {
 	 @Autowired
 	    private TeacherAssignRepository teacherAssignRepository;
 	 
+	 
+	 @Autowired
+	 private StudentFeedbackAnswerRepository studentFeedbackAnswerRepo;
 	 
 	 @Autowired
 	 private FeedbackRepository feedbackRepo;
@@ -91,9 +99,14 @@ public class TeacherController {
 	        for (TeacherAssign assign : assignedPrograms) {
 	            List<Feedback> feedbacks = feedbackRepo.findByProgramId(assign.getProgram().getId());
 	            long active = feedbacks.stream()
-	                                   .filter(f -> f.getEndDate().isAfter(LocalDate.now()) && f.getStartDate().isBefore(LocalDate.now()))
-	                                   .count();
+	            	    .filter(f -> 
+	            	        ( !f.getStartDate().isAfter(LocalDate.now()) ) &&   // startDate <= today
+	            	        ( !f.getEndDate().isBefore(LocalDate.now()) )       // endDate >= today
+	            	    )
+	            	    .count();
+
 	            long inactive = feedbacks.size() - active;
+
 	            Map<String, Long> statusMap = new HashMap<>();
 	            statusMap.put("active", active);
 	            statusMap.put("inactive", inactive);
@@ -150,43 +163,89 @@ public class TeacherController {
 	
 	
 	@GetMapping("/programDetail/{id}")
-	public String programDetail(@PathVariable Long id, Model model) {
-
+	public String teacherProgramDetail(@PathVariable Long id, Model model, HttpSession session) {
+	    // Logged-in teacher check
 	    Teacher teacher = (Teacher) session.getAttribute("loggedInTeacher");
-	    if (teacher == null) return "redirect:/";
+	    if (teacher == null) {
+	        return "redirect:/";  // login page pe bhej do
+	    }
 
-	    // Program fetch
+	    // Program detail
 	    Program program = programRepo.findById(id)
 	            .orElseThrow(() -> new RuntimeException("Program not found"));
 
-	    // Modules & topics
-	    List<Module> modules = moduleRepo.findByProgramId(id);
-	    Map<Long, List<CurriculumTopic>> moduleTopicsMap = new HashMap<>();
-	    for (Module module : modules) {
-	        moduleTopicsMap.put(module.getId(), curriculumTopicRepo.findByModuleId(module.getId()));
+	    // Sirf wahi program allow ho jisme yeh teacher assigned hai
+	    boolean isAssigned = teacherAssignRepo.existsByProgramIdAndTeacherId(id, teacher.getId());
+	    if (!isAssigned) {
+	        return "redirect:/teacher/dashboard"; // unauthorized
 	    }
 
-	    // Assigned Teachers
-	    List<TeacherAssign> teacherAssignments = teacherAssignRepo.findAllByProgramId(id);
+	    List<Module> modules = moduleRepo.findByProgramId(id);
 
-	    // Student count
+	    Map<Long, List<CurriculumTopic>> moduleTopicsMap = new HashMap<>();
+	    for (Module module : modules) {
+	        List<CurriculumTopic> topics = curriculumTopicRepo.findByModuleId(module.getId());
+	        moduleTopicsMap.put(module.getId(), topics);
+	    }
+
+	    List<EnrolledProgram> enrolledStudents = enrolledProgramRepo.findByProgramId(id);
 	    long enrolledCount = enrolledProgramRepo.countByProgramId(id);
 
-	    // Fetch enrolled students
-	    List<EnrolledProgram> enrolledList = enrolledProgramRepo.findByProgramId(id);
-	    List<Student> enrolledStudents = enrolledList.stream()
-	                                                 .map(EnrolledProgram::getStudent)
-	                                                 .toList();
-
-	    // Model attributes
 	    model.addAttribute("program", program);
 	    model.addAttribute("modules", modules);
-	    model.addAttribute("teacherAssignments", teacherAssignments);
 	    model.addAttribute("moduleTopicsMap", moduleTopicsMap);
-	    model.addAttribute("enrolledCount", enrolledCount);
 	    model.addAttribute("enrolledStudents", enrolledStudents);
+	    model.addAttribute("enrolledCount", enrolledCount);
 
 	    return "Teacher/programDetail";
+	}
+
+	
+	@PostMapping("/updateStatus/{id}")
+	public String teacherUpdateStatus(@PathVariable Long id, HttpSession session) {
+	    Teacher teacher = (Teacher) session.getAttribute("loggedInTeacher");
+	    if (teacher == null) {
+	        return "redirect:/";
+	    }
+
+	    EnrolledProgram ep = enrolledProgramRepo.findById(id).orElse(null);
+	    if (ep != null) {
+	        // ensure teacher is assigned to this program
+	        boolean isAssigned = teacherAssignRepo.existsByProgramIdAndTeacherId(ep.getProgram().getId(), teacher.getId());
+	        if (!isAssigned) {
+	            return "redirect:/Teacher/Dashboard"; // unauthorized
+	        }
+
+	        if (ep.getStatus() == EnrolledProgram.ProgramStatus.PENDING) {
+	            ep.setStatus(EnrolledProgram.ProgramStatus.APPROVED);
+	        } else {
+	            ep.setStatus(EnrolledProgram.ProgramStatus.PENDING);
+	        }
+	        enrolledProgramRepo.save(ep);
+
+	        return "redirect:/Teacher/programDetail/" + ep.getProgram().getId();
+	    }
+	    return "redirect:/Teacher/Dashboard";
+	}
+
+	@PostMapping("/deleteEnrollment/{id}")
+	public String teacherDeleteEnrollment(@PathVariable Long id, HttpSession session) {
+	    Teacher teacher = (Teacher) session.getAttribute("loggedInTeacher");
+	    if (teacher == null) {
+	        return "redirect:/";
+	    }
+
+	    EnrolledProgram ep = enrolledProgramRepo.findById(id).orElse(null);
+	    if (ep != null) {
+	        boolean isAssigned = teacherAssignRepo.existsByProgramIdAndTeacherId(ep.getProgram().getId(), teacher.getId());
+	        if (!isAssigned) {
+	            return "redirect:/Teacher/Dashboard";
+	        }
+	        Long programId = ep.getProgram().getId();
+	        enrolledProgramRepo.deleteById(id);
+	        return "redirect:/teacher/programDetail/" + programId;
+	    }
+	    return "redirect:/Teacher/Dashboard";
 	}
 
 	
@@ -296,7 +355,55 @@ public class TeacherController {
 	        return "redirect:/Teacher/ChangePassword"; 
 	    }
 	}
+	@GetMapping("/FeedbackDetail/{id}")
+	public String showFeedbackDetail(@PathVariable Long id, Model model, HttpSession session) {
+	    Teacher teacher = (Teacher) session.getAttribute("loggedInTeacher");
+	    if (teacher == null) {
+	        return "redirect:/";
+	    }
 
+	    // Feedback fetch
+	    Feedback feedback = feedbackRepo.findById(id)
+	            .orElseThrow(() -> new RuntimeException("Feedback not found"));
+
+	    // All answers
+	    List<StudentFeedbackAnswer> answers = studentFeedbackAnswerRepo.findByFeedback(feedback);
+
+	    // Group answers by question
+	    Map<Question, List<StudentFeedbackAnswer>> answersByQuestion =
+	            answers.stream().collect(Collectors.groupingBy(StudentFeedbackAnswer::getQuestion));
+
+	    // Map for averages (only for NUMBER type questions)
+	    Map<Long, Double> avgByQuestion = new HashMap<>();
+	    for (Map.Entry<Question, List<StudentFeedbackAnswer>> entry : answersByQuestion.entrySet()) {
+	        Question q = entry.getKey();
+	        if (q.getAnswerType() == Question.AnswerType.NUMBER) {
+	            List<Integer> nums = entry.getValue().stream()
+	                    .map(a -> {
+	                        try {
+	                            return Integer.parseInt(a.getAnswer().trim());
+	                        } catch (Exception e) {
+	                            return null;
+	                        }
+	                    })
+	                    .filter(Objects::nonNull)
+	                    .toList();
+
+	            if (!nums.isEmpty()) {
+	                double avg = nums.stream().mapToInt(i -> i).average().orElse(0);
+	                avgByQuestion.put(q.getId(), avg);
+	            }
+	        }
+	    }
+
+	    model.addAttribute("feedback", feedback);
+	    model.addAttribute("answersByQuestion", answersByQuestion);
+	    model.addAttribute("avgByQuestion", avgByQuestion);
+
+	    return "Teacher/feedbackDetail";
+	}
+
+	
 	
 	
 }

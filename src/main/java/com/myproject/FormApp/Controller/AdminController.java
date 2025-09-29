@@ -13,6 +13,7 @@ import com.myproject.FormApp.Model.Program;
 import com.myproject.FormApp.Model.Question;
 import com.myproject.FormApp.Model.QuestionCatrgories;
 import com.myproject.FormApp.Model.Student;
+import com.myproject.FormApp.Model.StudentFeedbackAnswer;
 import com.myproject.FormApp.Model.Teacher;
 import com.myproject.FormApp.Model.Teacher.Status;
 import com.myproject.FormApp.Model.TeacherAssign;
@@ -26,6 +27,7 @@ import com.myproject.FormApp.Repository.ModuleRepository;
 import com.myproject.FormApp.Repository.ProgramRepository;
 import com.myproject.FormApp.Repository.QuestionCatrgoriesRepository;
 import com.myproject.FormApp.Repository.QuestionRepository;
+import com.myproject.FormApp.Repository.StudentFeedbackAnswerRepository;
 import com.myproject.FormApp.Repository.StudentsRepository;
 import com.myproject.FormApp.Repository.TeacherAssignRepository;
 import com.myproject.FormApp.Repository.TeacherRepository;
@@ -89,6 +91,9 @@ public class AdminController {
     
     @Autowired
     private EnrolledProgramRepository enrolledProgramRepo;
+    
+    @Autowired
+    private StudentFeedbackAnswerRepository answerRepo;
     
 
 
@@ -677,5 +682,84 @@ public String saveFeedback(@RequestParam Long programId,
             return "redirect:/admin/ChangePassword"; 
         }
     }
+    
+    
+    
+ // ✅ Toggle Status
+    @PostMapping("/updateStatus/{id}")
+    public String updateStatus(@PathVariable Long id) {
+        EnrolledProgram ep = enrolledProgramRepo.findById(id).orElse(null);
+        if (ep != null) {
+            if (ep.getStatus() == EnrolledProgram.ProgramStatus.PENDING) {
+                ep.setStatus(EnrolledProgram.ProgramStatus.APPROVED);
+            } else {
+                ep.setStatus(EnrolledProgram.ProgramStatus.PENDING);
+            }
+            enrolledProgramRepo.save(ep);
 
+            // Redirect to the program detail page using program's id
+            Long programId = ep.getProgram().getId();
+            return "redirect:/admin/programDetail/" + programId;
+        }
+        // fallback if enrolled program not found
+        return "redirect:/admin/dashboard";
+    }
+
+    // ✅ Delete Enrollment
+    @PostMapping("/deleteEnrollment/{id}")
+    public String deleteEnrollment(@PathVariable Long id) {
+        EnrolledProgram ep = enrolledProgramRepo.findById(id).orElse(null);
+        if (ep != null) {
+            Long programId = ep.getProgram().getId();
+            enrolledProgramRepo.deleteById(id);
+            return "redirect:/admin/programDetail/" + programId;
+        }
+        return "redirect:/admin/dashboard";
+    }
+
+    
+    
+    @GetMapping("/studentFeedback")
+    public String showStudentFeedback(Model model, HttpSession session) {
+        Admin admin = (Admin) session.getAttribute("loggedInAdmin");
+        if (admin == null) {
+            return "redirect:/";
+        }
+
+        List<Feedback> feedbacks = feedRepo.findAll();
+
+        // Create a map of feedbackId -> unique students
+        Map<Long, List<Student>> feedbackStudentsMap = new HashMap<>();
+        for (Feedback feedback : feedbacks) {
+            List<Student> uniqueStudents = feedback.getStudentFeedbackAnswers().stream()
+                    .map(StudentFeedbackAnswer::getStudent)
+                    .distinct()
+                    .toList();
+            feedbackStudentsMap.put(feedback.getId(), uniqueStudents);
+        }
+
+        model.addAttribute("feedbacks", feedbacks);
+        model.addAttribute("feedbackStudentsMap", feedbackStudentsMap);
+
+        return "admin/studentFeedback";
+    }
+
+    // For student feedback detail page
+    @GetMapping("/studentFeedback/detail/{studentId}/{feedbackId}")
+    public String showStudentFeedbackDetail(@PathVariable Long studentId,
+                                            @PathVariable Long feedbackId,
+                                            Model model) {
+        List<StudentFeedbackAnswer> answers =
+                answerRepo.findByStudentIdAndFeedbackId(studentId, feedbackId);
+
+        model.addAttribute("answers", answers);
+        return "admin/studentFeedbackDetail";
+    }
+    
+    
+    
+    
+    
+    
+    
 }

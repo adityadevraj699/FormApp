@@ -11,5 +11,8 @@ public interface FeedbackQuestionCategoryRepository extends JpaRepository<Feedba
 	
 	@Query("SELECT fqc.questionCategory FROM FeedbackQuestionCategory fqc WHERE fqc.id = :id")
     QuestionCatrgories findCategoryByFqcId(@Param("id") Long fqcId);
+	
+	
+	
 
 }
