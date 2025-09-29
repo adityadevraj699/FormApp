@@ -24,8 +24,10 @@ import com.cloudinary.utils.ObjectUtils;
 import com.myproject.FormApp.Model.CurriculumTopic;
 import com.myproject.FormApp.Model.EnrolledProgram;
 import com.myproject.FormApp.Model.Feedback;
+import com.myproject.FormApp.Model.FeedbackAnalysis;
 import com.myproject.FormApp.Model.Program;
 import com.myproject.FormApp.Model.Question;
+import com.myproject.FormApp.Model.Question.AnswerType;
 import com.myproject.FormApp.Model.Student;
 import com.myproject.FormApp.Model.StudentFeedbackAnswer;
 import com.myproject.FormApp.Model.Module;
@@ -39,6 +41,7 @@ import com.myproject.FormApp.Repository.ProgramRepository;
 import com.myproject.FormApp.Repository.StudentFeedbackAnswerRepository;
 import com.myproject.FormApp.Repository.TeacherAssignRepository;
 import com.myproject.FormApp.Repository.TeacherRepository;
+import com.myproject.FormApp.Service.FeedbackAnalysisService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -82,6 +85,9 @@ public class TeacherController {
 
 	    @Autowired
 	    private HttpSession session;
+	    
+	    @Autowired
+	    private FeedbackAnalysisService analysisService;
 	    
 	    
 	    
@@ -355,55 +361,63 @@ public class TeacherController {
 	        return "redirect:/Teacher/ChangePassword"; 
 	    }
 	}
+	
+	
+	
+	
 	@GetMapping("/FeedbackDetail/{id}")
 	public String showFeedbackDetail(@PathVariable Long id, Model model, HttpSession session) {
 	    Teacher teacher = (Teacher) session.getAttribute("loggedInTeacher");
-	    if (teacher == null) {
-	        return "redirect:/";
-	    }
+	    if (teacher == null) return "redirect:/";
 
-	    // Feedback fetch
+	    // Fetch feedback
 	    Feedback feedback = feedbackRepo.findById(id)
-	            .orElseThrow(() -> new RuntimeException("Feedback not found"));
+	        .orElseThrow(() -> new RuntimeException("Feedback not found"));
 
-	    // All answers
+	    // Fetch all answers for this feedback
 	    List<StudentFeedbackAnswer> answers = studentFeedbackAnswerRepo.findByFeedback(feedback);
 
 	    // Group answers by question
 	    Map<Question, List<StudentFeedbackAnswer>> answersByQuestion =
-	            answers.stream().collect(Collectors.groupingBy(StudentFeedbackAnswer::getQuestion));
+	        answers.stream().collect(Collectors.groupingBy(StudentFeedbackAnswer::getQuestion));
 
-	    // Map for averages (only for NUMBER type questions)
+	    // Maps to hold analysis & averages
+	    Map<Long, FeedbackAnalysis> analysisByQuestion = new HashMap<>();
 	    Map<Long, Double> avgByQuestion = new HashMap<>();
-	    for (Map.Entry<Question, List<StudentFeedbackAnswer>> entry : answersByQuestion.entrySet()) {
-	        Question q = entry.getKey();
-	        if (q.getAnswerType() == Question.AnswerType.NUMBER) {
-	            List<Integer> nums = entry.getValue().stream()
-	                    .map(a -> {
-	                        try {
-	                            return Integer.parseInt(a.getAnswer().trim());
-	                        } catch (Exception e) {
-	                            return null;
-	                        }
-	                    })
-	                    .filter(Objects::nonNull)
-	                    .toList();
 
-	            if (!nums.isEmpty()) {
-	                double avg = nums.stream().mapToInt(i -> i).average().orElse(0);
-	                avgByQuestion.put(q.getId(), avg);
-	            }
+	    for (Map.Entry<Question, List<StudentFeedbackAnswer>> entry : answersByQuestion.entrySet()) {
+	        Question question = entry.getKey();
+	        List<StudentFeedbackAnswer> ansList = entry.getValue();
+
+	        // AI Analysis
+	        FeedbackAnalysis fa = analysisService.computeAndSaveTextAnalysis(feedback, question, ansList);
+	        analysisByQuestion.put(question.getId(), fa);
+
+	        if (question.getAnswerType() == Question.AnswerType.NUMBER) {
+	            double avg = ansList.stream()
+	                .mapToDouble(ans -> {
+	                    try { return Double.parseDouble(ans.getAnswer()); } 
+	                    catch (NumberFormatException e) { return 0.0; }
+	                })
+	                .average()
+	                .orElse(0.0);
+
+	            avgByQuestion.put(question.getId(), avg);
+
+	            fa.setAvgNumeric(avg);  // store in DB
 	        }
+
 	    }
 
 	    model.addAttribute("feedback", feedback);
 	    model.addAttribute("answersByQuestion", answersByQuestion);
+	    model.addAttribute("analysisByQuestion", analysisByQuestion);
 	    model.addAttribute("avgByQuestion", avgByQuestion);
 
 	    return "Teacher/feedbackDetail";
 	}
 
-	
+
 	
 	
 }
