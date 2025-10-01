@@ -1,6 +1,7 @@
 package com.myproject.FormApp.Repository;
 
 import com.myproject.FormApp.Model.Program;
+import com.myproject.FormApp.Model.Teacher;
 import com.myproject.FormApp.Model.TeacherAssign;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -20,5 +21,7 @@ public interface TeacherAssignRepository extends JpaRepository<TeacherAssign, Lo
 	List<TeacherAssign> findByProgramId(Long programId);
 
 	boolean existsByProgramIdAndTeacherId(Long id, Long id2);
+
+	boolean existsByTeacherAndProgram(Teacher teacher, Program program);
 }
 

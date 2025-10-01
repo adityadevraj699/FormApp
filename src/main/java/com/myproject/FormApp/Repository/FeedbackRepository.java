@@ -22,5 +22,9 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
 
 	List<Feedback> findByProgramId(Long id);
 
+	boolean existsByProgram(Program program);
+
+	boolean existsByFeedbackPhase_Id(Long id);
+
 
 }

@@ -1,6 +1,7 @@
 package com.myproject.FormApp.Model;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import jakarta.persistence.*;
 
@@ -36,4 +37,19 @@ public class Program {
 
     public LocalDate getEndDate() { return endDate; }
     public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+    
+    @OneToMany(mappedBy = "program", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TeacherAssign> teacherAssignments;
+
+ // Program -> Module (OneToMany)
+    @OneToMany(mappedBy = "program", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<Module> modules = new java.util.ArrayList<>();
+
+	public java.util.List<Module> getModules() {
+		return modules;
+	}
+
+	public void setModules(java.util.List<Module> modules) {
+		this.modules = modules;
+	}
 }

@@ -1,0 +1,105 @@
+<html th:replace="~{Adminbase::layout(~{::main})}">
+<body>
+<main class="container my-5">
+   
+    <!-- Header with button -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="m-0">Manage Feedback Phases</h3>
+        <a href="/admin/feedbackPhase" class="btn btn-primary">
+            + Add Feedback Phase
+        </a>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-primary">
+                <tr>
+                    <th>#</th>
+                    <th>Phase Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="phase, iterStat : ${phase}">
+                    <td th:text="${iterStat.index + 1}"></td>
+                    <td th:text="${phase.phaseName}"></td>
+                    <td>
+                        <a th:href="@{/admin/feedbackphase/edit/{id}(id=${phase.id})}" 
+                           class="btn btn-sm btn-warning me-2">Edit</a>
+                        <a href="#" 
+                           th:onclick="'confirmDelete(' + ${phase.id} + ')'" 
+                           class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Hidden input for server message -->
+    <input type="hidden" id="serverMessage" th:value="${serverMessageModule}">
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+          const serverMessage = document.getElementById("serverMessage")?.value;
+          if (serverMessage && serverMessage.trim() !== "") {
+              const lowerMsg = serverMessage.toLowerCase();
+              const isError = lowerMsg.includes('invalid') || 
+                              lowerMsg.includes('disabled') || 
+                              lowerMsg.includes('pending') || 
+                              lowerMsg.includes('not found');
+
+              Swal.fire({
+                  title: 'Notification',
+                  text: serverMessage,
+                  icon: isError ? 'error' : 'success',
+                  confirmButtonColor: '#2575fc',
+                  background: '#f9f9f9',
+                  color: '#333',
+                  timer: 4000,
+                  timerProgressBar: true
+              });
+          }
+      });
+
+      function confirmDelete(id) {
+          Swal.fire({
+              title: 'Are you sure?',
+              text: "You won't be able to revert this!",
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#d33',
+              cancelButtonColor: '#3085d6',
+              confirmButtonText: 'Yes, delete it!'
+          }).then((result) => {
+              if (result.isConfirmed) {
+                  window.location.href = '/admin/feedbackphase/delete/' + id;
+              }
+          });
+      }
+    </script>
+    
+    
+    <!-- SweetAlert2 for server messages -->
+    <input type="hidden" id="serverMessage" th:value="${serverMessageModule}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+          const serverMessage = document.getElementById("serverMessage")?.value;
+          if (serverMessage && serverMessage.trim() !== "") {
+              const isError = serverMessage.toLowerCase().includes('error') ||
+                              serverMessage.toLowerCase().includes('not found');
+              Swal.fire({
+                  title: 'Notification',
+                  text: serverMessage,
+                  icon: isError ? 'error' : 'success',
+                  confirmButtonColor: '#2575fc'
+              });
+          }
+      });
+    </script>
+</main>
+</body>
+</html>

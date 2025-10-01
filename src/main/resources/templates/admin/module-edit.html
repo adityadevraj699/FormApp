@@ -1,0 +1,62 @@
+<html th:replace="~{Adminbase::layout(~{::main})}">
+<body>
+<main>
+  <div class="container my-5">
+
+    <h2>Edit Module</h2>
+
+    <form  th:object="${module}" method="post">
+      
+      <!-- Hidden input for module ID -->
+      <input type="hidden" th:field="*{id}" />
+
+      <!-- Module Name -->
+      <div class="mb-3">
+        <label for="moduleName" class="form-label">Module Name</label>
+        <input type="text" id="moduleName" class="form-control" th:field="*{moduleName}" required>
+      </div>
+
+      <!-- Program Dropdown -->
+      <div class="mb-3">
+        <label for="program" class="form-label">Program</label>
+        <select id="program" class="form-select" th:field="*{program}" required>
+          <option th:value="${module.program.id}" th:text="${module.program.trainingProgram}" selected>
+            Current Program
+          </option>
+          <option th:each="prog : ${programs}" 
+                  th:value="${prog.id}" 
+                  th:text="${prog.trainingProgram}"
+                  th:if="${prog.id != module.program.id}">
+          </option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-success">Update Module</button>
+      <a th:href="@{/admin/module-management}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+
+    <!-- SweetAlert2 -->
+    <input type="hidden" id="serverMessage" th:value="${serverMessageModule}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const serverMessage = document.getElementById("serverMessage")?.value;
+        if (serverMessage && serverMessage.trim() !== "") {
+          const lowerMsg = serverMessage.toLowerCase();
+          const isError = lowerMsg.includes('invalid') || lowerMsg.includes('not found');
+          Swal.fire({
+            title: 'Notification',
+            text: serverMessage.replace('✅','').replace('❌','').trim(),
+            icon: isError ? 'error' : 'success',
+            confirmButtonColor: '#2575fc',
+            timer: 4000,
+            timerProgressBar: true
+          });
+        }
+      });
+    </script>
+
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<html th:replace="~{Adminbase::layout(~{::main})}">
+<body>
+<main>
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card shadow-sm">
+          
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="fw-bold m-0">Edit Question</h4>
+            <a href="#" th:href="@{/admin/manageQuestion}" class="btn btn-light btn-sm fw-bold">
+              <i class="bi bi-list-check me-1"></i> Manage Questions
+            </a>
+          </div>
+
+          <div class="card-body">
+            <form method="post" th:action="@{'/admin/question/edit/' + ${question.id}}">
+              
+              <!-- Category Dropdown -->
+              <div class="mb-3">
+                <label for="categorySelect" class="form-label fw-bold">Select Category:</label>
+                <select id="categorySelect" name="categoryId" class="form-select" required
+                        th:disabled="${!isEditable}">
+                  <option value="" disabled>-- Choose Category --</option>
+                  <th:block th:each="cat : ${categories}">
+                    <option th:value="${cat.id}" th:text="${cat.categoryName}"
+                            th:selected="${cat.id == question.category.id}"></option>
+                  </th:block>
+                </select>
+              </div>
+
+              <!-- Question Text -->
+              <div class="mb-3">
+                <label class="form-label fw-bold">Question:</label>
+                <input type="text" name="questionText" class="form-control" th:value="${question.questionText}"
+                       required th:disabled="${!isEditable}">
+              </div>
+
+              <!-- Answer Type -->
+              <div class="mb-3">
+                <label class="form-label fw-bold">Answer Type:</label>
+                <select id="answerTypeSelect" name="answerType" class="form-select" onchange="updateRangeInput(this)" required
+                        th:disabled="${!isEditable}">
+                  <option value="TEXT" th:selected="${question.answerType.name() == 'TEXT'}">TEXT</option>
+                  <option value="NUMBER" th:selected="${question.answerType.name() == 'NUMBER'}">NUMBER</option>
+                </select>
+              </div>
+
+              <!-- Range -->
+              <div class="mb-3 range-container">
+                <div th:if="${question.answerType.name() == 'NUMBER'}">
+                  <input type="number" name="rangeStart" class="form-control mb-1" placeholder="Start Range"
+                         th:value="${question.rangeStart}" required th:disabled="${!isEditable}">
+                  <input type="number" name="rangeEnd" class="form-control" placeholder="End Range"
+                         th:value="${question.rangeEnd}" required th:disabled="${!isEditable}">
+                </div>
+              </div>
+
+              <div class="d-grid">
+                <button type="submit" class="btn btn-success btn-lg fw-bold" th:disabled="${!isEditable}">
+                  Save Question
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SweetAlert for messages -->
+  <input type="hidden" id="serverMessage" th:value="${msg}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    // Dynamic range input toggle
+    function updateRangeInput(select) {
+      const container = select.closest('form').querySelector('.range-container');
+      container.innerHTML = '';
+      if (select.value === 'NUMBER') {
+        container.innerHTML = `
+          <input type="number" name="rangeStart" class="form-control mb-1" placeholder="Start Range" required>
+          <input type="number" name="rangeEnd" class="form-control" placeholder="End Range" required>
+        `;
+      }
+    }
+
+    // Show server message using SweetAlert
+    document.addEventListener("DOMContentLoaded", function () {
+      const serverMessage = document.getElementById("serverMessage")?.value;
+      if (serverMessage && serverMessage.trim() !== "") {
+        const lowerMsg = serverMessage.toLowerCase();
+        const isError = lowerMsg.includes('invalid') || lowerMsg.includes('error') || lowerMsg.includes('failed');
+        Swal.fire({
+          title: 'Notification',
+          text: serverMessage,
+          icon: isError ? 'error' : 'success',
+          confirmButtonColor: '#2575fc',
+          background: '#f9f9f9',
+          color: '#333',
+          timer: 4000,
+          timerProgressBar: true
+        });
+      }
+    });
+  </script>
+</main>
+</body>
+</html>

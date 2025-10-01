@@ -1,5 +1,7 @@
 package com.myproject.FormApp.Model;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -87,5 +89,6 @@ public class Question {
 
     // Getters and setters for all fields including rangeStart and rangeEnd
     
-    
+	@OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<FeedbackAnalysis> feedbackAnalysis;
 }

@@ -1,0 +1,92 @@
+<html th:replace="~{Adminbase::layout(~{::main})}">
+<body>
+<main>
+  <div class="container my-5">
+    <div class="col-md-6 mx-auto">
+      <div class="card shadow-sm">
+
+        <!-- Card Header -->
+        <div class="card-header bg-primary text-white text-center">
+          <h4 class="fw-bold m-0">Edit Teacher Assignment</h4>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body">
+          <form th:action="@{'/admin/assignTeacher/edit/' + ${assign.id}}" method="post">
+
+            <!-- Teacher Dropdown -->
+            <div class="mb-3">
+              <label for="teacherSelect" class="form-label fw-bold">Select Teacher</label>
+              <select class="form-select" id="teacherSelect" name="teacherId" required>
+                <option value="" disabled>-- Select Teacher --</option>
+                <option th:each="t : ${teachers}" 
+                        th:value="${t.id}" 
+                        th:text="${t.name}"
+                        th:selected="${t.id == assign.teacher.id}">
+                </option>
+              </select>
+            </div>
+
+            <!-- Program Dropdown -->
+            <div class="mb-3">
+              <label for="programSelect" class="form-label fw-bold">Select Program</label>
+              <select class="form-select" id="programSelect" name="programId" required>
+                <option value="" disabled>-- Select Program --</option>
+                <option th:each="p : ${programs}" 
+                        th:value="${p.id}" 
+                        th:text="${p.trainingProgram}"
+                        th:selected="${p.id == assign.program.id}">
+                </option>
+              </select>
+            </div>
+
+            <!-- Buttons -->
+            <div class="d-flex justify-content-between">
+              <button type="submit" class="btn btn-success btn-lg fw-bold">
+                <i class="bi bi-save2 me-2"></i> Update Assignment
+              </button>
+              <a href="http://localhost:8800/admin/assignTeacher-manage" 
+                 class="btn btn-secondary btn-lg fw-bold">
+                <i class="bi bi-x-circle me-2"></i> Cancel
+              </a>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden input for server message -->
+  <input type="hidden" id="serverMessage" th:value="${serverMessage}">
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const serverMessage = document.getElementById("serverMessage")?.value;
+      if (serverMessage && serverMessage.trim() !== "") {
+        const lowerMsg = serverMessage.toLowerCase();
+        const isError = lowerMsg.includes('invalid') || 
+                        lowerMsg.includes('disabled') || 
+                        lowerMsg.includes('pending') || 
+                        lowerMsg.includes('not found') || 
+                        lowerMsg.includes('already assigned');
+
+        Swal.fire({
+          title: 'Notification',
+          text: serverMessage,
+          icon: isError ? 'error' : 'success',
+          confirmButtonColor: '#2575fc',
+          background: '#f9f9f9',
+          color: '#333',
+          timer: 4000,
+          timerProgressBar: true
+        });
+      }
+    });
+  </script>
+
+</main>
+</body>
+</html>

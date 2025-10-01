@@ -1,0 +1,80 @@
+<html th:replace="~{Adminbase::layout(~{::main})}">
+<body>
+<main>
+  <div class="container my-5">
+    <div class="card shadow-sm">
+      <!-- Header -->
+      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h4 class="fw-bold m-0">Manage Programs</h4>
+        <a href="/admin/program" class="btn btn-light btn-sm fw-bold">
+          <i class="bi bi-plus-circle me-1"></i> Add Program
+        </a>
+      </div>
+
+      <!-- Body -->
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped table-bordered align-middle">
+            <thead class="table-dark">
+              <tr>
+                <th>ID</th>
+                <th>Program Name</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="p : ${programs}">
+                <td th:text="${p.id}"></td>
+                <td th:text="${p.trainingProgram}"></td>
+                <td th:text="${p.startDate}"></td>
+                <td th:text="${p.endDate}"></td>
+                <td>
+                  <a th:href="@{'/admin/program/edit/' + ${p.id}}" 
+                     class="btn btn-sm btn-warning me-2">
+                     <i class="bi bi-pencil-square"></i> Edit
+                  </a>
+                  <a th:href="@{'/admin/program/delete/' + ${p.id}}" 
+                     class="btn btn-sm btn-danger"
+                     onclick="return confirm('Are you sure you want to delete this program?');">
+                     <i class="bi bi-trash"></i> Delete
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <input type="hidden" id="serverMessage" th:value="${serverMessage}" />
+          <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+          
+          <script>
+document.addEventListener("DOMContentLoaded", function () {
+  const serverMessage = document.getElementById("serverMessage")?.value;
+
+  if (serverMessage && serverMessage.trim() !== "") {
+    // Agar message me ❌ ho → error, ✅ ho → success
+    let icon = 'info';
+    if (serverMessage.includes('❌')) icon = 'error';
+    if (serverMessage.includes('✅')) icon = 'success';
+
+    Swal.fire({
+      title: 'Notification',
+      text: serverMessage.replace('❌','').replace('✅','').trim(), // remove emoji from message
+      icon: icon,
+      confirmButtonColor: '#2575fc',
+      background: '#f9f9f9',
+      color: '#333',
+      timer: 4000,
+      timerProgressBar: true
+    });
+  }
+});
+</script>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

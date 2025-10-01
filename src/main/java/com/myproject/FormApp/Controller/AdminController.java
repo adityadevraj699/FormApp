@@ -21,6 +21,7 @@ import com.myproject.FormApp.Repository.AdminRepository;
 import com.myproject.FormApp.Repository.CurriculumTopicRepository;
 import com.myproject.FormApp.Repository.EnrolledProgramRepository;
 import com.myproject.FormApp.Repository.FeedBackPhaseRepository;
+import com.myproject.FormApp.Repository.FeedbackAnalysisRepository;
 import com.myproject.FormApp.Repository.FeedbackQuestionCategoryRepository;
 import com.myproject.FormApp.Repository.FeedbackRepository;
 import com.myproject.FormApp.Repository.ModuleRepository;
@@ -94,6 +95,10 @@ public class AdminController {
     
     @Autowired
     private StudentFeedbackAnswerRepository answerRepo;
+    
+    
+    @Autowired
+    private FeedbackAnalysisRepository feedbackAnalysisRepo;
     
 
 
@@ -757,9 +762,418 @@ public String saveFeedback(@RequestParam Long programId,
     }
     
     
+ // Manage Program
+    @GetMapping("/manage-program")
+    public String showManageProgram(Model model){
+        if (!isLoggedIn()) return redirectIfNotLoggedIn();
+
+        List<Program> programs = programRepo.findAll();  // <-- Repo se data nikalna
+        model.addAttribute("programs", programs);
+
+        return "admin/manage-program";
+    }
+
+    @GetMapping("/program/delete/{id}")
+    public String deleteProgram(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        Program program = programRepo.findById(id)
+                .orElse(null);
+
+        if (program == null) {
+            redirectAttributes.addFlashAttribute("serverMessage", "Program not found!");
+            return "redirect:/admin/manage-program";
+        }
+
+        // Check if program has feedback
+        boolean hasFeedback = feedRepo.existsByProgram(program);
+        if (hasFeedback) {
+            redirectAttributes.addFlashAttribute("serverMessage", 
+                "❌ Program cannot be deleted because feedback is already created!");
+            return "redirect:/admin/manage-program";
+        }
+
+        // Safe delete (modules, assignments bhi cascade se delete ho jayenge)
+        programRepo.delete(program);
+
+        redirectAttributes.addFlashAttribute("serverMessage", 
+            "✅ Program and its modules deleted successfully!");
+        return "redirect:/admin/manage-program";
+    }
+
+
+ // Edit Program Form
+    @GetMapping("/program/edit/{id}")
+    public String editProgram(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        Program program = programRepo.findById(id).orElse(null);
+        if (program == null) {
+            redirectAttributes.addFlashAttribute("serverMessage", "❌ Program not found!");
+            return "redirect:/admin/manage-program";
+        }
+        model.addAttribute("program", program);
+        return "admin/edit-program";
+    }
+
+    // Update Program
+    @PostMapping("/program/update")
+    public String updateProgram(@ModelAttribute Program program, RedirectAttributes redirectAttributes) {
+        // Save updated program
+        programRepo.save(program);
+
+        // Add success message
+        redirectAttributes.addFlashAttribute("serverMessage", "✅ Program updated successfully!");
+        return "redirect:/admin/manage-program";
+    }
     
     
     
+    @GetMapping("/module-management")
+    public String showModuleManage(Model model) {
+        List<Module> modules = moduleRepo.findAll(); // assuming you have ModuleRepository
+        model.addAttribute("modules", modules);
+        return "admin/module-management";
+    }
     
+    
+    @GetMapping("/module/edit/{id}")
+    public String editModule(@PathVariable Long id, Model model) {
+        Module module = moduleRepo.findById(id)
+                         .orElseThrow(() -> new IllegalArgumentException("Invalid module Id:" + id));
+        List<Program> programs = programRepo.findAll(); // get all programs
+
+        model.addAttribute("module", module);
+        model.addAttribute("programs", programs);
+
+        return "admin/module-edit";
+    }
+    
+    @PostMapping("module/edit/{id}")
+    public String updateModule(@ModelAttribute Module module, RedirectAttributes redirectAttributes) {
+        // Fetch the program object using ID from the form
+        Program program = programRepo.findById(module.getProgram().getId())
+                         .orElseThrow(() -> new IllegalArgumentException("Invalid Program Id"));
+        module.setProgram(program);
+
+        moduleRepo.save(module);
+
+        redirectAttributes.addFlashAttribute("serverMessageModule", "✅ Module updated successfully");
+        return "redirect:/admin/module-management";
+    }
+
+
+
+    @GetMapping("/module/delete/{id}")
+    public String deleteModule(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        moduleRepo.deleteById(id);
+        redirectAttributes.addFlashAttribute("serverMessageModule", "✅ Module deleted successfully");
+        return "redirect:/admin/module-management";
+    }
+
+    @GetMapping("/curriculum-management")
+    public String showCurriculumManagement(Model model) {
+        List<CurriculumTopic> topics = curriculumTopicRepo.findAll();
+        model.addAttribute("topics", topics);
+        return "admin/curriculum-management"; // must match template path
+    }
+
+
+ @GetMapping("/curriculum/edit/{id}")
+ public String editCurriculumTopic(@PathVariable Long id, Model model) {
+	    CurriculumTopic topic = curriculumTopicRepo.findById(id)
+	                            .orElseThrow(() -> new IllegalArgumentException("Invalid Topic Id:" + id));
+	    List<Module> modules = moduleRepo.findAll();
+	    model.addAttribute("topic", topic);
+	    model.addAttribute("modules", modules);
+	    return "admin/curriculum-edit";
+	}
+ 
+ 
+ @PostMapping("/curriculum/edit/{id}")
+ public String updateCurriculumTopic(@PathVariable Long id,
+                                     @ModelAttribute("topic") CurriculumTopic updatedTopic,
+                                     RedirectAttributes redirectAttributes) {
+     // Fetch the existing topic from DB
+     CurriculumTopic existingTopic = curriculumTopicRepo.findById(id)
+             .orElseThrow(() -> new IllegalArgumentException("Invalid Topic Id:" + id));
+
+     // Update the topic name
+     existingTopic.setTopicName(updatedTopic.getTopicName());
+
+     // Update the module association
+     Module selectedModule = moduleRepo.findById(updatedTopic.getModule().getId())
+             .orElseThrow(() -> new IllegalArgumentException("Invalid Module Id:" + updatedTopic.getModule().getId()));
+     existingTopic.setModule(selectedModule);
+
+     // Save the updated topic
+     curriculumTopicRepo.save(existingTopic);
+
+     // Add flash attribute for success message
+     redirectAttributes.addFlashAttribute("serverMessage", "✅ Curriculum Topic updated successfully!");
+
+     // Redirect back to the management page
+     return "redirect:/admin/curriculum-management";
+ }
+
+
+
+
+    // Delete Curriculum Topic
+    @GetMapping("/curriculum/delete/{id}")
+    public String deleteCurriculumTopic(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        curriculumTopicRepo.deleteById(id);
+        redirectAttributes.addFlashAttribute("serverMessage", "✅ Curriculum topic deleted successfully");
+        return "redirect:/admin/curriculum-management";
+    }
+
+    
+    
+    @GetMapping("/assignTeacher-manage")
+    public String assignTeacher(Model model) {
+        List<TeacherAssign> teacherAssignments = teacherAssignRepo.findAll();
+        model.addAttribute("teacherAssignments", teacherAssignments);
+        return "admin/assignTeacher-manage";
+    }
+
+    
+    @GetMapping("/assignTeacher/edit/{id}")
+    public String editTeacherAssign(@PathVariable Long id, Model model) {
+        TeacherAssign assign = teacherAssignRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid assignment ID: " + id));
+
+        List<Teacher> teachers = teacherRepository.findAllByStatus(Teacher.Status.APPROVED);
+        List<Program> programs = programRepo.findAll();
+
+        model.addAttribute("assign", assign);
+        model.addAttribute("teachers", teachers);
+        model.addAttribute("programs", programs);
+
+        return "admin/edit-assignTeacher";
+    }
+
+
+    @PostMapping("/assignTeacher/edit/{id}")
+    public String updateAssignTeacher(@PathVariable Long id, 
+                                      @RequestParam Long teacherId,
+                                      @RequestParam Long programId,
+                                      RedirectAttributes redirectAttributes) {
+
+        TeacherAssign assign = teacherAssignRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid assignment ID: " + id));
+
+        Teacher teacher = teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid teacher ID: " + teacherId));
+
+        Program program = programRepo.findById(programId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid program ID: " + programId));
+
+        // Check if this teacher is already assigned to this program
+        boolean exists = teacherAssignRepo.existsByTeacherAndProgram(teacher, program);
+
+        if (exists && !(assign.getTeacher().getId().equals(teacherId) 
+                        && assign.getProgram().getId().equals(programId))) {
+            redirectAttributes.addFlashAttribute("serverMessage", 
+                    "This teacher is already assigned to the selected program!");
+            return "redirect:/admin/assignTeacher/edit/" + id;
+        }
+
+        // Update assignment
+        assign.setTeacher(teacher);
+        assign.setProgram(program);
+        teacherAssignRepo.save(assign);
+
+        redirectAttributes.addFlashAttribute("serverMessage", "Assignment updated successfully!");
+        return "redirect:/admin/assignTeacher-manage";
+    }
+
+
+    // Delete Assignment (but NOT teacher or program themselves)
+    @GetMapping("/assignTeacher/delete/{id}")
+    public String deleteAssignTeacher(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        TeacherAssign assign = teacherAssignRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid assignment ID: " + id));
+
+        teacherAssignRepo.delete(assign);
+        redirectAttributes.addFlashAttribute("serverMessage", "Assignment Teacher Delete successfully!");
+        return "redirect:/admin/assignTeacher-manage";
+    }
+
+
+    @GetMapping("/Manage-feedbackphase")
+    public String showManageFeedbackPhase(Model model) {
+    	List<FeedBackPhase> phase = feedbackRepo.findAll();
+    	model.addAttribute("phase", phase);	
+    	return "admin/Manage-feedbackphase";
+    }
+   
+    
+    
+    @GetMapping("/feedbackphase/delete/{id}")
+    public String deleteFeedbackPhase(@PathVariable Long id, RedirectAttributes redirectAttrs) {
+
+        // Check if phase is used in any Feedback
+        boolean isPhaseUsed = feedRepo.existsByFeedbackPhase_Id(id);
+
+        if (isPhaseUsed) {
+            redirectAttrs.addFlashAttribute("serverMessageModule",
+                    "This Feedback Phase cannot be deleted because it is already assigned in Feedback!");
+        } else {
+            try {
+                feedbackRepo.deleteById(id);
+                redirectAttrs.addFlashAttribute("serverMessageModule", "Feedback Phase deleted successfully!");
+            } catch (Exception e) {
+                redirectAttrs.addFlashAttribute("serverMessageModule", "Error deleting Feedback Phase!");
+            }
+        }
+
+        return "redirect:/admin/Manage-feedbackphase";
+    }
+
+ // Edit page open karne ke liye (GET)
+    @GetMapping("/feedbackphase/edit/{id}")
+    public String editFeedbackPhase(@PathVariable Long id, Model model, RedirectAttributes redirectAttrs) {
+        FeedBackPhase phase = feedbackRepo.findById(id).orElse(null);
+
+        if (phase == null) {
+            redirectAttrs.addFlashAttribute("serverMessageModule", "Feedback Phase not found!");
+            return "redirect:/admin/Manage-feedbackphase";
+        }
+
+        model.addAttribute("phase", phase);
+        return "admin/edit-feedbackphase"; // ye html file load hogi
+    }
+
+    // Form submit karne ke liye (POST)
+    @PostMapping("/feedbackphase/update/{id}")
+    public String updateFeedbackPhase(@PathVariable Long id,
+                                      @ModelAttribute("phase") FeedBackPhase updatedPhase,
+                                      RedirectAttributes redirectAttrs) {
+        FeedBackPhase existing = feedbackRepo.findById(id).orElse(null);
+
+        if (existing == null) {
+            redirectAttrs.addFlashAttribute("serverMessageModule", "Feedback Phase not found!");
+            return "redirect:/admin/Manage-feedbackphase";
+        }
+
+        try {
+            existing.setPhaseName(updatedPhase.getPhaseName());
+            feedbackRepo.save(existing);
+            redirectAttrs.addFlashAttribute("serverMessageModule", "Feedback Phase updated successfully!");
+        } catch (Exception e) {
+            redirectAttrs.addFlashAttribute("serverMessageModule", "Error updating Feedback Phase!");
+        }
+
+        return "redirect:/admin/Manage-feedbackphase";
+    }
+    
+    
+    @GetMapping("/manageQuestion")
+    public String showManageQuestion(Model model) {
+        List<Question> questions = questionRepo.findAll();
+        model.addAttribute("questions", questions);
+        return "admin/manageQuestion";
+    }
+
+    @GetMapping("/question/delete/{id}")
+    public String deleteQuestion(@PathVariable Long id, RedirectAttributes redirectAttrs) {
+        Question q = questionRepo.findById(id).orElse(null);
+        if (q == null) {
+            redirectAttrs.addFlashAttribute("msg", "Question not found!");
+            return "redirect:/admin/manageQuestion";
+        }
+
+       
+        boolean isInFeedbackAnalysis = feedbackAnalysisRepo.existsByQuestion(q);
+        
+        if (isInFeedbackAnalysis) {
+            // Agar FeedbackAnalysis me hai, delete nahi karenge
+            redirectAttrs.addFlashAttribute("msg", "Question cannot be deleted because it is used in feedback analysis!");
+        } else {
+            // Sirf categories me hai ya kahin aur nahi → delete allowed
+            questionRepo.delete(q);
+            redirectAttrs.addFlashAttribute("msg", "Question deleted successfully!");
+        }
+
+        return "redirect:/admin/manageQuestion";
+    }
+
+
+    
+    @GetMapping("/question/edit/{id}")
+    public String editQuestionForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttrs) {
+        Question question = questionRepo.findById(id).orElse(null);
+        if (question == null) {
+            redirectAttrs.addFlashAttribute("msg", "Question not found!");
+            return "redirect:/admin/manageQuestion";
+        }
+
+        // Check if question is used in any feedback analysis
+        boolean isInFeedbackAnalysis = feedbackAnalysisRepo.existsByQuestion(question);
+        if (isInFeedbackAnalysis) {
+            // Redirect immediately with flash message
+            redirectAttrs.addFlashAttribute("msg", "Question cannot be edited because it is used in feedback analysis!");
+            return "redirect:/admin/manageQuestion";
+        }
+
+        // If not in feedback analysis → allow edit
+        model.addAttribute("question", question);
+        model.addAttribute("categories", questionCategoryRepo.findAll());
+        model.addAttribute("isEditable", true); // Editable
+
+        return "admin/editQuestion"; // Thymeleaf template
+    }
+
+
+    // --- POST Mapping for Update ---
+    @PostMapping("/question/edit/{id}")
+    public String updateQuestion(@PathVariable Long id,
+                                 @RequestParam Long categoryId,
+                                 @RequestParam String questionText,
+                                 @RequestParam String answerType,
+                                 @RequestParam(required = false) Integer rangeStart,
+                                 @RequestParam(required = false) Integer rangeEnd,
+                                 RedirectAttributes redirectAttrs) {
+
+        Question question = questionRepo.findById(id).orElse(null);
+        if (question == null) {
+            redirectAttrs.addFlashAttribute("msg", "Question not found!");
+            return "redirect:/admin/manageQuestion";
+        }
+
+        // Check if linked to feedbackAnalysis
+        boolean isInFeedbackAnalysis = feedbackAnalysisRepo.existsByQuestion(question);
+        if (isInFeedbackAnalysis) {
+            redirectAttrs.addFlashAttribute("msg", "Cannot edit question used in feedback analysis!");
+            return "redirect:/admin/manageQuestion";
+        }
+
+        // Validation for NUMBER type
+        Question.AnswerType typeEnum = Question.AnswerType.valueOf(answerType);
+        if (typeEnum == Question.AnswerType.NUMBER) {
+            if (rangeStart == null || rangeEnd == null) {
+                redirectAttrs.addFlashAttribute("msg", "Range start and end are required for NUMBER type questions!");
+                return "redirect:/admin/question/edit/" + id;
+            }
+            question.setRangeStart(rangeStart);
+            question.setRangeEnd(rangeEnd);
+        } else {
+            question.setRangeStart(null);
+            question.setRangeEnd(null);
+        }
+
+        QuestionCatrgories category = questionCategoryRepo.findById(categoryId).orElse(null);
+        if (category == null) {
+            redirectAttrs.addFlashAttribute("msg", "Invalid category!");
+            return "redirect:/admin/question/edit/" + id;
+        }
+
+        question.setCategory(category);
+        question.setQuestionText(questionText);
+        question.setAnswerType(typeEnum);
+
+        questionRepo.save(question);
+        redirectAttrs.addFlashAttribute("msg", "Question updated successfully!");
+        return "redirect:/admin/manageQuestion";
+    }
+
+
+
     
 }

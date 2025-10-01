@@ -30,4 +30,18 @@ public class Module {
 
     public Program getProgram() { return program; }
     public void setProgram(Program program) { this.program = program; }
+    
+    
+ // Module -> CurriculumTopic (OneToMany)
+    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<CurriculumTopic> topics = new java.util.ArrayList<>();
+
+	public java.util.List<CurriculumTopic> getTopics() {
+		return topics;
+	}
+
+	public void setTopics(java.util.List<CurriculumTopic> topics) {
+		this.topics = topics;
+	}
+
 }

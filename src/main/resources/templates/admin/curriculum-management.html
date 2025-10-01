@@ -1,0 +1,59 @@
+<html th:replace="~{Adminbase::layout(~{::main})}">
+<body>
+<main>
+  <div class="container my-5">
+
+    <h2 class="mb-4">Curriculum Management</h2>
+
+    <table class="table table-bordered table-striped">
+      <thead class="table-dark">
+        <tr>
+          <th>Topic Name</th>
+          <th>Module Name</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="topic : ${topics}">
+          <td th:text="${topic.topicName}">Topic Name</td>
+          <td th:text="${topic.module.moduleName}">Module Name</td>
+          <td>
+            <a th:href="@{'/admin/curriculum/edit/' + ${topic.id}}" 
+               class="btn btn-primary btn-sm">Edit</a>
+            <a th:href="@{'/admin/curriculum/delete/' + ${topic.id}}" 
+               class="btn btn-danger btn-sm"
+               onclick="return confirm('Are you sure you want to delete this topic?');">Delete</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  <input type="hidden" id="serverMessage" th:value="${serverMessage}" />
+          <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+          
+          <script>
+document.addEventListener("DOMContentLoaded", function () {
+  const serverMessage = document.getElementById("serverMessage")?.value;
+
+  if (serverMessage && serverMessage.trim() !== "") {
+    // Agar message me ❌ ho → error, ✅ ho → success
+    let icon = 'info';
+    if (serverMessage.includes('❌')) icon = 'error';
+    if (serverMessage.includes('✅')) icon = 'success';
+
+    Swal.fire({
+      title: 'Notification',
+      text: serverMessage.replace('❌','').replace('✅','').trim(), // remove emoji from message
+      icon: icon,
+      confirmButtonColor: '#2575fc',
+      background: '#f9f9f9',
+      color: '#333',
+      timer: 4000,
+      timerProgressBar: true
+    });
+  }
+});
+</script>
+  </div>
+</main>
+</body>
+</html>

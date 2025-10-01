@@ -1,0 +1,33 @@
+<html th:replace="~{Adminbase::layout(~{::main})}">
+<body>
+<main>
+  <div class="container my-5">
+    <h2>Edit Curriculum Topic</h2>
+
+    <form  th:object="${topic}" method="post">
+      <input type="hidden" th:field="*{id}" />
+
+      <div class="mb-3">
+        <label for="topicName" class="form-label">Topic Name</label>
+        <input type="text" class="form-control" id="topicName" th:field="*{topicName}" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="module" class="form-label">Module</label>
+        <select id="module" class="form-select" th:field="*{module}" required>
+          <option th:value="${topic.module.id}" th:text="${topic.module.moduleName}" selected>
+            Current Module
+          </option>
+          <option th:each="m : ${modules}" th:value="${m.id}" th:text="${m.moduleName}"
+                  th:if="${m.id != topic.module.id}">
+          </option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-success">Update</button>
+      <a th:href="@{/admin/curriculum-management}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+  </div>
+</main>
+</body>
+</html>
