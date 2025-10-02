@@ -25,6 +25,7 @@
         <th>End Date</th>
         <th>Status</th>
         <th>Details</th>
+        <th>Action</th>
       </tr>
     </thead>
     <tbody>
@@ -35,18 +36,22 @@
         <td th:text="${fb.endDate}" class="endDate"></td>
         <td class="statusCell"></td>
         <td>
-  <a th:href="@{'/admin/feedback/details/' + ${fb.id}}" 
-     class="btn btn-sm btn-outline-primary">
-      Details
-  </a>
-</td>
+          <a th:href="@{'/admin/feedback/details/' + ${fb.id}}" 
+             class="btn btn-sm btn-outline-primary">
+              Details
+          </a>
+        </td>
+        <td>
+          <a href="javascript:void(0)" 
+   th:onclick="'confirmDelete(' + ${fb.id} + ')'"
+   class="btn btn-sm btn-danger">
+   Delete
+</a>
 
-
+        </td>
       </tr>
     </tbody>
   </table>
-  
-  
   
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -57,30 +62,16 @@ document.addEventListener("DOMContentLoaded", function() {
     const rows = document.querySelectorAll("#feedbackTable tbody tr");
 
     rows.forEach(row => {
-        // Get date strings from table
         const startStr = row.querySelector(".startDate").textContent.trim();
         const endStr   = row.querySelector(".endDate").textContent.trim();
 
-        // Parse to JS Date at local midnight
-        const startParts = startStr.split('-'); // ["2025","09","25"]
+        const startParts = startStr.split('-');
         const endParts = endStr.split('-');
 
-        const startDate = new Date(
-            parseInt(startParts[0]), // year
-            parseInt(startParts[1]) - 1, // month 0-indexed
-            parseInt(startParts[2]), // day
-            0,0,0 // midnight
-        );
-
-        const endDate = new Date(
-            parseInt(endParts[0]),
-            parseInt(endParts[1]) - 1,
-            parseInt(endParts[2]),
-            23,59,59 // end of day
-        );
+        const startDate = new Date(parseInt(startParts[0]), parseInt(startParts[1]) - 1, parseInt(startParts[2]), 0,0,0);
+        const endDate   = new Date(parseInt(endParts[0]), parseInt(endParts[1]) - 1, parseInt(endParts[2]), 23,59,59);
 
         const now = new Date();
-
         let status = "";
         let color = "";
 
@@ -102,9 +93,7 @@ document.addEventListener("DOMContentLoaded", function() {
         row.setAttribute("data-status", status);
     });
 });
-
 </script>
-
 
 <!-- Filter Logic -->
 <script>
@@ -119,9 +108,55 @@ filterSelect.addEventListener("change", function() {
     });
 });
 </script>
+<!-- Hidden input for server message -->
+<input type="hidden" id="serverMessage" th:value="${serverMessageModule}">
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+      const serverMessage = document.getElementById("serverMessage")?.value;
+      if (serverMessage && serverMessage.trim() !== "") {
+          const lowerMsg = serverMessage.toLowerCase();
+          const isError = lowerMsg.includes('invalid') || 
+                          lowerMsg.includes('disabled') || 
+                          lowerMsg.includes('pending') || 
+                          lowerMsg.includes('not found') || 
+                          lowerMsg.includes('Cannot') ||
+                          lowerMsg.includes('error');
+
+          Swal.fire({
+              title: isError ? 'Error' : 'Success',
+              text: serverMessage,
+              icon: isError ? 'error' : 'success',
+              confirmButtonColor: '#2575fc',
+              background: '#f9f9f9',
+              color: '#333',
+              timer: 4000,
+              timerProgressBar: true
+          });
+      }
+  });
+
+  // Delete confirm function
+  function confirmDelete(id) {
+      Swal.fire({
+          title: 'Are you sure?',
+          text: "This feedback will be deleted permanently!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+          if (result.isConfirmed) {
+              // Redirect for delete
+              window.location.href = '/admin/totalFeedback/delete/' + id;
+          }
+      });
+  }
+</script>
 
 </main>
-
-
 </body>
 </html>

@@ -1174,6 +1174,38 @@ public String saveFeedback(@RequestParam Long programId,
     }
 
 
+    
+    @GetMapping("/totalFeedback/delete/{id}")
+    public String deleteFeedback(@PathVariable Long id, RedirectAttributes redirectAttrs) {
+        Feedback feedback = feedRepo.findById(id).orElse(null);
+
+        if (feedback == null) {
+            redirectAttrs.addFlashAttribute("serverMessageModule", "Error: Feedback not found!");
+            return "redirect:/admin/totalFeedback";
+        }
+
+        // Check if feedback has StudentFeedbackAnswers (then cannot delete)
+        if (feedback.getStudentFeedbackAnswers() != null && !feedback.getStudentFeedbackAnswers().isEmpty()) {
+            redirectAttrs.addFlashAttribute("serverMessageModule", 
+                    "Error! Cannot delete! Feedback is already filled by students.");
+            return "redirect:/admin/totalFeedback";
+        }
+
+        try {
+            // Break the relations first (Program & Phase)
+            feedback.setProgram(null);
+            feedback.setFeedbackPhase(null);
+
+            // FeedbackQuestionCategories will be auto-deleted because of cascade=ALL + orphanRemoval=true
+            feedRepo.delete(feedback);
+
+            redirectAttrs.addFlashAttribute("serverMessageModule", " Feedback deleted successfully!");
+        } catch (Exception e) {
+            redirectAttrs.addFlashAttribute("serverMessageModule", " Error deleting feedback: " + e.getMessage());
+        }
+
+        return "redirect:/admin/totalFeedback";
+    }
 
     
 }

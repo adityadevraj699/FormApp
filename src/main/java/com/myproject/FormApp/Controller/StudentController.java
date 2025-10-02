@@ -484,6 +484,30 @@ public class StudentController {
         redirectAttrs.addFlashAttribute("success", "Profile updated successfully!");
         return "redirect:/Student/viewProfile";
     }
+    
+    
+    
+    
+    @GetMapping("/HistoryFeedback/{id}")
+    public String viewFeedbackDetail(@PathVariable Long id, Model model, HttpSession session) {
+        Student student = (Student) session.getAttribute("loggedInStudent");
+        if (student == null) {
+            return "redirect:/"; // login check
+        }
+
+        // Feedback find karo
+        Feedback feedback = feedRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Feedback not found"));
+
+        // Student ke diye gaye answers filter karo (Feedback + Student)
+        List<StudentFeedbackAnswer> answers = studentFeedbackAnswerRepo
+                .findByStudentIdAndFeedbackId(student.getId(), id);
+
+        model.addAttribute("feedback", feedback);
+        model.addAttribute("answers", answers);
+        return "Student/feedbackdetailhistory"; // नया Thymeleaf page
+    }
+
 	
 	
 }
