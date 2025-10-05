@@ -1,92 +1,145 @@
 <html th:replace="~{Adminbase::layout(~{::main})}">
 <body>
-<main>
-  <div class="container my-5">
-    <div class="row justify-content-center">
-      <div class="col-md-10">
-        <div class="card shadow-sm">
-          <!-- Card Header -->
-          <div class="card-header bg-primary text-white text-center">
-            <h4 class="fw-bold m-0">Student Details</h4>
+<main class="container my-5">
+
+  <div class="card shadow-lg border-0 rounded-4">
+    
+    <!-- Header -->
+    <div class="card-header bg-primary text-white text-center py-4 rounded-top-4">
+      <h3 class="fw-bold mb-0">Student Profile</h3>
+      <p class="mb-0 small opacity-75">Complete Student Information</p>
+    </div>
+
+    <!-- Card Body -->
+    <div class="card-body p-4">
+      <div class="row g-4">
+        
+        <!-- Left Column (Image + Basic Info) -->
+        <div class="col-md-4 text-center">
+          <!-- Profile Image -->
+          <div th:if="${student.profileImage != null}">
+            <img th:src="@{${student.profileImage}}"
+                 class="rounded-circle border border-4 border-primary shadow-sm"
+                 alt="Profile Image" width="180" height="180">
+          </div>
+          <div th:if="${student.profileImage == null}"
+               class="rounded-circle border border-4 border-primary d-flex align-items-center justify-content-center shadow-sm mx-auto"
+               style="width:180px; height:180px; background-color:#f0f2f5; font-size:54px; color:#495057; font-weight:bold;">
+            <span th:text="${student.name != null ? student.name.substring(0,1) : 'S'}">S</span>
           </div>
 
-          <!-- Card Body -->
-          <div class="card-body">
-            <div class="row">
-              <!-- Column 1 -->
-              <div class="col-md-6 mb-3">
-                <label class="fw-bold">Name:</label>
-                <p th:text="${student.name}" class="form-control-plaintext border p-2 rounded bg-light"></p>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="fw-bold">Roll No:</label>
-                <p th:text="${student.rollNo}" class="form-control-plaintext border p-2 rounded bg-light"></p>
-              </div>
+          <!-- Name + Role -->
+          <h4 class="fw-bold mt-3 mb-0" th:text="${student.name}">Student Name</h4>
+          <span class="badge bg-success fs-6 mt-2" th:text="${student.role}">STUDENT</span>
+        </div>
 
-              <div class="col-md-6 mb-3">
-                <label class="fw-bold">Father's Name:</label>
-                <p th:text="${student.fatherName}" class="form-control-plaintext border p-2 rounded bg-light"></p>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="fw-bold">Mother's Name:</label>
-                <p th:text="${student.motherName}" class="form-control-plaintext border p-2 rounded bg-light"></p>
-              </div>
-
-              <div class="col-md-6 mb-3">
-                <label class="fw-bold">Gender:</label>
-                <p th:text="${student.gender}" class="form-control-plaintext border p-2 rounded bg-light"></p>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="fw-bold">Address:</label>
-                <p th:text="${student.address}" class="form-control-plaintext border p-2 rounded bg-light"></p>
-              </div>
-
-              <div class="col-md-6 mb-3">
-                <label class="fw-bold">Branch:</label>
-                <p th:text="${student.branch}" class="form-control-plaintext border p-2 rounded bg-light"></p>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="fw-bold">Year:</label>
-                <p th:text="${student.year}" class="form-control-plaintext border p-2 rounded bg-light"></p>
-              </div>
-
-              <div class="col-md-6 mb-3">
-                <label class="fw-bold">Contact No:</label>
-                <p th:text="${student.contactNo}" class="form-control-plaintext border p-2 rounded bg-light"></p>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="fw-bold">Email:</label>
-                <p th:text="${student.email}" class="form-control-plaintext border p-2 rounded bg-light"></p>
-              </div>
-
-              <div class="col-md-6 mb-3">
-                <label class="fw-bold">Role:</label>
-                <p th:text="${student.role}" class="form-control-plaintext border p-2 rounded bg-light"></p>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="fw-bold">Status:</label>
-                <p th:text="${student.status}" class="form-control-plaintext border p-2 rounded bg-light"></p>
-              </div>
-
-              <div class="col-md-6 mb-4">
-                <label class="fw-bold">Registration Date:</label>
-                <p th:text="${student.regDate}" class="form-control-plaintext border p-2 rounded bg-light"></p>
-              </div>
+        <!-- Right Column (Important Info in same row) -->
+        <div class="col-md-8">
+          <div class="row g-3">
+            
+            <!-- Row 1 -->
+            <div class="col-md-6">
+              <label class="fw-bold text-secondary">Roll No:</label>
+              <p class="form-control-plaintext border rounded px-3 py-2 bg-light" th:text="${student.rollNo}">2025CS01</p>
+            </div>
+            <div class="col-md-6">
+              <label class="fw-bold text-secondary">Course:</label>
+              <p class="form-control-plaintext border rounded px-3 py-2 bg-light" th:text="${student.course}">B.Tech</p>
             </div>
 
-            <div class="text-center">
-              <a th:href="@{/admin/student}" class="btn btn-secondary fw-bold">
-                <i class="bi bi-arrow-left-circle me-1"></i> Back to Student List
-              </a>
+            <!-- Row 2 -->
+            <div class="col-md-6">
+              <label class="fw-bold text-secondary">Branch:</label>
+              <p class="form-control-plaintext border rounded px-3 py-2 bg-light" th:text="${student.branch}">CSE</p>
+            </div>
+            <div class="col-md-6">
+              <label class="fw-bold text-secondary">Year:</label>
+              <p class="form-control-plaintext border rounded px-3 py-2 bg-light" th:text="${student.year}">SECOND</p>
+            </div>
+
+            <!-- Row 3 -->
+            <div class="col-md-6">
+              <label class="fw-bold text-secondary">Semester:</label>
+              <p class="form-control-plaintext border rounded px-3 py-2 bg-light" th:text="${student.semester}">4</p>
+            </div>
+            <div class="col-md-6">
+              <label class="fw-bold text-secondary">Section:</label>
+              <p class="form-control-plaintext border rounded px-3 py-2 bg-light" th:text="${student.section}">A</p>
+            </div>
+
+            <!-- Row 4 -->
+            <div class="col-md-6">
+              <label class="fw-bold text-secondary">Email:</label>
+              <p class="form-control-plaintext border rounded px-3 py-2 bg-light" th:text="${student.email}">email@example.com</p>
+            </div>
+            <div class="col-md-6">
+              <label class="fw-bold text-secondary">Contact No:</label>
+              <p class="form-control-plaintext border rounded px-3 py-2 bg-light" th:text="${student.contactNo}">+91-9876543210</p>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Full Width Details Below -->
+      <div class="row g-3 mt-4">
+        <div class="col-md-6">
+          <label class="fw-bold text-secondary">Father's Name:</label>
+          <p class="form-control-plaintext border rounded px-3 py-2 bg-light" th:text="${student.fatherName}">Father Name</p>
+        </div>
+        <div class="col-md-6">
+          <label class="fw-bold text-secondary">Mother's Name:</label>
+          <p class="form-control-plaintext border rounded px-3 py-2 bg-light" th:text="${student.motherName}">Mother Name</p>
+        </div>
+
+        <div class="col-md-6">
+          <label class="fw-bold text-secondary">Gender:</label>
+          <p class="form-control-plaintext border rounded px-3 py-2 bg-light" th:text="${student.gender}">Male</p>
+        </div>
+        <div class="col-md-6">
+         <label class="fw-bold text-secondary">Status:</label>
+              <p class="form-control-plaintext border rounded px-3 py-2 bg-light">
+               <span class="badge bg-warning text-dark" 
+      th:if="${student.status.name() == 'PENDING'}">Pending</span>
+<span class="badge bg-success" 
+      th:if="${student.status.name() == 'APPROVED'}">Approved</span>
+<span class="badge bg-danger" 
+      th:if="${student.status.name() == 'DISABLED'}">Disabled</span>
+
+              </p>
+        </div>
+
+        <div class="col-md-12">
+          <label class="fw-bold text-secondary">Address:</label>
+          <p class="form-control-plaintext border rounded px-3 py-2 bg-light" th:text="${student.address}">Full Address</p>
+        </div>
+
+        <div class="col-md-12">
+          <label class="fw-bold text-secondary">Registration Date:</label>
+          <p class="form-control-plaintext border rounded px-3 py-2 bg-light" 
+             th:text="${#temporals.format(student.regDate, 'dd MMM yyyy HH:mm')}">
+             01 Jan 2025 10:30
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="card-footer text-center py-3 bg-light rounded-bottom-4">
+      <a th:href="@{/admin/student}" class="btn btn-secondary fw-bold px-4">
+        <i class="bi bi-arrow-left-circle me-2"></i> Back to Student List
+      </a>
     </div>
   </div>
 
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+  <style>
+    .card { transition: all 0.3s ease; }
+    .card:hover { transform: translateY(-3px); }
+    label { font-size: 0.9rem; color: #6c757d; }
+    .form-control-plaintext { font-weight: 500; }
+  </style>
 </main>
 </body>
 </html>

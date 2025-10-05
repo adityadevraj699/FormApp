@@ -27,9 +27,27 @@
                 <div class="mt-3">
                     <p class="mb-2"><i class="fa-solid fa-envelope me-2 text-secondary"></i><span th:text="${student.email}">email@example.com</span></p>
                     <p class="mb-2"><i class="fa-solid fa-phone me-2 text-secondary"></i><span th:text="${student.contactNo}">+91-1234567890</span></p>
-                    <p class="mb-0"><i class="fa-solid fa-graduation-cap me-2 text-secondary"></i>
-                        <span th:text="${student.branch + ' - ' + student.year}">CSE - 1st Year</span>
-                    </p>
+                    <p class="mb-2">
+  <i class="fa-solid fa-book me-2 text-secondary"></i>
+  <strong>Course:</strong> <span th:text="${student.course}">B.Tech</span>
+</p>
+<p class="mb-2" th:if="${student.branch != null}">
+  <i class="fa-solid fa-code-branch me-2 text-secondary"></i>
+  <strong>Branch:</strong> <span th:text="${student.branch}">CSE</span>
+</p>
+<p class="mb-2" th:if="${student.semester != null}">
+  <i class="fa-solid fa-layer-group me-2 text-secondary"></i>
+  <strong>Semester:</strong> <span th:text="${student.semester}">5</span>
+</p>
+<p class="mb-2">
+  <i class="fa-solid fa-calendar-alt me-2 text-secondary"></i>
+  <strong>Year:</strong> <span th:text="${student.year}">THIRD</span>
+</p>
+<p class="mb-0" th:if="${student.section != null}">
+  <i class="fa-solid fa-users me-2 text-secondary"></i>
+  <strong>Section:</strong> <span th:text="${student.section}">A</span>
+</p>
+
                 </div>
             </div>
         </div>

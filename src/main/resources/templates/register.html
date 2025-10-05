@@ -116,28 +116,70 @@
         <div class="col-md-6"><input type="email" class="form-control" name="email" placeholder="Email" required></div>
         <div class="col-md-6"><input type="password" class="form-control" name="password" placeholder="Password" required></div>
         
-        <!-- Branch Dropdown -->
-        <div class="col-md-6">
-          <select class="form-select optional" name="branch">
-            <option value="" selected disabled>Branch </option>
-            <option value="CSE">CSE</option>
-            <option value="ECE">ECE</option>
-            <option value="MECH">Mechanical</option>
-            <option value="CIVIL">Civil</option>
-            <option value="IT">IT</option>
-          </select>
-        </div>
+       <!-- Course Dropdown -->
+<div class="col-md-6">
+  <select class="form-select" name="course" required>
+    <option value="" selected disabled>Select Course</option>
+    <option value="B.Tech">B.Tech</option>
+    <option value="B.Pharm">B.Pharm</option>
+    <option value="BCA">BCA</option>
+    <option value="B.Com">B.Com</option>
+    <option value="BBA">BBA</option>
+    <option value="M.Tech">M.Tech</option>
+    <option value="M.Pharm">M.Pharm</option>
+    <option value="MCA">MCA</option>
+    <option value="B.Sc">B.Sc</option>
+  </select>
+</div>
 
-        <!-- Year Dropdown -->
-        <div class="col-md-6">
-          <select class="form-select optional" name="year">
-            <option value="" selected disabled>Year </option>
-            <option value="1">1st Year</option>
-            <option value="2">2nd Year</option>
-            <option value="3">3rd Year</option>
-            <option value="4">4th Year</option>
-          </select>
-        </div>
+<!-- Semester Dropdown -->
+<div class="col-md-6">
+  <select class="form-select" name="semester" required>
+    <option value="" selected disabled>Select Semester</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+    <option value="6">6</option>
+    <option value="7">7</option>
+    <option value="8">8</option>
+  </select>
+</div>
+
+<!-- Year Dropdown -->
+<div class="col-md-6">
+  <select class="form-select" name="year" required>
+    <option value="" selected disabled>Select Year</option>
+    <option value="FIRST">FIRST</option>
+    <option value="SECOND">SECOND</option>
+    <option value="THIRD">THIRD</option>
+    <option value="FOURTH">FOURTH</option>
+  </select>
+</div>
+
+<!-- Branch Dropdown (Optional) -->
+<div class="col-md-6">
+  <select class="form-select optional" name="branch">
+    <option value="" selected disabled>Select Branch (Optional)</option>
+    <option value="CSE">CSE</option>
+    <option value="ECE">ECE</option>
+    <option value="IT">IT</option>
+    <option value="MECH">Mechanical</option>
+    <option value="CIVIL">Civil</option>
+    <option value="EEE">EEE</option>
+    <option value="CHE">Chemical</option>
+    <option value="BIO">Biotechnology</option>
+    <option value="AERO">Aeronautical</option>
+    <option value="OTHER">Other</option>
+  </select>
+</div>
+
+<!-- Section Input (Optional, will be saved in UPPERCASE) -->
+<div class="col-md-6">
+  <input type="text" class="form-control optional" name="section" placeholder="Section (Optional)">
+</div>
+
 
         <!-- Gender Dropdown -->
         <div class="col-md-6">

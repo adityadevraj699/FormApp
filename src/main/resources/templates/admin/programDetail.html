@@ -11,57 +11,58 @@
     
   <h2 class="mb-4">Program Details</h2>
 
-  <!-- Program & Teacher Info Row -->
-  <div class="row mb-4">
-      <!-- Program Info (Left) -->
-      <div class="col-md-6">
-          <div class="card shadow-sm mb-3">
-              <div class="card-header bg-primary text-white">
-                  Program Info
-              </div>
-              <div class="card-body">
-                  <p><strong>Name:</strong> <span th:text="${program.trainingProgram}"></span></p>
-                  <p><strong>Start Date:</strong> <span th:text="${program.startDate}"></span></p>
-                  <p><strong>End Date:</strong> <span th:text="${program.endDate}"></span></p>
-                  <p><strong>Total Students Enrolled:</strong> <span th:text="${enrolledCount}"></span></p>
-              </div>
-          </div>
+  <!-- Program Info Card -->
+  <div class="card shadow-sm mb-4">
+      <div class="card-header bg-primary text-white">
+          Program Info
       </div>
+      <div class="card-body">
+          <div class="row">
+              <div class="col-md-4 mb-3"><strong>Name:</strong> <span th:text="${program.trainingProgram}"></span></div>
+              <div class="col-md-4 mb-3"><strong>Start Date:</strong> <span th:text="${program.startDate}"></span></div>
+              <div class="col-md-4 mb-3"><strong>End Date:</strong> <span th:text="${program.endDate}"></span></div>
 
-      <!-- Teacher Info (Right) -->
-      <div class="col-md-6">
-          <div class="card shadow-sm mb-3">
-              <div class="card-header bg-success text-white">
-                  Assigned Teachers
-              </div>
-              <div class="card-body p-0">
-                  <table class="table table-striped table-bordered mb-0">
-                      <thead class="table-success">
-                          <tr>
-                              <th>Name</th>
-                              <th>Email</th>
-                              <th>Experience</th>
-                              <th>Department</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          <tr th:each="ta : ${teacherAssignments}">
-                              <td th:text="${ta.teacher.name}"></td>
-                              <td th:text="${ta.teacher.email}"></td>
-                              <td th:text="${ta.teacher.experience}"></td>
-                              <td th:text="${ta.teacher.department}"></td>
-                          </tr>
-                      </tbody>
-                  </table>
-              </div>
+              <div class="col-md-4 mb-3"><strong>Course:</strong> <span th:text="${program.course}"></span></div>
+              <div class="col-md-4 mb-3"><strong>Branch:</strong> <span th:text="${program.branch}"></span></div>
+              <div class="col-md-4 mb-3"><strong>Year:</strong> <span th:text="${program.year}"></span></div>
+
+              <div class="col-md-4 mb-3"><strong>Section:</strong> <span th:text="${program.section}"></span></div>
+              <div class="col-md-4 mb-3"><strong>Semester:</strong> <span th:text="${program.semester}"></span></div>
+              <div class="col-md-4 mb-3"><strong>Total Students Enrolled:</strong> <span th:text="${enrolledCount}"></span></div>
           </div>
       </div>
   </div>
 
- 
+  <!-- Teacher Info Card -->
+  <div class="card shadow-sm mb-4">
+      <div class="card-header bg-success text-white">
+          Assigned Teachers
+      </div>
+      <div class="card-body p-0">
+          <table class="table table-striped table-bordered mb-0">
+              <thead class="table-success">
+                  <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Experience</th>
+                      <th>Department</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <tr th:each="ta : ${teacherAssignments}">
+                      <td th:text="${ta.teacher.name}"></td>
+                      <td th:text="${ta.teacher.email}"></td>
+                      <td th:text="${ta.teacher.experience}"></td>
+                      <td th:text="${ta.teacher.department}"></td>
+                  </tr>
+              </tbody>
+          </table>
+      </div>
+  </div>
+
   <!-- Modules & Topics Table -->
   <h4>Curriculum: Modules & Topics</h4>
-  <table class="table table-bordered table-hover">
+  <table class="table table-bordered table-hover mb-4">
       <thead class="table-dark">
           <tr>
               <th>Module Name</th>
@@ -79,16 +80,18 @@
           </tr>
       </tbody>
   </table>
-  
-  
-   <!-- Enrolled Students Table -->
+
+  <!-- Enrolled Students Table -->
   <h4>Enrolled Students</h4>
   <table class="table table-bordered table-hover mb-4">
       <thead class="table-dark">
           <tr>
               <th>Roll No</th>
               <th>Name</th>
+              <th>Course</th>
               <th>Branch</th>
+              <th>Section</th>
+              <th>Semester</th>
               <th>Year</th>
               <th>Email</th>
               <th>Action</th>
@@ -98,32 +101,30 @@
           <tr th:each="ep : ${enrolledStudents}">
               <td th:text="${ep.student.rollNo}"></td>
               <td th:text="${ep.student.name}"></td>
+              <td th:text="${ep.student.course}"></td>
               <td th:text="${ep.student.branch}"></td>
+              <td th:text="${ep.student.section}"></td>
+              <td th:text="${ep.student.semester}"></td>
               <td th:text="${ep.student.year}"></td>
               <td th:text="${ep.student.email}"></td>
-               <!-- Status Button -->
-    <!-- Action buttons -->
-    <td>
-        <!-- Update Status -->
-        <form th:action="@{/admin/updateStatus/{id}(id=${ep.id})}" method="post">
-           <button type="submit"
-            th:text="${ep.status}"
-            th:classappend="${#strings.equals(ep.status.toString(), 'PENDING') 
-                             ? 'btn btn-warning btn-sm' 
-                             : 'btn btn-success btn-sm'}">
-            </button>
-        </form>
-
-        <!-- Delete Enrollment -->
-        <form th:action="@{/admin/deleteEnrollment/{id}(id=${ep.id})}" method="post">
-            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-        </form>
-    </td>
-
+              <td>
+                  <!-- Update Status -->
+                  <form th:action="@{/admin/updateStatus/{id}(id=${ep.id})}" method="post" class="d-inline">
+                      <button type="submit"
+                          th:text="${ep.status}"
+                          th:classappend="${#strings.equals(ep.status.toString(), 'PENDING') 
+                                           ? 'btn btn-warning btn-sm' 
+                                           : 'btn btn-success btn-sm'}">
+                      </button>
+                  </form>
+                  <!-- Delete Enrollment -->
+                  <form th:action="@{/admin/deleteEnrollment/{id}(id=${ep.id})}" method="post" class="d-inline">
+                      <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                  </form>
+              </td>
           </tr>
       </tbody>
   </table>
-  
 
 </main>
 </body>

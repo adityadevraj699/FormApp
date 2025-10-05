@@ -42,6 +42,11 @@
           </a>
         </td>
         <td>
+         <a href="javascript:void(0)" 
+         th:href="@{/admin/feedback/edit/{id}(id=${fb.id})}"
+   class="btn btn-sm btn-warning">
+   Edit
+</a>
           <a href="javascript:void(0)" 
    th:onclick="'confirmDelete(' + ${fb.id} + ')'"
    class="btn btn-sm btn-danger">

@@ -179,10 +179,11 @@ public class AdminController {
 
     // ---------------------- PROGRAM ----------------------
     @GetMapping("/program")
-    public String showProgram() {
+    public String showProgram(Model model) {
         if (!isLoggedIn()) return redirectIfNotLoggedIn();
         return "admin/Program";
     }
+
 
     @PostMapping("/program")
     public String createProgram(@ModelAttribute Program program, RedirectAttributes redirectAttributes) {
@@ -466,16 +467,21 @@ public class AdminController {
             QuestionCatrgories category = questionCategoryRepo.findById(categoryId)
                     .orElseThrow(() -> new IllegalArgumentException("Invalid category ID"));
 
+            var count =0;
             for (int i = 0; i < questions.size(); i++) {
                 String text = questions.get(i).trim();
+                System.out.println("THe text of the question is "+text);
                 Question.AnswerType type = Question.AnswerType.valueOf(answerTypes.get(i));
+                System.out.println("The type of question is "+type);
                 Question q = new Question(category, text, type);
 
                 if (type == Question.AnswerType.NUMBER) {
-                    q.setRangeStart(rangeStarts.get(i));
-                    q.setRangeEnd(rangeEnds.get(i));
+                    q.setRangeStart(rangeStarts.get(count));
+                    q.setRangeEnd(rangeEnds.get(count));
+                    count++;
                 }
 
+                System.out.println("THe range is obtained");
                 questionRepo.save(q);
             }
 
@@ -1206,6 +1212,9 @@ public String saveFeedback(@RequestParam Long programId,
 
         return "redirect:/admin/totalFeedback";
     }
+    
+    
+   
 
     
 }

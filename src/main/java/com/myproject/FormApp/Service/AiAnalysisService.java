@@ -32,7 +32,7 @@ public class AiAnalysisService {
 
             // ✅ Payload for Grok 4 Fast free
             Map<String, Object> payload = Map.of(
-                    "model", "x-ai/grok-4-fast:free",
+                    "model", "deepseek/deepseek-chat-v3.1:free",
                     "messages", List.of(
                             Map.of(
                                     "role", "user",

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.myproject.FormApp.Model.EnrolledProgram;
+import com.myproject.FormApp.Model.EnrolledProgram.ProgramStatus;
 
 public interface EnrolledProgramRepository extends JpaRepository<EnrolledProgram, Long>{
 
@@ -17,5 +18,8 @@ public interface EnrolledProgramRepository extends JpaRepository<EnrolledProgram
 	long countByProgramId(Long id);
 
 	List<EnrolledProgram> findByProgramId(Long id);
+
+	List<EnrolledProgram> findByStudentIdAndStatus(Long id, ProgramStatus status);
+
 
 }

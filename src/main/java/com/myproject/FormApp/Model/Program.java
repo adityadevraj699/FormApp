@@ -21,8 +21,62 @@ public class Program {
 
     @Column(nullable = false)
     private LocalDate endDate;
+    
+    private String course;
+    private String branch;
+    private String year;
+    private String section;
+    private String semester;
 
-    // Default constructor required by JPA
+    public String getCourse() {
+		return course;
+	}
+
+	public void setCourse(String course) {
+		this.course = course;
+	}
+
+	public String getBranch() {
+		return branch;
+	}
+
+	public void setBranch(String branch) {
+		this.branch = branch;
+	}
+
+	public String getYear() {
+		return year;
+	}
+
+	public void setYear(String year) {
+		this.year = year;
+	}
+
+	public String getSection() {
+		return section;
+	}
+
+	public void setSection(String section) {
+		this.section = section;
+	}
+
+	public String getSemester() {
+		return semester;
+	}
+
+	public void setSemester(String semester) {
+		this.semester = semester;
+	}
+
+	public List<TeacherAssign> getTeacherAssignments() {
+		return teacherAssignments;
+	}
+
+	public void setTeacherAssignments(List<TeacherAssign> teacherAssignments) {
+		this.teacherAssignments = teacherAssignments;
+	}
+
+	// Default constructor required by JPA
     public Program() {}
 
     // Getters and Setters

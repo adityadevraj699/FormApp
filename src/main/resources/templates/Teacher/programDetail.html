@@ -11,16 +11,27 @@
 
     <!-- Program Info -->
     <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white">Program Information</div>
-        <div class="card-body">
-            <p><strong>Name:</strong> <span th:text="${program.trainingProgram}"></span></p>
-            <p><strong>Start Date:</strong> <span th:text="${program.startDate}"></span></p>
-            <p><strong>End Date:</strong> <span th:text="${program.endDate}"></span></p>
-            <p><strong>Total Students Enrolled:</strong> 
-                <span class="badge bg-success" th:text="${enrolledCount}"></span>
-            </p>
+    <div class="card-header bg-primary text-white">Program Information</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4"><strong>Name:</strong> <span th:text="${program.trainingProgram} ?: 'All'"></span></div>
+            <div class="col-md-4"><strong>Course:</strong> <span th:text="${program.course} ?: 'All'"></span></div>
+            <div class="col-md-4"><strong>Branch:</strong> <span th:text="${program.branch} ?: 'All'"></span></div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-4"><strong>Year:</strong> <span th:text="${program.year} ?: 'All'"></span></div>
+            <div class="col-md-4"><strong>Section:</strong> <span th:text="${program.section} ?: 'All'"></span></div>
+            <div class="col-md-4"><strong>Semester:</strong> <span th:text="${program.semester} ?: 'All'"></span></div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-4"><strong>Start Date:</strong> <span th:text="${program.startDate} ?: 'All'"></span></div>
+            <div class="col-md-4"><strong>End Date:</strong> <span th:text="${program.endDate} ?: 'All'"></span></div>
+            <div class="col-md-4"><strong>Total Students:</strong> <span th:text="${enrolledCount} ?: '0'"></span></div>
         </div>
     </div>
+</div>
+
+
 
     <!-- Teacher Info -->
     <div class="card shadow-sm mb-4">
@@ -77,7 +88,10 @@
         <tr>
             <th>Roll No</th>
             <th>Name</th>
+            <th>Course</th>
             <th>Branch</th>
+            <th>Section</th>
+            <th>Semester</th>
             <th>Year</th>
             <th>Contact</th>
             <th>Status</th>
@@ -93,7 +107,10 @@
                      alt="profile" width="32" height="32" class="rounded-circle me-1" />
                 <span th:text="${ep.student.name}"></span>
             </td>
+            <td th:text="${ep.student.course}"></td>
             <td th:text="${ep.student.branch}"></td>
+            <td th:text="${ep.student.section}"></td>
+            <td th:text="${ep.student.semester}"></td>
             <td th:text="${ep.student.year}"></td>
             <td th:text="${ep.student.contactNo}"></td>
 

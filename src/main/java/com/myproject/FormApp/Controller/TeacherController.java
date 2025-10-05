@@ -173,38 +173,45 @@ public class TeacherController {
 	    // Logged-in teacher check
 	    Teacher teacher = (Teacher) session.getAttribute("loggedInTeacher");
 	    if (teacher == null) {
-	        return "redirect:/";  // login page pe bhej do
+	        return "redirect:/";  // login page
 	    }
 
 	    // Program detail
 	    Program program = programRepo.findById(id)
 	            .orElseThrow(() -> new RuntimeException("Program not found"));
 
-	    // Sirf wahi program allow ho jisme yeh teacher assigned hai
+	    // Only allow if teacher assigned
 	    boolean isAssigned = teacherAssignRepo.existsByProgramIdAndTeacherId(id, teacher.getId());
 	    if (!isAssigned) {
 	        return "redirect:/teacher/dashboard"; // unauthorized
 	    }
 
+	    // Fetch modules & topics
 	    List<Module> modules = moduleRepo.findByProgramId(id);
-
 	    Map<Long, List<CurriculumTopic>> moduleTopicsMap = new HashMap<>();
 	    for (Module module : modules) {
 	        List<CurriculumTopic> topics = curriculumTopicRepo.findByModuleId(module.getId());
 	        moduleTopicsMap.put(module.getId(), topics);
 	    }
 
+	    // Enrolled students
 	    List<EnrolledProgram> enrolledStudents = enrolledProgramRepo.findByProgramId(id);
 	    long enrolledCount = enrolledProgramRepo.countByProgramId(id);
 
+	    // ✅ Fetch teacher assignments for this program
+	    List<TeacherAssign> teacherAssignments = teacherAssignRepo.findByProgramId(id);
+
+	    // Add to model
 	    model.addAttribute("program", program);
 	    model.addAttribute("modules", modules);
 	    model.addAttribute("moduleTopicsMap", moduleTopicsMap);
 	    model.addAttribute("enrolledStudents", enrolledStudents);
 	    model.addAttribute("enrolledCount", enrolledCount);
+	    model.addAttribute("teacherAssignments", teacherAssignments); // ✅ Add this
 
 	    return "Teacher/programDetail";
 	}
+
 
 	
 	@PostMapping("/updateStatus/{id}")

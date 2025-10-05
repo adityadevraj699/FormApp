@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -104,48 +105,64 @@ public class StudentController {
     @PersistenceContext
     private EntityManager entityManager;
 	
-    @GetMapping("/Dashboard")
-    public String showDashboard(Model model) {
-        Student student = (Student) session.getAttribute("loggedInStudent");
-        if(student == null) return "redirect:/";
+   @GetMapping("/Dashboard")
+public String showDashboard(Model model) {
+    Student student = (Student) session.getAttribute("loggedInStudent");
+    if(student == null) return "redirect:/";
 
-        // 1️⃣ Enrolled Programs
-        List<EnrolledProgram> enrolledPrograms = enrolledProgramRepo.findByStudentId(student.getId());
-        model.addAttribute("enrolledPrograms", enrolledPrograms);
+    // 1️⃣ Enrolled Programs (only APPROVED)
+    List<EnrolledProgram> enrolledPrograms = enrolledProgramRepo.findByStudentId(student.getId())
+            .stream()
+            .filter(ep -> ep.getStatus() == EnrolledProgram.ProgramStatus.APPROVED)
+            .toList();
+    model.addAttribute("enrolledPrograms", enrolledPrograms);
 
-        // 2️⃣ Pending Feedbacks
-        List<Long> answeredFeedbackIds = studentFeedbackAnswerRepo.findAnsweredFeedbackIdsByStudent(student.getId());
-        List<Feedback> pendingFeedbacks = answeredFeedbackIds.isEmpty()
-            ? feedRepo.findByProgramIn(enrolledPrograms.stream().map(EnrolledProgram::getProgram).toList())
-            : feedRepo.findByProgramInAndIdNotIn(
-                enrolledPrograms.stream().map(EnrolledProgram::getProgram).toList(),
-                answeredFeedbackIds
-            );
-        model.addAttribute("pendingFeedbacks", pendingFeedbacks);
+    // 2️⃣ Pending Feedbacks
+    List<Long> answeredFeedbackIds = studentFeedbackAnswerRepo.findAnsweredFeedbackIdsByStudent(student.getId());
+    List<Feedback> pendingFeedbacks = answeredFeedbackIds.isEmpty()
+        ? feedRepo.findByProgramIn(enrolledPrograms.stream().map(EnrolledProgram::getProgram).toList())
+        : feedRepo.findByProgramInAndIdNotIn(
+            enrolledPrograms.stream().map(EnrolledProgram::getProgram).toList(),
+            answeredFeedbackIds
+        );
+    model.addAttribute("pendingFeedbacks", pendingFeedbacks);
 
-        // 3️⃣ Recent Programs (last 5)
-        List<EnrolledProgram> recentPrograms = enrolledPrograms.stream()
-                .sorted((a,b) -> b.getRegDate().compareTo(a.getRegDate()))
-                .limit(5)
-                .toList();
-        model.addAttribute("recentPrograms", recentPrograms);
+    // 3️⃣ Recent Programs (last 5, only APPROVED)
+    List<EnrolledProgram> recentPrograms = enrolledPrograms.stream()
+            .sorted((a,b) -> b.getRegDate().compareTo(a.getRegDate()))
+            .limit(5)
+            .toList();
+    model.addAttribute("recentPrograms", recentPrograms);
 
-        return "Student/Dashboard";
-    }
+    return "Student/Dashboard";
+}
 
 	
-	@GetMapping("/TotalProgram")
-	public String showTotalProgram(Model model) {
-		if(session.getAttribute("loggedInStudent") == null) {
-			return "redirect:/";
-		}
-		
-		List<TeacherAssign> programList = teacherAssignRepo.findAll();
+    @GetMapping("/TotalProgram")
+    public String showTotalProgram(Model model) {
+        if (session.getAttribute("loggedInStudent") == null) {
+            return "redirect:/";
+        }
 
-        // Model में डालो
-        model.addAttribute("programList", programList);
-		return "Student/TotalProgram";
-	}
+        Student student = (Student) session.getAttribute("loggedInStudent");
+        
+        List<TeacherAssign> allPrograms = teacherAssignRepo.findAll();
+
+        // Filter programs dynamically
+        List<TeacherAssign> filteredPrograms = allPrograms.stream()
+            .filter(p -> 
+                (p.getProgram().getCourse() == null || p.getProgram().getCourse().equals(student.getCourse())) &&
+                (p.getProgram().getBranch() == null || p.getProgram().getBranch().equals(student.getBranch())) &&
+                (p.getProgram().getYear() == null || p.getProgram().getYear().equals(student.getYear())) &&
+                (p.getProgram().getSection() == null || p.getProgram().getSection().equals(student.getSection())) &&
+                (p.getProgram().getSemester() == null || p.getProgram().getSemester().equals(student.getSemester()))
+            )
+            .collect(Collectors.toList());
+
+        model.addAttribute("programList", filteredPrograms);
+        return "Student/TotalProgram";
+    }
+
 	
 	
 	@GetMapping("/programDetail/{id}")
@@ -225,9 +242,13 @@ public class StudentController {
 	    if(student == null) return "redirect:/";
 
 	    // Fetch all programs this student is enrolled in
-	    List<EnrolledProgram> enrolledPrograms = enrolledProgramRepo.findByStudentId(student.getId());
+	    List<EnrolledProgram> enrolledProgramsApproved = enrolledProgramRepo.findByStudentIdAndStatus(student.getId(),ProgramStatus.APPROVED);
+	    List<EnrolledProgram> enrolledProgramsPending = enrolledProgramRepo.findByStudentIdAndStatus(student.getId(),ProgramStatus.PENDING);
 
-	    model.addAttribute("enrolledPrograms", enrolledPrograms);
+	    model.addAttribute("enrolledProgramsApproved", enrolledProgramsApproved);
+	    model.addAttribute("enrolledProgramsPending", enrolledProgramsPending);
+	    
+	    
 	    return "Student/EnrolledProgram";
 	}
 
@@ -241,7 +262,8 @@ public class StudentController {
 
 	    // Student के enrolled programs लाओ
 	    List<EnrolledProgram> enrolledPrograms =
-	            enrolledProgramRepo.findByStudentId(loggedInStudent.getId());
+	    	    enrolledProgramRepo.findByStudentIdAndStatus(loggedInStudent.getId(), ProgramStatus.APPROVED);
+
 
 	    // Program list निकालो
 	    List<Program> programs = enrolledPrograms.stream()

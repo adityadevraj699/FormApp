@@ -32,9 +32,38 @@ public class Student {
     private String motherName;
     private String gender;
     private String address;
+    private String course;
+    private String section;
+    private String semester;
+
+    
 
 
-    @Column(nullable = false)
+    
+	public String getCourse() {
+		return course;
+	}
+
+	public void setCourse(String course) {
+		this.course = course;
+	}
+
+	public String getSection() {
+		return section;
+	}
+
+	public void setSection(String section) {
+		this.section = section;
+	}
+
+	public String getSemester() {
+		return semester;
+	}
+
+	public void setSemester(String semester) {
+		this.semester = semester;
+	}
+	@Column(nullable = false)
     private String branch;
     @Column(nullable = false)
     private String year;
