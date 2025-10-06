@@ -18,6 +18,7 @@ public class Student {
     private String name;
     
     // Add this for profile image
+    @Column(nullable = true)
     private String profileImage;
     
 
@@ -28,12 +29,19 @@ public class Student {
 	public void setProfileImage(String profileImage) {
 		this.profileImage = profileImage;
 	}
+	@Column(nullable = true)
 	private String fatherName;
+	@Column(nullable = true)
     private String motherName;
+	@Column(nullable = true)
     private String gender;
+	@Column(nullable = true)
     private String address;
+	@Column(nullable = true)
     private String course;
+	@Column(nullable = true)
     private String section;
+	@Column(nullable = true)
     private String semester;
 
     
@@ -63,17 +71,23 @@ public class Student {
 	public void setSemester(String semester) {
 		this.semester = semester;
 	}
-	@Column(nullable = false)
+
+	@Column(nullable = true)
     private String branch;
-    @Column(nullable = false)
+   
+	@Column(nullable = true)
     private String year;
-    @Column(nullable = false)
+  
+	@Column(nullable = true)
     private String contactNo;
+	
     @Column(nullable = false, unique = true)
     private String email;
+    
     @Column(nullable = false)
     private String password;
 
+    
     private LocalDateTime regDate;
 
     @Enumerated(EnumType.STRING)
@@ -86,6 +100,7 @@ public class Student {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    
     public enum Status {
         PENDING, APPROVED, DISABLED
     }

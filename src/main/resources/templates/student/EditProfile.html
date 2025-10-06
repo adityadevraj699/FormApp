@@ -2,110 +2,169 @@
 <body>
 <main class="container my-5">
 
-       <h2 class="mb-3">Edit Profile</h2>
+  <h2 class="mb-3">Edit Profile</h2>
 
-    <!-- Flash Messages -->
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+  <!-- Flash Messages -->
+  <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+  <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
-    <form th:action="@{/Student/EditProfile}" method="post" enctype="multipart/form-data" th:object="${student}">
-        <div class="row">
-            <!-- Left Column: Profile Image -->
-            <div class="col-md-4 text-center">
-                <img th:src="${student.profileImage != null ? student.profileImage : '/images/default-avatar.png'}"
-                     alt="Profile Image"
-                     class="img-thumbnail mb-3"
-                     style="width: 200px; height: 200px; object-fit: cover;">
+  <form th:action="@{/Student/EditProfile}" method="post" enctype="multipart/form-data" th:object="${student}">
+    <div class="row">
+      <!-- Left Column -->
+      <div class="col-md-4 text-center">
+        <img th:src="${student.profileImage != null ? student.profileImage : '/images/default-avatar.png'}"
+             alt="Profile Image"
+             class="img-thumbnail mb-3"
+             style="width: 200px; height: 200px; object-fit: cover;">
+        <input type="file" name="profileImageFile" class="form-control">
+      </div>
 
-                <input type="file" name="profileImageFile" class="form-control">
-            </div>
-
-            <!-- Right Column: Info -->
-            <div class="col-md-8">
-                <div class="mb-3">
-                    <label class="form-label">Full Name</label>
-                    <input type="text" th:field="*{name}" class="form-control" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Contact No</label>
-                    <input type="text" th:field="*{contactNo}" class="form-control">
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Branch</label>
-                    <input type="text" th:field="*{branch}" class="form-control">
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Year</label>
-                    <input type="text" th:field="*{year}" class="form-control">
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Father's Name</label>
-                    <input type="text" th:field="*{fatherName}" class="form-control">
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Mother's Name</label>
-                    <input type="text" th:field="*{motherName}" class="form-control">
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Gender</label>
-                    <select th:field="*{gender}" class="form-select">
-                        <option value="">-- Select --</option>
-                        <option value="Male" th:selected="${student.gender == 'Male'}">Male</option>
-                        <option value="Female" th:selected="${student.gender == 'Female'}">Female</option>
-                        <option value="Other" th:selected="${student.gender == 'Other'}">Other</option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Address</label>
-                    <textarea th:field="*{address}" class="form-control" rows="3"></textarea>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Save Changes</button>
-                <a th:href="@{/Student/viewProfile}" class="btn btn-secondary">Cancel</a>
-            </div>
+      <!-- Right Column -->
+      <div class="col-md-8">
+        <div class="mb-3">
+          <label class="form-label">Full Name</label>
+          <input type="text" th:field="*{name}" class="form-control" required>
         </div>
-    </form>
-</div>
-<!-- Hidden input to pass flash message -->
-<input type="hidden" id="serverMessage" 
-       th:value="${success != null ? success : (error != null ? error : '')}" />
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const serverMessage = document.getElementById("serverMessage")?.value;
 
-  if (serverMessage && serverMessage.trim() !== "") {
-    // Lowercase version for easy keyword matching
-    const lowerMsg = serverMessage.toLowerCase();
+        <div class="mb-3">
+          <label class="form-label">Contact No</label>
+          <input type="text" th:field="*{contactNo}" class="form-control">
+        </div>
 
-    // Error check (keywords)
-    const isError = lowerMsg.includes('invalid') || 
-                    lowerMsg.includes('failed') || 
-                    lowerMsg.includes('error') || 
-                    lowerMsg.includes('not found');
+        <!-- Course Dropdown -->
+        <div class="mb-3">
+          <label class="form-label">Course</label>
+          <select th:field="*{course}" class="form-select" required>
+            <option value="">Select Course</option>
+            <option value="B.Tech">B.Tech</option>
+            <option value="B.Pharm">B.Pharm</option>
+            <option value="BCA">BCA</option>
+            <option value="B.Com">B.Com</option>
+            <option value="BBA">BBA</option>
+            <option value="M.Tech">M.Tech</option>
+            <option value="M.Pharm">M.Pharm</option>
+            <option value="MCA">MCA</option>
+            <option value="B.Sc">B.Sc</option>
+          </select>
+        </div>
 
-    Swal.fire({
-      title: isError ? 'Error' : 'Success',
-      text: serverMessage,
-      icon: isError ? 'error' : 'success',
-      confirmButtonColor: '#2575fc',
-      background: '#f9f9f9',
-      color: '#333',
-      timer: 4000,
-      timerProgressBar: true
-    });
-  }
-});
-</script>
+        <!-- Branch Dropdown -->
+        <div class="mb-3">
+          <label class="form-label">Branch</label>
+          <select th:field="*{branch}" class="form-select">
+            <option value="">Select Branch</option>
+            <option value="CSE">CSE</option>
+            <option value="ECE">ECE</option>
+            <option value="IT">IT</option>
+            <option value="MECH">Mechanical</option>
+            <option value="CIVIL">Civil</option>
+            <option value="EEE">EEE</option>
+            <option value="CHE">Chemical</option>
+            <option value="BIO">Biotechnology</option>
+            <option value="AERO">Aeronautical</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
 
-<link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+        <!-- Year Dropdown -->
+        <div class="mb-3">
+          <label class="form-label">Year</label>
+          <select th:field="*{year}" class="form-select" required>
+            <option value="">Select Year</option>
+            <option value="FIRST">FIRST</option>
+            <option value="SECOND">SECOND</option>
+            <option value="THIRD">THIRD</option>
+            <option value="FOURTH">FOURTH</option>
+          </select>
+        </div>
+
+        <!-- Semester Dropdown -->
+        <div class="mb-3">
+          <label class="form-label">Semester</label>
+          <select th:field="*{semester}" class="form-select" required>
+            <option value="">Select Semester</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+          </select>
+        </div>
+
+        <!-- Section Dropdown (A–I) -->
+        <div class="mb-3">
+          <label class="form-label">Section</label>
+          <select th:field="*{section}" class="form-select">
+            <option value="">Select Section</option>
+            <option th:each="sec : ${#numbers.sequence(65,73)}"
+                    th:value="${T(java.lang.Character).toString(sec)}"
+                    th:text="${T(java.lang.Character).toString(sec)}">
+            </option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Father's Name</label>
+          <input type="text" th:field="*{fatherName}" class="form-control">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Mother's Name</label>
+          <input type="text" th:field="*{motherName}" class="form-control">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Gender</label>
+          <select th:field="*{gender}" class="form-select">
+            <option value="">-- Select Gender --</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Address</label>
+          <textarea th:field="*{address}" class="form-control" rows="3"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a th:href="@{/Student/viewProfile}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </div>
+  </form>
+
+  <!-- Hidden flash message -->
+  <input type="hidden" id="serverMessage" th:value="${success != null ? success : (error != null ? error : '')}" />
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const serverMessage = document.getElementById("serverMessage")?.value;
+    if (serverMessage && serverMessage.trim() !== "") {
+      const lowerMsg = serverMessage.toLowerCase();
+      const isError = lowerMsg.includes('invalid') ||
+                      lowerMsg.includes('failed') ||
+                      lowerMsg.includes('error') ||
+                      lowerMsg.includes('not found');
+      Swal.fire({
+        title: isError ? 'Error' : 'Success',
+        text: serverMessage,
+        icon: isError ? 'error' : 'success',
+        confirmButtonColor: '#2575fc',
+        background: '#f9f9f9',
+        color: '#333',
+        timer: 4000,
+        timerProgressBar: true
+      });
+    }
+  });
+  </script>
+
+  <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
 </main>
 </body>
 </html>

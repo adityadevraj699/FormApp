@@ -2,6 +2,31 @@
 <body>
 <main class="container mt-4">
     <h2>Registered Students</h2>
+    
+    <!-- Bulk Upload Form -->
+    <div class="card p-3 mb-4 shadow-sm">
+        <form th:action="@{/admin/student/RegisterBulkStudent}" 
+              method="post" 
+              enctype="multipart/form-data" 
+              class="row g-3 align-items-end">
+            
+            <div class="col-md-5">
+                <label class="form-label">Upload Excel File (.xlsx)</label>
+                <input type="file" name="file" class="form-control" accept=".xlsx" required>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Data Start Row</label>
+                <input type="number" name="startRow" class="form-control" min="2" value="2" required>
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-success w-100">Upload</button>
+            </div>
+        </form>
+    </div>
+    
+
 
     <!-- Filter & Search Form -->
     <form th:action="@{/admin/student}" method="get" class="row g-3 mb-3">
@@ -57,6 +82,35 @@
             </tr>
         </tbody>
     </table>
+    
+    <input type="hidden" id="serverMessage" th:value="${mgs}">
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const serverMessage = document.getElementById("serverMessage")?.value;
+      if (serverMessage && serverMessage.trim() !== "") {
+        const lowerMsg = serverMessage.toLowerCase();
+        const isError = lowerMsg.includes('invalid') || 
+                        lowerMsg.includes('disabled') || 
+                        lowerMsg.includes('pending') || 
+                        lowerMsg.includes('not found');
+        Swal.fire({
+          title: 'Notification',
+          text: serverMessage,
+          icon: isError ? 'error' : 'success',
+          confirmButtonColor: '#2575fc',
+          background: '#f9f9f9',
+          color: '#333',
+          timer: 4000,
+          timerProgressBar: true
+        });
+      }
+    });
+  </script>
+    
+    
 </main>
 
 </body>

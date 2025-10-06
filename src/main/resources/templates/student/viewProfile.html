@@ -2,86 +2,105 @@
 <body>
 <main class="container my-5">
 
-    <!-- Profile Header -->
-    <div class="card shadow-lg rounded-4 mb-5 border-0">
-        <div class="card-body d-flex flex-column flex-md-row align-items-center p-4">
-            
-            <!-- Profile Image (with default fallback using first letter) -->
-            <div class="text-center me-md-5 mb-3 mb-md-0">
-                <div th:if="${student.profileImage != null}">
-                    <img th:src="@{${student.profileImage}}"
-                         class="rounded-circle border border-4 border-primary shadow-sm"
-                         alt="Profile Image" width="160" height="160">
-                </div>
-                <div th:if="${student.profileImage == null}"
-                     class="rounded-circle border border-4 border-primary d-flex align-items-center justify-content-center shadow-sm"
-                     style="width:160px; height:160px; background-color:#f0f2f5; font-size:48px; color:#495057; font-weight:bold;">
-                    <span th:text="${student.name != null ? student.name.substring(0,1) : 'S'}">S</span>
-                </div>
-            </div>
-
-            <!-- Name & Role -->
-            <div class="flex-grow-1 text-center text-md-start">
-                <h3 th:text="${student.name}" class="fw-bold mb-1">Student Name</h3>
-                <span class="badge bg-primary fs-6 py-2 px-3" th:text="${student.role}">STUDENT</span>
-                <div class="mt-3">
-                    <p class="mb-2"><i class="fa-solid fa-envelope me-2 text-secondary"></i><span th:text="${student.email}">email@example.com</span></p>
-                    <p class="mb-2"><i class="fa-solid fa-phone me-2 text-secondary"></i><span th:text="${student.contactNo}">+91-1234567890</span></p>
-                    <p class="mb-2">
-  <i class="fa-solid fa-book me-2 text-secondary"></i>
-  <strong>Course:</strong> <span th:text="${student.course}">B.Tech</span>
-</p>
-<p class="mb-2" th:if="${student.branch != null}">
-  <i class="fa-solid fa-code-branch me-2 text-secondary"></i>
-  <strong>Branch:</strong> <span th:text="${student.branch}">CSE</span>
-</p>
-<p class="mb-2" th:if="${student.semester != null}">
-  <i class="fa-solid fa-layer-group me-2 text-secondary"></i>
-  <strong>Semester:</strong> <span th:text="${student.semester}">5</span>
-</p>
-<p class="mb-2">
-  <i class="fa-solid fa-calendar-alt me-2 text-secondary"></i>
-  <strong>Year:</strong> <span th:text="${student.year}">THIRD</span>
-</p>
-<p class="mb-0" th:if="${student.section != null}">
-  <i class="fa-solid fa-users me-2 text-secondary"></i>
-  <strong>Section:</strong> <span th:text="${student.section}">A</span>
-</p>
-
-                </div>
-            </div>
-        </div>
+<!-- Profile Header -->
+  <div class="card shadow-lg rounded-4 mb-4 border-0">
+    <div class="card-body d-flex flex-column flex-md-row align-items-center p-4 gap-4">
+      
+    <div class="text-center" style="min-width: 120px; max-width: 160px; margin: auto;">
+    <img th:if="${student.profileImage != null}"
+         th:src="@{${student.profileImage}}"
+         class="rounded-circle border border-4 border-primary shadow-sm img-fluid"
+         alt="Profile Image"
+         style="width: 100%; height: auto; object-fit: cover; aspect-ratio: 1 / 1;">
+         
+    <div th:if="${student.profileImage == null}"
+         class="rounded-circle border border-4 border-primary d-flex align-items-center justify-content-center shadow-sm"
+         style="width: 100%; height: auto; aspect-ratio: 1 / 1; max-width: 160px; background-color:#f0f2f5; font-size:48px; color:#495057; font-weight:bold; margin:auto;">
+        <span th:text="${student.name != null ? student.name.substring(0,1) : 'S'}">S</span>
     </div>
+</div>
 
-    <!-- Profile Details -->
-    <div class="row g-4 mb-5">
-        <div class="col-md-6">
-            <div class="card shadow-sm rounded-4 border-0 h-100">
-                <div class="card-header bg-primary text-white fw-bold fs-6 rounded-top-4">Personal Info</div>
-                <div class="card-body p-4">
-                    <p th:if="${student.fatherName != null}"><strong>Father Name:</strong> <span th:text="${student.fatherName}"></span></p>
-                    <p th:if="${student.motherName != null}"><strong>Mother Name:</strong> <span th:text="${student.motherName}"></span></p>
-                    <p th:if="${student.gender != null}"><strong>Gender:</strong> <span th:text="${student.gender}"></span></p>
-                    <p th:if="${student.address != null}"><strong>Address:</strong> <span th:text="${student.address}"></span></p>
-                    <p th:if="${student.regDate != null}"><strong>Registered On:</strong>
-                        <span th:text="${#temporals.format(student.regDate, 'dd MMM yyyy')}"></span>
-                    </p>
-                </div>
+
+      <!-- Main Info -->
+      <div class="flex-grow-1 w-100">
+        <div class="d-flex justify-content-between align-items-start flex-column flex-md-row gap-3">
+          <div>
+            <h3 class="fw-bold mb-1" th:text="${student.name}">Student Name</h3>
+            <div>
+              <span class="badge bg-primary fs-6 py-2 px-3" th:text="${student.role != null ? student.role : 'STUDENT'}">STUDENT</span>
             </div>
+            <p class="text-muted mt-2 mb-0"><small th:text="'Roll No: ' + ${student.rollNo}">Roll No: 123</small></p>
+          </div>
+
+          <div class="text-md-end">
+            <a th:href="@{/Student/EditProfile}" class="btn btn-sm btn-outline-warning me-2">Edit Profile</a>
+            <a th:href="@{/logout}" class="btn btn-sm btn-outline-danger">Logout</a>
+          </div>
         </div>
 
-        <!-- Actions -->
-        <div class="col-md-6">
-            <div class="d-flex flex-column gap-3 h-100">
-                <a th:href="@{/Student/EditProfile}" class="btn btn-warning w-100 py-2 fw-bold shadow-sm rounded-4">
-                    <i class="fa-solid fa-pen-to-square me-2"></i>Edit Profile
-                </a>
-                <a th:href="@{/logout}" class="btn btn-danger w-100 py-2 fw-bold shadow-sm rounded-4">
-                    <i class="fa-solid fa-right-from-bracket me-2"></i>Logout
-                </a>
-            </div>
+        <!-- Contact & Academics -->
+        <div class="row mt-3 g-3">
+          <div class="col-12 col-md-6">
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item px-0">
+                <strong>Email:</strong>
+                <span class="text-muted ms-2" th:text="${student.email}">email@example.com</span>
+              </li>
+              <li class="list-group-item px-0" th:if="${student.contactNo != null}">
+                <strong>Contact:</strong>
+                <span class="text-muted ms-2" th:text="${student.contactNo}">+91-1234567890</span>
+              </li>
+              <li class="list-group-item px-0" th:if="${student.address != null}">
+                <strong>Address:</strong>
+                <span class="text-muted ms-2" th:text="${student.address}">City, State</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item px-0" th:if="${student.course != null}">
+                <strong>Course:</strong>
+                <span class="text-muted ms-2" th:text="${student.course}">B.Tech</span>
+              </li>
+              <li class="list-group-item px-0" th:if="${student.branch != null}">
+                <strong>Branch:</strong>
+                <span class="text-muted ms-2" th:text="${student.branch}">CSE</span>
+              </li>
+              <li class="list-group-item px-0" th:if="${student.year != null}">
+                <strong>Year:</strong>
+                <span class="text-muted ms-2" th:text="${student.year}">Third</span>
+              </li>
+              <li class="list-group-item px-0" th:if="${student.semester != null}">
+                <strong>Semester:</strong>
+                <span class="text-muted ms-2" th:text="${student.semester}">5</span>
+              </li>
+              <li class="list-group-item px-0" th:if="${student.section != null}">
+                <strong>Section:</strong>
+                <span class="text-muted ms-2" th:text="${student.section}">A</span>
+              </li>
+            </ul>
+          </div>
         </div>
+
+      </div>
     </div>
+  </div>
+
+  <!-- Additional Info Cards -->
+  <div class="row g-4">
+    <div class="col-12 col-md-6">
+      <div class="card h-100 shadow-sm">
+        <div class="card-header bg-white border-0 fw-bold">Personal Info</div>
+        <div class="card-body">
+          <p th:if="${student.fatherName != null}"><strong>Father Name:</strong> <span th:text="${student.fatherName}"></span></p>
+          <p th:if="${student.motherName != null}"><strong>Mother Name:</strong> <span th:text="${student.motherName}"></span></p>
+          <p th:if="${student.gender != null}"><strong>Gender:</strong> <span th:text="${student.gender}"></span></p>
+          <p th:if="${student.regDate != null}"><strong>Registered On:</strong> <span th:text="${#temporals.format(student.regDate, 'dd MMM yyyy')}"></span></p>
+        </div>
+      </div>
+    </div>
+  </div>
 
     <style>
         .card:hover {

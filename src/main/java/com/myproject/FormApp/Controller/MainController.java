@@ -73,8 +73,11 @@ public Callable<String> loginAsync(HttpServletRequest request, HttpSession sessi
                         return "redirect:/admin/dashboard";
                     } else attr.addFlashAttribute("msg", "Invalid Password");
                 } 
-                else if ("STUDENT".equals(role) && studentRepo.existsByEmail(email)) {
+                else if ("STUDENT".equals(role) && (studentRepo.existsByEmail(email) || studentRepo.existsByRollNo(email))) {
                     Student st = studentRepo.findByEmail(email);
+                    if(st == null) {
+                    	st = studentRepo.findByRollNo(email);
+                    }
                     if (st.getPassword().equals(password)) {
                         if (st.getStatus() == Student.Status.APPROVED) {
                             session.setAttribute("loggedInStudent", st);
@@ -86,8 +89,11 @@ public Callable<String> loginAsync(HttpServletRequest request, HttpSession sessi
                         }
                     } else attr.addFlashAttribute("msg", "Invalid Password");
                 } 
-                else if ("TEACHER".equals(role) && teacherRepo.existsByEmail(email)) {
+                else if ("TEACHER".equals(role) && (teacherRepo.existsByEmail(email) || teacherRepo.existsByEmployeeId(email))) {
                     Teacher t = teacherRepo.findByEmail(email);
+                    if(t== null) {
+                    	t = teacherRepo.findByEmployeeId(email);
+                    }
                     if (t.getPassword().equals(password)) {
                         if (t.getStatus() == Teacher.Status.APPROVED) {
                             session.setAttribute("loggedInTeacher", t);

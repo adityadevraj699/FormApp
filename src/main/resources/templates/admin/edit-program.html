@@ -10,30 +10,64 @@
         <form method="post" th:action="@{/admin/program/update}" th:object="${program}">
           <input type="hidden" th:field="*{id}">
 
-          <!-- Program Name -->
-          <div class="mb-4">
-            <label class="form-label fw-bold">Program Name</label>
-            <input type="text" class="form-control" th:field="*{trainingProgram}" required>
-          </div>
+          <div class="row g-3">
 
-          <!-- Start Date -->
-          <div class="mb-4">
-            <label class="form-label fw-bold">Start Date</label>
-            <input type="date" class="form-control" 
-                   th:field="*{startDate}" 
-                   th:value="${#temporals.format(program.startDate, 'yyyy-MM-dd')}" required>
-          </div>
+            <!-- Program Name -->
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Program Name <span style="color:red;">*</span></label>
+              <input type="text" class="form-control" th:field="*{trainingProgram}" placeholder="Enter program name" required>
+            </div>
 
-          <!-- End Date -->
-          <div class="mb-4">
-            <label class="form-label fw-bold">End Date</label>
-            <input type="date" class="form-control" 
-                   th:field="*{endDate}" 
-                   th:value="${#temporals.format(program.endDate, 'yyyy-MM-dd')}" required>
+            <!-- Start Date -->
+            <div class="col-md-3">
+              <label class="form-label fw-bold">Start Date <span style="color:red;">*</span></label>
+              <input type="date" class="form-control" 
+                     th:field="*{startDate}" 
+                     th:value="${#temporals.format(program.startDate, 'yyyy-MM-dd')}" required>
+            </div>
+
+            <!-- End Date -->
+            <div class="col-md-3">
+              <label class="form-label fw-bold">End Date <span style="color:red;">*</span></label>
+              <input type="date" class="form-control" 
+                     th:field="*{endDate}" 
+                     th:value="${#temporals.format(program.endDate, 'yyyy-MM-dd')}" required>
+            </div>
+
+            <!-- Course -->
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Course</label>
+              <input type="text" class="form-control" th:field="*{course}" placeholder="Optional">
+            </div>
+
+            <!-- Branch -->
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Branch</label>
+              <input type="text" class="form-control" th:field="*{branch}" placeholder="Optional">
+            </div>
+
+            <!-- Year -->
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Year</label>
+              <input type="text" class="form-control" th:field="*{year}" placeholder="Optional">
+            </div>
+
+            <!-- Section -->
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Section</label>
+              <input type="text" class="form-control" th:field="*{section}" placeholder="Optional">
+            </div>
+
+            <!-- Semester -->
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Semester</label>
+              <input type="text" class="form-control" th:field="*{semester}" placeholder="Optional">
+            </div>
+
           </div>
 
           <!-- Buttons -->
-          <div class="d-flex justify-content-between">
+          <div class="d-flex justify-content-between mt-4">
             <button type="submit" class="btn btn-success fw-bold">
               <i class="bi bi-check2-circle me-1"></i> Update Program
             </button>

@@ -23,4 +23,6 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
 
 	List<Teacher> findAllByStatus(Status approved);
 
+	Teacher findByEmployeeId(String email);
+
 }

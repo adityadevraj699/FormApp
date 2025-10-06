@@ -1,5 +1,11 @@
 package com.myproject.FormApp.Controller;
 
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myproject.FormApp.Model.Admin;
@@ -41,8 +47,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -818,16 +826,32 @@ public String saveFeedback(@RequestParam Long programId,
         return "admin/edit-program";
     }
 
-    // Update Program
     @PostMapping("/program/update")
-    public String updateProgram(@ModelAttribute Program program, RedirectAttributes redirectAttributes) {
-        // Save updated program
-        programRepo.save(program);
+    public String updateProgram(@ModelAttribute Program updatedProgram, RedirectAttributes redirectAttributes) {
+        Program existingProgram = programRepo.findById(updatedProgram.getId()).orElse(null);
+        if (existingProgram == null) {
+            redirectAttributes.addFlashAttribute("serverMessage", "❌ Program not found!");
+            return "redirect:/admin/manage-program";
+        }
 
-        // Add success message
+        // Update only editable fields
+        existingProgram.setTrainingProgram(updatedProgram.getTrainingProgram());
+        existingProgram.setStartDate(updatedProgram.getStartDate());
+        existingProgram.setEndDate(updatedProgram.getEndDate());
+        existingProgram.setCourse(updatedProgram.getCourse());
+        existingProgram.setBranch(updatedProgram.getBranch());
+        existingProgram.setYear(updatedProgram.getYear());
+        existingProgram.setSection(updatedProgram.getSection());
+        existingProgram.setSemester(updatedProgram.getSemester());
+
+        // Do NOT touch teacherAssignments → existing assignments remain
+
+        programRepo.save(existingProgram);
+
         redirectAttributes.addFlashAttribute("serverMessage", "✅ Program updated successfully!");
         return "redirect:/admin/manage-program";
     }
+
     
     
     
@@ -1213,7 +1237,68 @@ public String saveFeedback(@RequestParam Long programId,
         return "redirect:/admin/totalFeedback";
     }
     
-    
+    @PostMapping("/student/RegisterBulkStudent")
+    public String registerBulkStudents(@RequestParam("file") MultipartFile file,
+                                       @RequestParam("startRow") int startRow,
+                                       RedirectAttributes redirectAttributes) {
+        try {
+            if (file.isEmpty()) {
+                redirectAttributes.addFlashAttribute("msg", "Please upload a valid Excel file!");
+                return "redirect:/admin/student";
+            }
+
+            // Apache POI to read Excel
+            try (InputStream inputStream = file.getInputStream();
+                 Workbook workbook = WorkbookFactory.create(inputStream)) {
+
+                Sheet sheet = workbook.getSheetAt(0);
+                int addedCount = 0;
+
+                for (int i = startRow - 1; i <= sheet.getLastRowNum(); i++) {
+                    Row row = sheet.getRow(i);
+                    if (row == null) continue;
+
+                    String rollNo = getCellValue(row.getCell(1)); // Column B
+                    String name   = getCellValue(row.getCell(2)); // Column C
+                    String email  = getCellValue(row.getCell(3)); // Column D
+
+                    if (rollNo == null || name == null || email == null) continue;
+
+                    // Skip duplicates
+                    if (studentRepository.existsByEmail(email) || studentRepository.existsByRollNo(rollNo)) {
+                        continue;
+                    }
+
+                    Student s = new Student();
+                    s.setRollNo(rollNo);
+                    s.setName(name);
+                    s.setEmail(email);
+                    s.setPassword("12345"); // Default password
+                    s.setRole(Student.Role.STUDENT);
+                    s.setStatus(Student.Status.APPROVED);
+
+                    studentRepository.save(s);
+                    addedCount++;
+                }
+
+                redirectAttributes.addFlashAttribute("msg", addedCount + " students registered successfully!");
+            }
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("msg", "Error while uploading: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return "redirect:/admin/student";
+    }
+
+    // Helper method to read cell safely
+    private String getCellValue(Cell cell) {
+        if (cell == null) return null;
+        cell.setCellType(CellType.STRING);
+        return cell.getStringCellValue().trim();
+    }
+
    
 
     

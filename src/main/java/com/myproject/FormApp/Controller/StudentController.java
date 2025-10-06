@@ -138,30 +138,45 @@ public String showDashboard(Model model) {
 }
 
 	
-    @GetMapping("/TotalProgram")
-    public String showTotalProgram(Model model) {
-        if (session.getAttribute("loggedInStudent") == null) {
-            return "redirect:/";
-        }
+   @GetMapping("/TotalProgram")
+   public String showTotalProgram(Model model) {
+       if (session.getAttribute("loggedInStudent") == null) {
+           return "redirect:/";
+       }
 
-        Student student = (Student) session.getAttribute("loggedInStudent");
-        
-        List<TeacherAssign> allPrograms = teacherAssignRepo.findAll();
+       Student student = (Student) session.getAttribute("loggedInStudent");
+       List<TeacherAssign> allPrograms = teacherAssignRepo.findAllWithProgram();
 
-        // Filter programs dynamically
-        List<TeacherAssign> filteredPrograms = allPrograms.stream()
-            .filter(p -> 
-                (p.getProgram().getCourse() == null || p.getProgram().getCourse().equals(student.getCourse())) &&
-                (p.getProgram().getBranch() == null || p.getProgram().getBranch().equals(student.getBranch())) &&
-                (p.getProgram().getYear() == null || p.getProgram().getYear().equals(student.getYear())) &&
-                (p.getProgram().getSection() == null || p.getProgram().getSection().equals(student.getSection())) &&
-                (p.getProgram().getSemester() == null || p.getProgram().getSemester().equals(student.getSemester()))
-            )
-            .collect(Collectors.toList());
+       // ✅ Smart Dynamic Filter
+       List<TeacherAssign> filteredPrograms = allPrograms.stream()
+           .filter(assign -> {
+               Program p = assign.getProgram();
 
-        model.addAttribute("programList", filteredPrograms);
-        return "Student/TotalProgram";
-    }
+               boolean matchCourse = (p.getCourse() == null || p.getCourse().isEmpty() 
+                                      || p.getCourse().equalsIgnoreCase(student.getCourse()));
+
+               boolean matchBranch = (p.getBranch() == null || p.getBranch().isEmpty() 
+                                      || p.getBranch().equalsIgnoreCase(student.getBranch()));
+
+               boolean matchYear = (p.getYear() == null || p.getYear().isEmpty() 
+                                    || p.getYear().equalsIgnoreCase(student.getYear()));
+
+               boolean matchSection = (p.getSection() == null || p.getSection().isEmpty() 
+                                       || p.getSection().equalsIgnoreCase(student.getSection()));
+
+               boolean matchSemester = (p.getSemester() == null || p.getSemester().isEmpty() 
+                                        || p.getSemester().equalsIgnoreCase(student.getSemester()));
+
+               // ✅ If program has only course filled — match course only
+               // ✅ If program has more fields filled — all those must match
+               return matchCourse && matchBranch && matchYear && matchSection && matchSemester;
+           })
+           .collect(Collectors.toList());
+
+       model.addAttribute("programList", filteredPrograms);
+       return "Student/TotalProgram";
+   }
+
 
 	
 	
@@ -487,7 +502,7 @@ public String showDashboard(Model model) {
             redirectAttrs.addFlashAttribute("error", "Image upload failed!");
         }
 
-        // बाकी fields update
+     // baki fields update
         student.setName(updatedStudent.getName());
         student.setContactNo(updatedStudent.getContactNo());
         student.setBranch(updatedStudent.getBranch());
@@ -496,6 +511,9 @@ public String showDashboard(Model model) {
         student.setMotherName(updatedStudent.getMotherName());
         student.setGender(updatedStudent.getGender());
         student.setAddress(updatedStudent.getAddress());
+        student.setCourse(updatedStudent.getCourse());
+        student.setSection(updatedStudent.getSection());
+        student.setSemester(updatedStudent.getSemester());
 
         // DB save
         studentRepo.save(student);

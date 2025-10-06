@@ -17,6 +17,7 @@ public interface StudentsRepository extends JpaRepository<Student, Long> {
 	List<Student> findByStatus(Status valueOf);
 	List<Student> findByRollNoContaining(String rollNo);
 	List<Student> findByStatusAndRollNoContaining(Status valueOf, String rollNo);
+	Student findByRollNo(String email);
 	
 	
 	
