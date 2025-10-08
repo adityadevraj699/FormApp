@@ -1,13 +1,22 @@
 package com.myproject.FormApp.Controller;
 
+import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import com.itextpdf.layout.element.LineSeparator;
+import com.itextpdf.kernel.colors.DeviceRgb;
+import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
+import com.itextpdf.kernel.colors.ColorConstants;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,10 +30,24 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.LineSeparator;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
 import com.myproject.FormApp.Model.CurriculumTopic;
 import com.myproject.FormApp.Model.EnrolledProgram;
 import com.myproject.FormApp.Model.EnrolledProgram.ProgramStatus;
 import com.myproject.FormApp.Model.Feedback;
+import com.myproject.FormApp.Model.FeedbackQuestionCategory;
 import com.myproject.FormApp.Model.Module;
 import com.myproject.FormApp.Model.Program;
 import com.myproject.FormApp.Model.Question;
@@ -401,9 +424,14 @@ public String showDashboard(Model model) {
                 loggedInStudent.getId()
         );
 
+        if (filledFeedbacks == null) {
+            filledFeedbacks = List.of(); // empty list assign karo
+        }
+
         model.addAttribute("feedbacks", filledFeedbacks);
         return "Student/HistoryFeedback";
     }
+
     
     
     
@@ -547,7 +575,153 @@ public String showDashboard(Model model) {
         model.addAttribute("answers", answers);
         return "Student/feedbackdetailhistory"; // नया Thymeleaf page
     }
+    
+    @GetMapping("/Report/{id}")
+    public ResponseEntity<byte[]> downloadFeedbackPDF(@PathVariable("id") Long feedbackId) {
+        Student student = (Student) session.getAttribute("loggedInStudent");
+        if (student == null) {
+            return ResponseEntity.status(403)
+                    .body("Please login to download the feedback report.".getBytes());
+        }
 
-	
+        Feedback feedback = feedRepo.findById(feedbackId).orElse(null);
+        if (feedback == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<StudentFeedbackAnswer> answers =
+                studentFeedbackAnswerRepo.findByFeedbackAndStudent(feedback, student);
+        
+      
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdfDoc = new PdfDocument(writer);
+            Document document = new Document(pdfDoc);
+
+            PdfFont bold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+            PdfFont normal = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+            PdfFont italic = PdfFontFactory.createFont(StandardFonts.HELVETICA_OBLIQUE);
+
+            // 🔹 Header
+            Paragraph header = new Paragraph("MEERUT INSTITUTE OF TECHNOLOGY, MEERUT - 292")
+                    .setFont(bold)
+                    .setFontSize(16)
+                    .setFontColor(ColorConstants.BLUE)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                    .setPadding(5);
+            document.add(header);
+
+            Paragraph reportTitle = new Paragraph("FEEDBACK REPORT")
+                    .setFont(bold)
+                    .setFontSize(14)
+                    .setFontColor(ColorConstants.RED)
+                    .setTextAlignment(TextAlignment.CENTER);
+            document.add(reportTitle);
+
+            // ✅ LineSeparator
+            document.add(new LineSeparator(new SolidLine(1f)));
+
+         // 🔹 Student Info
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+            // Get first teacher assigned to the program (if any)
+            String teacherName = "";
+            if (feedback.getProgram().getTeacherAssignments() != null && !feedback.getProgram().getTeacherAssignments().isEmpty()) {
+                TeacherAssign firstAssign = feedback.getProgram().getTeacherAssignments().get(0);
+                if (firstAssign != null && firstAssign.getTeacher() != null) {
+                    teacherName = firstAssign.getTeacher().getName();
+                }
+            }
+
+            Paragraph studentInfo = new Paragraph()
+                    .add("Program Name: " + feedback.getProgram().getTrainingProgram() + "\n")
+                    .add("Teacher Name: " + teacherName + "\n")  // ✅ Teacher Name added
+                    .add("Feedback Phase: " + feedback.getFeedbackPhase().getPhaseName() + "\n")
+                    .add("Student Name: " + student.getName() + "\n")
+                    .add("Roll No: " + student.getRollNo() + "\n")
+                    .add("Branch: " + student.getBranch() +
+                            " | Year: " + student.getYear() +
+                            " | Course: " + student.getCourse() + "\n")
+                    .add("Feedback Period: " + feedback.getStartDate().format(formatter)
+                            + " to " + feedback.getEndDate().format(formatter))
+                    .setFont(normal)
+                    .setFontSize(11)
+                    .setMarginBottom(10);
+
+            document.add(studentInfo);
+
+
+            document.add(new LineSeparator(new SolidLine(1f)));
+
+            // 🔹 Questions & Answers
+            for (FeedbackQuestionCategory categoryMapping : feedback.getFeedbackQuestionCategories()) {
+                String categoryName = categoryMapping.getQuestionCategory().getCategoryName();
+                Paragraph categoryHeader = new Paragraph(categoryName)
+                        .setFont(bold)
+                        .setFontSize(12)
+                        .setFontColor(ColorConstants.MAGENTA);
+                document.add(categoryHeader);
+
+                // Table with relative column widths
+                Table table = new Table(UnitValue.createPercentArray(new float[]{1, 5, 4}));
+                table.setWidth(UnitValue.createPercentValue(100));
+
+                // Table Header
+                table.addHeaderCell(new Cell().add(new Paragraph("#").setFont(bold).setFontColor(ColorConstants.WHITE))
+                        .setBackgroundColor(ColorConstants.DARK_GRAY));
+                table.addHeaderCell(new Cell().add(new Paragraph("Question").setFont(bold).setFontColor(ColorConstants.WHITE))
+                        .setBackgroundColor(ColorConstants.DARK_GRAY));
+                table.addHeaderCell(new Cell().add(new Paragraph("Answer").setFont(bold).setFontColor(ColorConstants.WHITE))
+                        .setBackgroundColor(ColorConstants.DARK_GRAY));
+
+                int qNo = 1;
+                for (Question q : categoryMapping.getQuestionCategory().getQuestions()) {
+                    String ansText = answers.stream()
+                            .filter(a -> a.getQuestion().getId().equals(q.getId()))
+                            .map(StudentFeedbackAnswer::getAnswer)
+                            .findFirst()
+                            .orElse("Not Answered");
+
+                    table.addCell(new Cell().add(new Paragraph(String.valueOf(qNo)).setFont(normal)));
+                    table.addCell(new Cell().add(new Paragraph(q.getQuestionText()).setFont(normal)));
+                    table.addCell(new Cell().add(new Paragraph(ansText).setFont(italic)));
+
+                    qNo++;
+                }
+                document.add(table);
+                document.add(new Paragraph("\n")); // spacing after table
+            }
+
+            // 🔹 Footer
+            document.add(new LineSeparator(new SolidLine(1f)));
+            Paragraph footer = new Paragraph("Generated on: " + LocalDate.now().format(formatter))
+                    .setFont(normal)
+                    .setFontSize(9)
+                    .setTextAlignment(TextAlignment.RIGHT)
+                    .setFontColor(ColorConstants.DARK_GRAY);
+            document.add(footer);
+
+            document.close();
+
+            byte[] pdfBytes = baos.toByteArray();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment",
+                    "Feedback_Report_" + student.getRollNo() + ".pdf");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(pdfBytes);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                    .body(("Error generating feedback PDF: " + e.getMessage()).getBytes());
+        }
+    }
+
 	
 }

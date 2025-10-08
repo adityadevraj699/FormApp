@@ -30,8 +30,9 @@ public class Feedback {
     private LocalDate endDate;
 
     // Optional: mapped categories
-    @OneToMany(mappedBy = "feedback", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "feedback", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<FeedbackQuestionCategory> feedbackQuestionCategories;
+
 
     // ----- Constructors -----
     public Feedback() {}

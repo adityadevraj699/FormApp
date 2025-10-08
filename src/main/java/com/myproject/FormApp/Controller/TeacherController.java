@@ -1,12 +1,111 @@
 package com.myproject.FormApp.Controller;
 
+import java.io.InputStream;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import com.itextpdf.layout.element.Paragraph;
 
+
+//✅ Java / Utility
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+//✅ Servlet / HTTP
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+
+//✅ Spring Framework
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+//✅ Apache POI (Excel)
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+
+//✅ Cloudinary
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+
+//✅ Your Project Entities
+import com.myproject.FormApp.Model.CurriculumTopic;
+import com.myproject.FormApp.Model.EnrolledProgram;
+import com.myproject.FormApp.Model.Feedback;
+import com.myproject.FormApp.Model.FeedbackAnalysis;
+import com.myproject.FormApp.Model.FeedbackQuestionCategory;
+import com.myproject.FormApp.Model.Program;
+import com.myproject.FormApp.Model.Question;
+import com.myproject.FormApp.Model.Student;
+import com.myproject.FormApp.Model.StudentFeedbackAnswer;
+import com.myproject.FormApp.Model.Module;
+import com.myproject.FormApp.Model.Teacher;
+import com.myproject.FormApp.Model.TeacherAssign;
+import com.myproject.FormApp.Model.EnrolledProgram.ProgramStatus;
+import com.myproject.FormApp.Model.Question.AnswerType;
+
+//✅ Your Project Repositories
+import com.myproject.FormApp.Repository.CurriculumTopicRepository;
+import com.myproject.FormApp.Repository.EnrolledProgramRepository;
+import com.myproject.FormApp.Repository.FeedbackRepository;
+import com.myproject.FormApp.Repository.ModuleRepository;
+import com.myproject.FormApp.Repository.ProgramRepository;
+import com.myproject.FormApp.Repository.StudentFeedbackAnswerRepository;
+import com.myproject.FormApp.Repository.StudentsRepository;
+import com.myproject.FormApp.Repository.TeacherAssignRepository;
+import com.myproject.FormApp.Repository.TeacherRepository;
+
+//✅ Your Project Services
+import com.myproject.FormApp.Service.FeedbackAnalysisService;
+
+//✅ iText PDF
+import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.LineSeparator;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
+import com.itextpdf.layout.element.LineSeparator;
+import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
+import com.itextpdf.io.font.constants.StandardFonts;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -33,12 +132,14 @@ import com.myproject.FormApp.Model.StudentFeedbackAnswer;
 import com.myproject.FormApp.Model.Module;
 import com.myproject.FormApp.Model.Teacher;
 import com.myproject.FormApp.Model.TeacherAssign;
+import com.myproject.FormApp.Model.EnrolledProgram.ProgramStatus;
 import com.myproject.FormApp.Repository.CurriculumTopicRepository;
 import com.myproject.FormApp.Repository.EnrolledProgramRepository;
 import com.myproject.FormApp.Repository.FeedbackRepository;
 import com.myproject.FormApp.Repository.ModuleRepository;
 import com.myproject.FormApp.Repository.ProgramRepository;
 import com.myproject.FormApp.Repository.StudentFeedbackAnswerRepository;
+import com.myproject.FormApp.Repository.StudentsRepository;
 import com.myproject.FormApp.Repository.TeacherAssignRepository;
 import com.myproject.FormApp.Repository.TeacherRepository;
 import com.myproject.FormApp.Service.FeedbackAnalysisService;
@@ -88,6 +189,10 @@ public class TeacherController {
 	    
 	    @Autowired
 	    private FeedbackAnalysisService analysisService;
+	    
+	    
+	    @Autowired
+	    private StudentsRepository studentRepo;
 	    
 	    
 	    
@@ -256,7 +361,7 @@ public class TeacherController {
 	        }
 	        Long programId = ep.getProgram().getId();
 	        enrolledProgramRepo.deleteById(id);
-	        return "redirect:/teacher/programDetail/" + programId;
+	        return "redirect:/Teacher/programDetail/" + programId;
 	    }
 	    return "redirect:/Teacher/Dashboard";
 	}
@@ -338,6 +443,7 @@ public class TeacherController {
 	// ✅ POST mapping to handle the form submission
 	@PostMapping("/ChangePassword")
 	public String changePassword(RedirectAttributes attributes, HttpServletRequest request) {
+		
 	    String oldPassword = request.getParameter("oldPassword");
 	    String newPassword = request.getParameter("newPassword");
 	    String confirmPassword = request.getParameter("confirmPassword");
@@ -424,6 +530,232 @@ public class TeacherController {
 	    return "Teacher/feedbackDetail";
 	}
 
+
+	
+	
+	 // Helper method to read cell safely
+    private String getCellValue(Cell cell) {
+        if (cell == null) return null;
+        cell.setCellType(CellType.STRING);
+        return cell.getStringCellValue().trim();
+    }
+    
+    
+    @PostMapping("/uploadEnrollmentExcel")
+    public String uploadEnrollmentExcel(@RequestParam("file") MultipartFile file,
+                                        @RequestParam("programId") Long programId,
+                                        RedirectAttributes redirectAttributes) {
+    	
+    	Teacher teacher = (Teacher) session.getAttribute("loggedInTeacher");
+        if (teacher == null) {
+            return "redirect:/";
+        }
+        try {
+            if (file.isEmpty()) {
+                redirectAttributes.addFlashAttribute("msg", "Please upload a valid Excel file!");
+                return "redirect:/Teacher/programDetails/" + programId;
+            }
+
+            Program program = programRepo.findById(programId)
+                    .orElseThrow(() -> new Exception("Program not found!"));
+
+            try (InputStream inputStream = file.getInputStream();
+                 Workbook workbook = WorkbookFactory.create(inputStream)) {
+
+                Sheet sheet = workbook.getSheetAt(0);
+                int addedCount = 0;
+
+                for (int i = 1; i <= sheet.getLastRowNum(); i++) { // skip header row
+                    Row row = sheet.getRow(i);
+                    if (row == null) continue;
+
+                    String rollNo = getCellValue(row.getCell(1)); // Column B
+                    String name   = getCellValue(row.getCell(2)); // Column C
+                    String email  = getCellValue(row.getCell(3)); // Column D
+
+                    if (rollNo == null || rollNo.isBlank()) continue;
+
+                    Student student = studentRepo.findByRollNo(rollNo);
+                    if (student == null) {
+                        System.out.println("No student found for Roll No: " + rollNo);
+                        continue;
+                    }
+
+                    boolean alreadyEnrolled = enrolledProgramRepo.existsByStudentAndProgram(student, program);
+                    if (!alreadyEnrolled) {
+                        EnrolledProgram ep = new EnrolledProgram();
+                        ep.setProgram(program);
+                        ep.setStudent(student);
+                        ep.setRegDate(LocalDateTime.now());
+                        ep.setStatus(ProgramStatus.APPROVED);
+
+                        enrolledProgramRepo.save(ep);
+                        addedCount++;
+                    }
+                }
+
+                redirectAttributes.addFlashAttribute("msg", addedCount + " students enrolled successfully!");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("msg", "Error while uploading: " + e.getMessage());
+        }
+
+        return "redirect:/Teacher/programDetail/" + programId;
+    }
+    
+    
+    
+    @GetMapping("/feedbackReport/allStudents/{feedbackId}")
+    public ResponseEntity<byte[]> downloadAllStudentsFeedbackPDFForTeacher(@PathVariable("feedbackId") Long feedbackId) {
+        Teacher teacher = (Teacher) session.getAttribute("loggedInTeacher");
+        if (teacher == null) {
+            return ResponseEntity.status(403).body("Please login to download the feedback report.".getBytes());
+        }
+
+        Feedback feedback = feedbackRepo.findById(feedbackId).orElse(null);
+        if (feedback == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        boolean isAssigned = teacherAssignRepo.existsByProgramIdAndTeacherId(
+                feedback.getProgram().getId(), teacher.getId());
+        if (!isAssigned) {
+            return ResponseEntity.status(403).body("You are not assigned to this program.".getBytes());
+        }
+
+        List<StudentFeedbackAnswer> answers = studentFeedbackAnswerRepo.findByFeedback(feedback);
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdfDoc = new PdfDocument(writer);
+            Document document = new Document(pdfDoc);
+
+            PdfFont bold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+            PdfFont normal = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+            PdfFont italic = PdfFontFactory.createFont(StandardFonts.HELVETICA_OBLIQUE);
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+            // --- Header ---
+            Paragraph header = new Paragraph("MEERUT INSTITUTE OF TECHNOLOGY, MEERUT - 292")
+                    .setFont(bold)
+                    .setFontSize(16)
+                    .setFontColor(ColorConstants.BLUE)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setBackgroundColor(ColorConstants.LIGHT_GRAY)
+                    .setPadding(5);
+            document.add(header);
+
+            Paragraph reportTitle = new Paragraph("FEEDBACK REPORT")
+                    .setFont(bold)
+                    .setFontSize(14)
+                    .setFontColor(ColorConstants.RED)
+                    .setTextAlignment(TextAlignment.CENTER);
+            document.add(reportTitle);
+
+            String teacherName = "";
+            if (feedback.getProgram().getTeacherAssignments() != null &&
+                    !feedback.getProgram().getTeacherAssignments().isEmpty()) {
+                TeacherAssign firstAssign = feedback.getProgram().getTeacherAssignments().get(0);
+                if (firstAssign != null && firstAssign.getTeacher() != null) {
+                    teacherName = firstAssign.getTeacher().getName();
+                }
+            }
+
+            Paragraph programInfo = new Paragraph()
+                    .add("Program Name: " + feedback.getProgram().getTrainingProgram() + "\n")
+                    .add("Teacher Name: " + teacherName + "\n")
+                    .add("Feedback Phase: " + feedback.getFeedbackPhase().getPhaseName() + "\n")
+                    .add("Feedback Period: " + feedback.getStartDate().format(formatter) +
+                            " to " + feedback.getEndDate().format(formatter))
+                    .setFont(normal)
+                    .setFontSize(11)
+                    .setMarginBottom(10);
+            document.add(programInfo);
+
+            document.add(new LineSeparator(new SolidLine(1f)));
+
+            // --- Questions & Answers ---
+            if (feedback.getFeedbackQuestionCategories() != null) {
+                for (FeedbackQuestionCategory categoryMapping : feedback.getFeedbackQuestionCategories()) {
+                    if (categoryMapping == null || categoryMapping.getQuestionCategory() == null) continue;
+
+                    String categoryName = categoryMapping.getQuestionCategory().getCategoryName();
+                    Paragraph categoryHeader = new Paragraph(categoryName != null ? categoryName : "Category")
+                            .setFont(bold)
+                            .setFontSize(12)
+                            .setFontColor(ColorConstants.MAGENTA);
+                    document.add(categoryHeader);
+
+                    if (categoryMapping.getQuestionCategory().getQuestions() != null) {
+                        int qNo = 1;
+                        for (Question q : categoryMapping.getQuestionCategory().getQuestions()) {
+                            if (q == null) continue;
+
+                            // Question (black)
+                            document.add(new Paragraph(qNo + ". " + (q.getQuestionText() != null ? q.getQuestionText() : ""))
+                                    .setFont(bold)
+                                    .setFontColor(ColorConstants.BLACK)
+                                    .setFontSize(11));
+
+                            // Answers (blue)
+                            List<String> ansList = answers.stream()
+                                    .filter(a -> a.getQuestion() != null && a.getQuestion().getId().equals(q.getId()))
+                                    .map(StudentFeedbackAnswer::getAnswer)
+                                    .collect(Collectors.toList());
+
+                            int ansNo = 1;
+                            for (String ans : ansList) {
+                                document.add(new Paragraph("Answer " + ansNo + " : " + ans)
+                                        .setFont(normal)
+                                        .setFontColor(ColorConstants.BLUE)
+                                        .setFontSize(11));
+                                ansNo++;
+                            }
+
+                            if (ansList.isEmpty()) {
+                                document.add(new Paragraph("No answers submitted")
+                                        .setFont(normal)
+                                        .setFontColor(ColorConstants.BLUE)
+                                        .setFontSize(11));
+                            }
+
+                            document.add(new Paragraph("\n")); // spacing
+                            qNo++;
+                        }
+                    }
+                }
+            }
+
+            document.add(new LineSeparator(new SolidLine(1f)));
+            Paragraph footer = new Paragraph("Generated on: " + LocalDate.now().format(formatter))
+                    .setFont(normal)
+                    .setFontSize(9)
+                    .setTextAlignment(TextAlignment.RIGHT)
+                    .setFontColor(ColorConstants.DARK_GRAY);
+            document.add(footer);
+
+            document.close();
+
+            byte[] pdfBytes = baos.toByteArray();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment",
+                    "Feedback_Report_" + feedback.getId() + ".pdf");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(pdfBytes);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                    .body(("Error generating feedback PDF: " + e.getMessage()).getBytes());
+        }
+    }
 
 	
 	

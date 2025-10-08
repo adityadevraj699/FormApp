@@ -12,6 +12,7 @@
                 <th>Feedback Start Date</th>
                 <th>Feedback End Date</th>
                 <th>Action</th>
+               
             </tr>
         </thead>
         <tbody>
@@ -21,18 +22,23 @@
                 <td th:text="${fb.feedbackPhase.phaseName}"></td>
                 <td th:text="${fb.startDate}"></td>
                 <td th:text="${fb.endDate}"></td>
-            
-   <td>
-    <a th:href="@{/Student/HistoryFeedback/{id}(id=${fb.id})}" 
-       class="btn btn-sm btn-info">
-       Detail
-    </a>
-</td>
 
+                <!-- Action column -->
+                <td>
+                    <a th:href="@{/Student/HistoryFeedback/{id}(id=${fb.id})}" 
+                       class="btn btn-sm btn-info">
+                       Detail
+                    </a>
+              <a th:href="@{/Student/Report/{id}(id=${fb.id})}" 
+                       class="btn btn-sm btn-info">
+                       Download
+                    </a>
+                </td>
 
             </tr>
+
             <tr th:if="${feedbacks.isEmpty()}">
-                <td colspan="5" class="text-center text-muted">No feedback submitted yet.</td>
+                <td colspan="7" class="text-center text-muted">No feedback submitted yet.</td>
             </tr>
         </tbody>
     </table>
