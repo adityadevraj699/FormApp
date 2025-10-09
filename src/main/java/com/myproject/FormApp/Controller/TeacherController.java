@@ -647,6 +647,13 @@ public class TeacherController {
                     .setBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .setPadding(5);
             document.add(header);
+            
+            Paragraph subheader = new Paragraph("Department of Compter Science and Engineering")
+            		.setFont(bold)
+            		.setFontSize(15)
+            		.setFontColor(ColorConstants.BLACK)
+            		.setTextAlignment(TextAlignment.CENTER);
+            document.add(subheader);
 
             Paragraph reportTitle = new Paragraph("FEEDBACK REPORT")
                     .setFont(bold)
@@ -744,7 +751,7 @@ public class TeacherController {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentDispositionFormData("attachment",
-                    "Feedback_Report_" + feedback.getId() + ".pdf");
+                    "Feedback_Report_" +" "+ feedback.getProgram().getTrainingProgram() +" "+ feedback.getId() + ".pdf");
 
             return ResponseEntity.ok()
                     .headers(headers)

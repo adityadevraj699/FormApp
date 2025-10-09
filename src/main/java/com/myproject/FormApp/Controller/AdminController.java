@@ -1438,6 +1438,13 @@ public String saveFeedback(@RequestParam Long programId,
                     .setTextAlignment(TextAlignment.CENTER)
                     .setBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .setPadding(5));
+            
+            Paragraph subheader = new Paragraph("Department of Compter Science and Engineering")
+            		.setFont(bold)
+            		.setFontSize(15)
+            		.setFontColor(ColorConstants.BLACK)
+            		.setTextAlignment(TextAlignment.CENTER);
+            document.add(subheader);
 
             document.add(new Paragraph("FEEDBACK REPORT")
                     .setFont(bold)
@@ -1518,7 +1525,7 @@ public String saveFeedback(@RequestParam Long programId,
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentDispositionFormData("attachment",
-                    "Feedback_Report_" + student.getRollNo() + ".pdf");
+                    "Feedback_Report_" +" "+feedback.getProgram().getTrainingProgram()+" "+ student.getRollNo() + ".pdf");
 
             return ResponseEntity.ok()
                     .headers(headers)
@@ -1579,6 +1586,13 @@ public String saveFeedback(@RequestParam Long programId,
                     .setBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .setPadding(5);
             document.add(header);
+            
+            Paragraph subheader = new Paragraph("Department of Compter Science and Engineering")
+            		.setFont(bold)
+            		.setFontSize(15)
+            		.setFontColor(ColorConstants.BLACK)
+            		.setTextAlignment(TextAlignment.CENTER);
+            document.add(subheader);
 
             Paragraph reportTitle = new Paragraph("FEEDBACK REPORT")
                     .setFont(bold)
@@ -1665,7 +1679,7 @@ public String saveFeedback(@RequestParam Long programId,
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentDispositionFormData("attachment",
-                    "Feedback_Report_AllStudents_" + feedback.getId() + ".pdf");
+                    "Feedback_Report_AllStudents_" +" "+feedback.getProgram().getTrainingProgram()+" "+ feedback.getId() + ".pdf");
 
             return ResponseEntity.ok()
                     .headers(headers)

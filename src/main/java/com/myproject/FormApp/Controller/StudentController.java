@@ -612,6 +612,13 @@ public String showDashboard(Model model) {
                     .setBackgroundColor(ColorConstants.LIGHT_GRAY)
                     .setPadding(5);
             document.add(header);
+            
+            Paragraph subheader = new Paragraph("Department of Compter Science and Engineering")
+            		.setFont(bold)
+            		.setFontSize(15)
+            		.setFontColor(ColorConstants.BLACK)
+            		.setTextAlignment(TextAlignment.CENTER);
+            document.add(subheader);
 
             Paragraph reportTitle = new Paragraph("FEEDBACK REPORT")
                     .setFont(bold)
@@ -710,7 +717,7 @@ public String showDashboard(Model model) {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentDispositionFormData("attachment",
-                    "Feedback_Report_" + student.getRollNo() + ".pdf");
+                    "Feedback_Report_"+" "+feedback.getProgram().getTrainingProgram()+ " " + student.getRollNo() + ".pdf");
 
             return ResponseEntity.ok()
                     .headers(headers)
