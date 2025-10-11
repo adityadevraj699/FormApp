@@ -81,7 +81,7 @@ public class Student {
 	@Column(nullable = true)
     private String contactNo;
 	
-    @Column(nullable = false, unique = true)
+    @Column(nullable = true, unique = true)
     private String email;
     
     @Column(nullable = false)

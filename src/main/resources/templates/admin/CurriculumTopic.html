@@ -18,39 +18,77 @@
 
           <!-- Card Body -->
           <div class="card-body">
-            <form th:action="@{/admin/curriculumTopic}" method="post">
+           <form th:action="@{/admin/curriculumTopic}" method="post">
 
-              <!-- Module Select -->
-              <div class="mb-4">
-                <label for="moduleSelect" class="form-label fw-bold">Select Module</label>
-                <select class="form-select" id="moduleSelect" name="moduleId" required>
-                  <option value="">-- Select Module --</option>
-                  <option th:each="m : ${modules}" 
-                          th:value="${m.id}" 
-                          th:text="${m.moduleName}">
-                  </option>
-                </select>
-              </div>
+  <!-- Module Select -->
+  <div class="mb-4">
+    <label for="moduleSelect" class="form-label fw-bold">Select Module</label>
+    <select class="form-select" id="moduleSelect" name="moduleId" required>
+      <option value="">-- Select Module --</option>
+      <option th:each="m : ${modules}" 
+              th:value="${m.id}" 
+              th:text="${m.moduleName}">
+      </option>
+    </select>
+  </div>
 
-              <!-- Curriculum Topic Name Input -->
-              <div class="mb-4">
-                <label for="topicName" class="form-label fw-bold">Curriculum Topic Name</label>
-                <input type="text" 
-                       class="form-control" 
-                       id="topicName" 
-                       name="topicName" 
-                       placeholder="Enter Curriculum Topic..." 
-                       required>
-              </div>
+  <!-- Curriculum Topics -->
+  <div class="mb-4">
+    <label class="form-label fw-bold">Curriculum Topics</label>
+    <div id="topicContainer">
+      <div class="input-group mb-2 topic-item">
+        <input type="text" name="topicNames" class="form-control" placeholder="Enter Curriculum Topic..." required>
+        <button type="button" class="btn btn-danger removeTopicBtn">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    </div>
+    <button type="button" id="addTopicBtn" class="btn btn-outline-primary btn-sm mt-2">
+      <i class="bi bi-plus-circle"></i> Add Topic
+    </button>
+  </div>
 
-              <!-- Submit Button -->
-              <div class="d-grid">
-                <button type="submit" class="btn btn-success btn-lg fw-bold">
-                  <i class="bi bi-save2 me-2"></i> Save Curriculum Topic
-                </button>
-              </div>
+  <!-- Submit Button -->
+  <div class="d-grid">
+    <button type="submit" class="btn btn-success btn-lg fw-bold">
+      <i class="bi bi-save2 me-2"></i> Save Curriculum Topics
+    </button>
+  </div>
 
-            </form>
+</form>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const container = document.getElementById("topicContainer");
+    const addBtn = document.getElementById("addTopicBtn");
+
+    // Add new topic input
+    addBtn.addEventListener("click", () => {
+      const newInput = document.createElement("div");
+      newInput.classList.add("input-group", "mb-2", "topic-item");
+      newInput.innerHTML = `
+        <input type="text" name="topicNames" class="form-control" placeholder="Enter Curriculum Topic..." required>
+        <button type="button" class="btn btn-danger removeTopicBtn">
+          <i class="bi bi-trash"></i>
+        </button>
+      `;
+      container.appendChild(newInput);
+    });
+
+    // Remove topic input
+    container.addEventListener("click", (e) => {
+      if (e.target.closest(".removeTopicBtn")) {
+        e.target.closest(".topic-item").remove();
+      }
+    });
+  });
+</script>
+
+<style>
+  .removeTopicBtn i { pointer-events: none; }
+  .topic-item input { flex: 1; }
+</style>
+
           </div>
         </div>
       </div>

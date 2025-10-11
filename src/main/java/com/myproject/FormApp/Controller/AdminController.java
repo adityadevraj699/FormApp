@@ -235,18 +235,24 @@ public class AdminController {
 
     @PostMapping("/module")
     public String saveModule(@RequestParam("trainingProgram") Long programId,
-                             @RequestParam("moduleName") String moduleName,
+                             @RequestParam("moduleNames") List<String> moduleNames,
                              RedirectAttributes redirectAttributes) {
 
         Program program = programRepo.findById(programId).orElseThrow();
-        Module module = new Module();
-        module.setModuleName(moduleName);
-        module.setProgram(program);
-        moduleRepo.save(module);
 
-        redirectAttributes.addFlashAttribute("serverMessageModule", "Module created successfully!");
+        for (String name : moduleNames) {
+            if (name != null && !name.trim().isEmpty()) {
+                Module module = new Module();
+                module.setModuleName(name.trim());
+                module.setProgram(program);
+                moduleRepo.save(module);
+            }
+        }
+
+        redirectAttributes.addFlashAttribute("serverMessageModule", "Modules created successfully!");
         return "redirect:/admin/module";
     }
+
 
  // ---------------------- CURRICULUM TOPIC ----------------------
     @GetMapping("/curriculumTopic")
@@ -262,19 +268,22 @@ public class AdminController {
 
     @PostMapping("/curriculumTopic")
     public String saveCurriculumTopic(@RequestParam Long moduleId,
-                                      @RequestParam String topicName,
+                                      @RequestParam("topicNames") List<String> topicNames,
                                       RedirectAttributes redirectAttributes) {
         Module module = moduleRepo.findById(moduleId).orElseThrow();
-        CurriculumTopic topic = new CurriculumTopic();
-        topic.setModule(module);
-        topic.setTopicName(topicName);
-        curriculumTopicRepo.save(topic);
 
-        redirectAttributes.addFlashAttribute("serverMessage", "Curriculum Topic created successfully!");
+        for (String name : topicNames) {
+            if (name != null && !name.trim().isEmpty()) {
+                CurriculumTopic topic = new CurriculumTopic();
+                topic.setModule(module);
+                topic.setTopicName(name.trim());
+                curriculumTopicRepo.save(topic);
+            }
+        }
+
+        redirectAttributes.addFlashAttribute("serverMessage", "Curriculum Topics created successfully!");
         return "redirect:/admin/curriculumTopic";
     }
-
-
 
     // ---------------------- STUDENT ----------------------
     @GetMapping("/student")
@@ -819,7 +828,7 @@ public String saveFeedback(@RequestParam Long programId,
             return "redirect:/admin/manage-program";
         }
 
-        // Check if program has feedback
+     // Check if program has feedback
         boolean hasFeedback = feedRepo.existsByProgram(program);
         if (hasFeedback) {
             redirectAttributes.addFlashAttribute("serverMessage", 
@@ -1282,19 +1291,17 @@ public String saveFeedback(@RequestParam Long programId,
 
                     String rollNo = getCellValue(row.getCell(1)); // Column B
                     String name   = getCellValue(row.getCell(2)); // Column C
-                    String email  = getCellValue(row.getCell(3)); // Column D
 
-                    if (rollNo == null || name == null || email == null) continue;
+                    if (rollNo == null || name == null) continue;
 
                     // Skip duplicates
-                    if (studentRepository.existsByEmail(email) || studentRepository.existsByRollNo(rollNo)) {
+                    if ( studentRepository.existsByRollNo(rollNo)) {
                         continue;
                     }
 
                     Student s = new Student();
                     s.setRollNo(rollNo);
                     s.setName(name);
-                    s.setEmail(email);
                     s.setPassword("12345"); // Default password
                     s.setRole(Student.Role.STUDENT);
                     s.setStatus(Student.Status.APPROVED);
@@ -1347,7 +1354,6 @@ public String saveFeedback(@RequestParam Long programId,
 
                     String rollNo = getCellValue(row.getCell(1)); // Column B
                     String name   = getCellValue(row.getCell(2)); // Column C
-                    String email  = getCellValue(row.getCell(3)); // Column D
 
                     if (rollNo == null || rollNo.isBlank()) continue;
 
