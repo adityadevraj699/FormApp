@@ -27,10 +27,16 @@ public interface StudentFeedbackAnswerRepository extends JpaRepository<StudentFe
 
 
 	 long countDistinctByFeedback(Feedback feedback);
+	 
+	 
+	 
 
 
 	 List<StudentFeedbackAnswer> findByFeedbackAndStudent(Feedback feedback, Student student);
 	 
 	 @Query("SELECT DISTINCT s.student FROM StudentFeedbackAnswer s WHERE s.feedback = :feedback")
 	    List<Student> findDistinctStudentsByFeedback(@Param("feedback") Feedback feedback);
+
+
+	 List<StudentFeedbackAnswer> findByFeedbackIdAndQuestionId(Long feedbackId, Long id);
 }
