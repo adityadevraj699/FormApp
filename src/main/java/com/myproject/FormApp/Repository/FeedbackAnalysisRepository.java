@@ -17,4 +17,6 @@ public interface FeedbackAnalysisRepository extends JpaRepository<FeedbackAnalys
 	
 	boolean existsByQuestion(Question q);
 
+	FeedbackAnalysis findByQuestionId(Long qid);
+
 }

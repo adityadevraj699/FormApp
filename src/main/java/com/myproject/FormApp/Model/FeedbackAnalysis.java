@@ -107,4 +107,24 @@ public class FeedbackAnalysis {
 
     public String getPerResponseJson() { return perResponseJson; }
     public void setPerResponseJson(String perResponseJson) { this.perResponseJson = perResponseJson; }
+
+	public Integer getPositiveCount() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Integer getNeutralCount() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Integer getNegativeCount() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Object getTopKeywords() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

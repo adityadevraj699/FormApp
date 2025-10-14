@@ -39,4 +39,7 @@ public interface StudentFeedbackAnswerRepository extends JpaRepository<StudentFe
 
 
 	 List<StudentFeedbackAnswer> findByFeedbackIdAndQuestionId(Long feedbackId, Long id);
+
+
+	 List<StudentFeedbackAnswer> findByFeedbackId(Long feedbackId);
 }

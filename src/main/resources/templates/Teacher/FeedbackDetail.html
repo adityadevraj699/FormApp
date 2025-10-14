@@ -5,7 +5,13 @@
 </head>
 <body>
 <main class="container my-5">
-<button>feedbck Report</button>
+ <!-- Flex container for top-right alignment -->
+  <div class="d-flex justify-content-end mb-3">
+    <a th:href="@{/feedback/report/{id}(id=${feedback.id})}" class="btn btn-primary">
+      Feedback Report
+    </a>
+  </div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <div class="accordion" id="questionAccordion">
   <div class="accordion-item mb-3" th:each="entry, iter : ${answersByQuestion}">

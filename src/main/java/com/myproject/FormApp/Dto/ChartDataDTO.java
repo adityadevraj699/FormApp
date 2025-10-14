@@ -4,11 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 public class ChartDataDTO {
-    private String chartType; // "bar" or "pie"
+    private String chartType;
     private Map<String, Object> meta;
-    private List<String> labels;   // student names
-    private List<Double> data;     // rating or sentiment numeric
-    private List<String> backgroundColors; // optional
+    private List<String> labels;
+    private List<Double> data;
+    private List<String> backgroundColors;
+    private List<String> questions;
+    private List<List<Integer>> values; // ✅ added for grouped data
+    private String title; // ✅ add this line
 
     public String getChartType() { return chartType; }
     public void setChartType(String chartType) { this.chartType = chartType; }
@@ -24,4 +27,18 @@ public class ChartDataDTO {
 
     public List<String> getBackgroundColors() { return backgroundColors; }
     public void setBackgroundColors(List<String> backgroundColors) { this.backgroundColors = backgroundColors; }
+
+    public List<String> getQuestions() { return questions; }
+    public void setQuestions(List<String> questions) { this.questions = questions; }
+
+    public List<List<Integer>> getValues() { return values; }
+    public void setValues(List<List<Integer>> values) { this.values = values; }
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+    
+    
 }

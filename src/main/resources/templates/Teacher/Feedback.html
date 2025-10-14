@@ -37,29 +37,41 @@
                     <div class="row g-4">
                         <div class="col-md-4" th:each="fb : ${programFeedbacks[assign.program.id]}">
                             <div class="card feedback-card h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title">
-                                        <i class="bi bi-chat-left-text text-primary"></i>
-                                        <span th:text="${fb.feedbackPhase.phaseName}">Feedback Phase</span>
-                                    </h5>
-                                    <p class="card-text text-muted mb-2">
-                                        <i class="bi bi-calendar-event text-secondary"></i>
-                                        <strong>Start:</strong> <span th:text="${fb.startDate}"></span>
-                                    </p>
-                                    <p class="card-text text-muted">
-                                        <i class="bi bi-calendar-check text-success"></i>
-                                        <strong>End:</strong> <span th:text="${fb.endDate}"></span>
-                                    </p>
-                                    <a th:href="@{'/Teacher/FeedbackDetail/' + ${fb.id}}" 
-                                       class="btn btn-details btn-sm mt-2">
-                                        View Details →
-                                    </a>
-                                    <a th:href="@{'/Teacher/feedbackReport/allStudents/' + ${fb.id}}" 
-   class="btn btn-success btn-sm mt-2 ms-2">
-   <i class="bi bi-download"></i> Download PDF
-</a>
-                                    
-                                </div>
+                               <div class="card-body">
+    <h5 class="card-title">
+        <i class="bi bi-chat-left-text text-primary"></i>
+        <span th:text="${fb.feedbackPhase.phaseName}">Feedback Phase</span>
+    </h5>
+    <p class="card-text text-muted mb-2">
+        <i class="bi bi-calendar-event text-secondary"></i>
+        <strong>Start:</strong> <span th:text="${fb.startDate}"></span>
+    </p>
+    <p class="card-text text-muted">
+        <i class="bi bi-calendar-check text-success"></i>
+        <strong>End:</strong> <span th:text="${fb.endDate}"></span>
+    </p>
+
+    <!-- Existing buttons -->
+    <a th:href="@{'/Teacher/FeedbackDetail/' + ${fb.id}}" 
+       class="btn btn-details btn-sm mt-2">
+        View Details →
+    </a>
+    <a th:href="@{'/Teacher/feedbackReport/allStudents/' + ${fb.id}}" 
+       class="btn btn-success btn-sm mt-2 ms-2">
+        <i class="bi bi-download"></i> Download PDF
+    </a>
+
+    <!-- New buttons -->
+    <a th:href="@{/feedback/report/{id}(id=${fb.id})}" 
+       class="btn btn-primary btn-sm mt-2 ms-2">
+        View Report Visualization
+    </a>
+    <a th:href="@{/feedback/report/{id}/download(id=${fb.id})}" 
+       class="btn btn-outline-success btn-sm mt-2 ms-2">
+        ⬇️ Download Report (PDF)
+    </a>
+</div>
+
                             </div>
                         </div>
                     </div>
