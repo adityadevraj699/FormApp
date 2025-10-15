@@ -1,4 +1,4 @@
-package com.myproject.FormApp.Model;
+ package com.myproject.FormApp.Model;
 
 import jakarta.persistence.*;
 

@@ -3,16 +3,25 @@ package com.myproject.FormApp.Controller;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import javax.imageio.ImageIO;
+
 import com.itextpdf.layout.element.Paragraph;
 
-
+import java.awt.Color;
+import java.awt.image.BufferedImage;
 //✅ Java / Utility
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -50,6 +59,15 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.knowm.xchart.BitmapEncoder;
+import org.knowm.xchart.CategoryChart;
+import org.knowm.xchart.CategoryChartBuilder;
+import org.knowm.xchart.PieChart;
+import org.knowm.xchart.PieChartBuilder;
+import org.knowm.xchart.XYChart;
+import org.knowm.xchart.XYChartBuilder;
+
+import org.knowm.xchart.style.markers.SeriesMarkers;
 
 //✅ Cloudinary
 import com.cloudinary.Cloudinary;
@@ -89,17 +107,24 @@ import com.myproject.FormApp.Service.FeedbackAnalysisService;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.AreaBreak;
+import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.LineSeparator;
+import com.itextpdf.layout.properties.AreaBreakType;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.layout.element.LineSeparator;
 import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
 import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.io.image.ImageData;
+import com.itextpdf.io.image.ImageDataFactory;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -530,6 +555,54 @@ public class TeacherController {
 
 	    return "Teacher/feedbackDetail";
 	}
+	
+	
+	@GetMapping("/FeedbackDetailGraph/{id}")
+	public String showFeedbackDetailGraph(@PathVariable Long id, Model model, HttpSession session) {
+	    Teacher teacher = (Teacher) session.getAttribute("loggedInTeacher");
+	    if (teacher == null) return "redirect:/";
+
+	    // Fetch feedback
+	    Feedback feedback = feedbackRepo.findById(id)
+	            .orElseThrow(() -> new RuntimeException("Feedback not found"));
+
+	    // Fetch all student answers for this feedback
+	    List<StudentFeedbackAnswer> answers = studentFeedbackAnswerRepo.findByFeedback(feedback);
+
+	    // Group by question
+	    Map<Question, List<StudentFeedbackAnswer>> answersByQuestion =
+	            answers.stream().collect(Collectors.groupingBy(StudentFeedbackAnswer::getQuestion));
+
+	    // Map for averages (only numeric)
+	    Map<Long, Double> avgByQuestion = new HashMap<>();
+
+	    for (Map.Entry<Question, List<StudentFeedbackAnswer>> entry : answersByQuestion.entrySet()) {
+	        Question question = entry.getKey();
+	        List<StudentFeedbackAnswer> ansList = entry.getValue();
+
+	        if (question.getAnswerType() == Question.AnswerType.NUMBER) {
+	            double avg = ansList.stream()
+	                    .mapToDouble(ans -> {
+	                        try {
+	                            return Double.parseDouble(ans.getAnswer());
+	                        } catch (NumberFormatException e) {
+	                            return 0.0;
+	                        }
+	                    })
+	                    .average()
+	                    .orElse(0.0);
+
+	            avgByQuestion.put(question.getId(), avg);
+	        }
+	    }
+
+	    model.addAttribute("feedback", feedback);
+	    model.addAttribute("answersByQuestion", answersByQuestion);
+	    model.addAttribute("avgByQuestion", avgByQuestion);
+
+	    return "Teacher/feedbackDetailGraph";
+	}
+
 
 
 	
@@ -764,6 +837,230 @@ public class TeacherController {
                     .body(("Error generating feedback PDF: " + e.getMessage()).getBytes());
         }
     }
+
+    
+  @GetMapping("/feedbackReport/full/{feedbackId}")
+public ResponseEntity<byte[]> downloadNumberOnlyFeedbackReport(@PathVariable Long feedbackId) {
+    Teacher teacher = (Teacher) session.getAttribute("loggedInTeacher");
+    if (teacher == null) {
+        return ResponseEntity.status(403)
+                .body("Please login to download the feedback report.".getBytes());
+    }
+
+    Feedback feedback = feedbackRepo.findById(feedbackId).orElse(null);
+    if (feedback == null) {
+        return ResponseEntity.notFound().build();
+    }
+
+    boolean isAssigned = teacherAssignRepo.existsByProgramIdAndTeacherId(
+            feedback.getProgram().getId(), teacher.getId());
+    if (!isAssigned) {
+        return ResponseEntity.status(403).body("You are not assigned to this program.".getBytes());
+    }
+
+    List<StudentFeedbackAnswer> answers = studentFeedbackAnswerRepo.findByFeedback(feedback);
+
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+        PdfWriter writer = new PdfWriter(baos);
+        PdfDocument pdfDoc = new PdfDocument(writer);
+        Document document = new Document(pdfDoc, PageSize.A4);
+        document.setMargins(20, 20, 20, 20);
+
+        PdfFont bold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+        PdfFont normal = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+        // --- HEADER ---
+        document.add(new Paragraph("MEERUT INSTITUTE OF TECHNOLOGY, MEERUT - 292")
+                .setFont(bold).setFontSize(16).setFontColor(ColorConstants.BLUE)
+                .setTextAlignment(TextAlignment.CENTER));
+        document.add(new Paragraph("Department of Computer Science and Engineering")
+                .setFont(bold).setFontSize(14).setTextAlignment(TextAlignment.CENTER));
+        document.add(new Paragraph("FEEDBACK REPORT (NUMBER TYPE QUESTIONS ONLY)")
+                .setFont(bold).setFontSize(13).setFontColor(ColorConstants.RED)
+                .setTextAlignment(TextAlignment.CENTER).setMarginBottom(10));
+
+        // --- PROGRAM INFO ---
+        document.add(new Paragraph("Program Name: " + feedback.getProgram().getTrainingProgram()).setFont(normal));
+        document.add(new Paragraph("Teacher Name: " + teacher.getName()).setFont(normal));
+        document.add(new Paragraph("Feedback Phase: " + feedback.getFeedbackPhase().getPhaseName()).setFont(normal));
+        document.add(new Paragraph("Feedback Period: " + feedback.getStartDate().format(fmt) +
+                " to " + feedback.getEndDate().format(fmt)).setFont(normal));
+        document.add(new Paragraph("Total Students Responded: " + answers.stream()
+                .map(StudentFeedbackAnswer::getStudent).distinct().count()).setFont(normal));
+        document.add(new LineSeparator(new SolidLine(1f)));
+
+        Map<String, Double> avgPerQuestion = new LinkedHashMap<>();
+        int qNoGlobal = 1;
+
+        // --- NUMBER QUESTIONS ONLY ---
+        for (FeedbackQuestionCategory catMap : feedback.getFeedbackQuestionCategories()) {
+            if (catMap == null || catMap.getQuestionCategory() == null) continue;
+
+            for (Question q : catMap.getQuestionCategory().getQuestions()) {
+                if (!q.getAnswerType().equals(Question.AnswerType.NUMBER)) continue;
+
+                document.add(new Paragraph(qNoGlobal + ". " + q.getQuestionText())
+                        .setFont(bold).setFontColor(ColorConstants.BLACK));
+
+                List<Double> numericVals = answers.stream()
+                        .filter(a -> a.getQuestion() != null && a.getQuestion().getId().equals(q.getId()))
+                        .map(a -> {
+                            try { return Double.parseDouble(a.getAnswer()); }
+                            catch(Exception e) { return 0.0; }
+                        })
+                        .toList();
+
+                if (numericVals.isEmpty()) {
+                    document.add(new Paragraph("No answers submitted").setFont(normal));
+                    qNoGlobal++;
+                    continue;
+                }
+
+                // --- Print Student Answers ---
+                int ansNo = 1;
+                for (Double val : numericVals) {
+                    document.add(new Paragraph("→ Student " + ansNo + ": " + val)
+                            .setFont(normal).setFontColor(ColorConstants.BLUE).setFontSize(9));
+                    ansNo++;
+                }
+
+                // --- Chart height in points ---
+                float chartHeight = 180;
+                float remainingHeight = document.getRenderer().getCurrentArea().getBBox().getHeight();
+
+                // Move chart to next page if not enough space
+                if (remainingHeight < chartHeight + 100) {
+                    document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                }
+
+                // --- Charts per question ---
+                CategoryChart barChart = new CategoryChartBuilder()
+                        .width(280).height((int) chartHeight)
+                        .title("Student Ratings")
+                        .xAxisTitle("Student No.").yAxisTitle("Rating").build();
+                barChart.getStyler().setChartBackgroundColor(Color.WHITE);
+                barChart.getStyler().setLegendVisible(false);
+                barChart.addSeries("Ratings",
+                        IntStream.range(1, numericVals.size() + 1).boxed().toList(),
+                        numericVals);
+
+                XYChart lineChart = new XYChartBuilder()
+                        .width(280).height((int) chartHeight)
+                        .title("Ratings Trend")
+                        .xAxisTitle("Student No.").yAxisTitle("Rating").build();
+                lineChart.getStyler().setChartBackgroundColor(Color.WHITE);
+                lineChart.getStyler().setLegendVisible(false);
+                lineChart.addSeries("Trend",
+                        IntStream.range(1, numericVals.size() + 1).boxed().toList(),
+                        numericVals);
+
+                Table table = new Table(UnitValue.createPercentArray(new float[]{1, 1})).useAllAvailableWidth();
+                table.addCell(new com.itextpdf.layout.element.Cell()
+                        .add(new Image(ImageDataFactory.create(toByteArray(BitmapEncoder.getBufferedImage(barChart)))).setAutoScale(true))
+                        .setBorder(Border.NO_BORDER));
+                table.addCell(new com.itextpdf.layout.element.Cell()
+                        .add(new Image(ImageDataFactory.create(toByteArray(BitmapEncoder.getBufferedImage(lineChart)))).setAutoScale(true))
+                        .setBorder(Border.NO_BORDER));
+                document.add(table);
+
+                // --- Save average for final chart ---
+                avgPerQuestion.put("Q" + qNoGlobal, numericVals.stream().mapToDouble(Double::doubleValue).average().orElse(0.0));
+                qNoGlobal++;
+            }
+        }
+
+        // --- Final summary charts ---
+      // --- Final summary charts ---
+if (!avgPerQuestion.isEmpty()) {
+    float chartHeight = 300; // chart height in points
+    float remainingHeight = document.getRenderer().getCurrentArea().getBBox().getHeight();
+    
+    // Move to next page if not enough space for both charts + some margin
+    if (remainingHeight < chartHeight + 50) {
+        document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+    }
+    
+ // Small gap before average section header
+    document.add(new Paragraph("\n"));
+
+    // --- Overall Summary heading ---
+    document.add(new Paragraph("OVERALL SUMMARY")
+            .setFont(bold)
+            .setFontColor(ColorConstants.BLUE)
+            .setFontSize(16)
+            .setTextAlignment(TextAlignment.CENTER)
+            .setMarginTop(10f)
+            .setMarginBottom(15f));
+
+    // --- Average Ratings per Question header ---
+    document.add(new Paragraph("AVERAGE RATINGS PER QUESTION")
+            .setFont(bold)
+            .setFontColor(ColorConstants.RED)
+            .setFontSize(14)
+            .setMarginTop(5f)
+            .setMarginBottom(5f));
+
+    List<String> labels = new ArrayList<>(avgPerQuestion.keySet());
+    List<Double> averages = new ArrayList<>(avgPerQuestion.values());
+
+    CategoryChart finalBar = new CategoryChartBuilder()
+            .width(500).height((int) chartHeight)
+            .title("Average Ratings per Question")
+            .xAxisTitle("Question").yAxisTitle("Average").build();
+    finalBar.getStyler().setChartBackgroundColor(Color.WHITE);
+    finalBar.getStyler().setLegendVisible(false);
+    finalBar.addSeries("Average", labels, averages);
+
+    XYChart finalLine = new XYChartBuilder()
+            .width(500).height((int) chartHeight)
+            .title("Average Ratings Trend")
+            .xAxisTitle("Question").yAxisTitle("Average").build();
+    finalLine.getStyler().setChartBackgroundColor(Color.WHITE);
+    finalLine.getStyler().setLegendVisible(false);
+    finalLine.addSeries("Trend", IntStream.range(0, averages.size()).boxed().toList(), averages);
+
+    Table finalTable = new Table(UnitValue.createPercentArray(new float[]{1, 1})).useAllAvailableWidth();
+    finalTable.addCell(new com.itextpdf.layout.element.Cell()
+            .add(new Image(ImageDataFactory.create(toByteArray(BitmapEncoder.getBufferedImage(finalBar)))).setAutoScale(true))
+            .setBorder(Border.NO_BORDER));
+    finalTable.addCell(new com.itextpdf.layout.element.Cell()
+            .add(new Image(ImageDataFactory.create(toByteArray(BitmapEncoder.getBufferedImage(finalLine)))).setAutoScale(true))
+            .setBorder(Border.NO_BORDER));
+    document.add(finalTable);
+}
+
+
+
+        document.add(new LineSeparator(new SolidLine(1f)));
+        document.add(new Paragraph("Generated on: " + LocalDate.now().format(fmt))
+                .setFont(normal).setFontSize(9).setTextAlignment(TextAlignment.RIGHT));
+
+        document.close();
+        byte[] pdfBytes = baos.toByteArray();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment",
+                feedback.getProgram().getTrainingProgram() + " " + feedback.getId() + ".pdf");
+
+        return ResponseEntity.ok().headers(headers).body(pdfBytes);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.internalServerError()
+                .body(("Error generating PDF: " + e.getMessage()).getBytes());
+    }
+}
+
+private byte[] toByteArray(BufferedImage img) throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    ImageIO.write(img, "png", baos);
+    return baos.toByteArray();
+}
+
+
+
 
     
    
