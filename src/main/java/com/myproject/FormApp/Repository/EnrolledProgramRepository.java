@@ -2,6 +2,8 @@ package com.myproject.FormApp.Repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.myproject.FormApp.Model.EnrolledProgram;
@@ -24,6 +26,12 @@ public interface EnrolledProgramRepository extends JpaRepository<EnrolledProgram
 	List<EnrolledProgram> findByStudentIdAndStatus(Long id, ProgramStatus status);
 
 	boolean existsByStudentAndProgram(Student student, Program program);
+
+	Page<EnrolledProgram> findByProgramId(Long programId, Pageable pageable);
+	Page<EnrolledProgram> findByProgramIdAndStatus(Long programId, ProgramStatus status, Pageable pageable);
+	Page<EnrolledProgram> findByProgramIdAndStudentRollNoContaining(Long programId, String rollNo, Pageable pageable);
+	Page<EnrolledProgram> findByProgramIdAndStatusAndStudentRollNoContaining(Long programId, ProgramStatus status, String rollNo, Pageable pageable);
+
 
 
 }

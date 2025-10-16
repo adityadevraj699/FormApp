@@ -25,9 +25,9 @@
       <tbody>
         <tr th:each="q, iterStat : ${questions}">
           <td th:text="${iterStat.index + 1}"></td>
-          <td th:text="${q.questionText}"></td>
+        <td th:utext="${#strings.replace(q.questionText, '\n', '<br/>')}"></td>
           <td th:text="${q.answerType}"></td>
-          <td th:text="${q.category.categoryName}"></td>
+        <td th:utext="${#strings.replace(q.category.categoryName, '\n', '<br/>')}"></td>
           <td>
             <a th:href="@{/admin/question/edit/{id}(id=${q.id})}" 
                class="btn btn-sm btn-warning me-2">

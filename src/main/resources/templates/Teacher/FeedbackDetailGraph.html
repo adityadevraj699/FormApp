@@ -34,7 +34,7 @@
                 th:aria-controls="'collapse-' + ${iter.index}"
                 onclick="toggleAccordion(this)">
           <i class="bi bi-question-circle me-2"></i>
-          <span th:text="${entry.key.questionText}">Question text</span>
+          <span th:utext="${#strings.replace(entry.key.questionText, '\n', '<br/>')}">Question text</span>
         </button>
       </h2>
 

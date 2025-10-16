@@ -79,7 +79,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
@@ -173,34 +176,54 @@ public class AdminController {
 
     
     @GetMapping("/programDetail/{id}")
-    public String programDetail(@PathVariable Long id, Model model) {
+public String programDetail(
+        @PathVariable Long id,
+        @RequestParam(value = "status", required = false) String status,
+        @RequestParam(value = "rollNo", required = false) String rollNo,
+        @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+        Model model) {
 
-        Program program = programRepo.findById(id)
+    Program program = programRepo.findById(id)
                             .orElseThrow(() -> new RuntimeException("Program not found"));
 
-        List<Module> modules = moduleRepo.findByProgramId(id);
+    List<Module> modules = moduleRepo.findByProgramId(id);
 
-        Map<Long, List<CurriculumTopic>> moduleTopicsMap = new HashMap<>();
-        for (Module module : modules) {
-            List<CurriculumTopic> topics = curriculumTopicRepo.findByModuleId(module.getId());
-            moduleTopicsMap.put(module.getId(), topics);
-        }
-
-        List<TeacherAssign> teacherAssignments = teacherAssignRepo.findAllByProgramId(id);
-
-        // Enrolled students
-        List<EnrolledProgram> enrolledStudents = enrolledProgramRepo.findByProgramId(id);
-        long enrolledCount = enrolledProgramRepo.countByProgramId(id);
-
-        model.addAttribute("program", program);
-        model.addAttribute("modules", modules);
-        model.addAttribute("teacherAssignments", teacherAssignments);
-        model.addAttribute("moduleTopicsMap", moduleTopicsMap);
-        model.addAttribute("enrolledStudents", enrolledStudents);
-        model.addAttribute("enrolledCount", enrolledCount);
-
-        return "admin/programDetail";
+    Map<Long, List<CurriculumTopic>> moduleTopicsMap = new HashMap<>();
+    for (Module module : modules) {
+        List<CurriculumTopic> topics = curriculumTopicRepo.findByModuleId(module.getId());
+        moduleTopicsMap.put(module.getId(), topics);
     }
+
+    List<TeacherAssign> teacherAssignments = teacherAssignRepo.findAllByProgramId(id);
+
+    // Enrolled students with pagination + filtering
+    Pageable pageable = PageRequest.of(page, 10); // 10 records per page
+    Page<EnrolledProgram> enrolledPage;
+
+    if ((status == null || status.equals("ALL")) && (rollNo == null || rollNo.isEmpty())) {
+        enrolledPage = enrolledProgramRepo.findByProgramId(id, pageable);
+    } else if (status != null && !status.equals("ALL") && (rollNo == null || rollNo.isEmpty())) {
+        enrolledPage = enrolledProgramRepo.findByProgramIdAndStatus(id, EnrolledProgram.ProgramStatus.valueOf(status), pageable);
+    } else if ((status == null || status.equals("ALL")) && rollNo != null && !rollNo.isEmpty()) {
+        enrolledPage = enrolledProgramRepo.findByProgramIdAndStudentRollNoContaining(id, rollNo, pageable);
+    } else {
+        enrolledPage = enrolledProgramRepo.findByProgramIdAndStatusAndStudentRollNoContaining(
+                id, EnrolledProgram.ProgramStatus.valueOf(status), rollNo, pageable);
+    }
+
+    model.addAttribute("program", program);
+    model.addAttribute("modules", modules);
+    model.addAttribute("teacherAssignments", teacherAssignments);
+    model.addAttribute("moduleTopicsMap", moduleTopicsMap);
+    model.addAttribute("enrolledStudents", enrolledPage.getContent());
+    model.addAttribute("enrolledCount", enrolledPage.getTotalElements());
+    model.addAttribute("currentPage", page);
+    model.addAttribute("totalPages", enrolledPage.getTotalPages());
+    model.addAttribute("selectedStatus", status != null ? status : "ALL");
+    model.addAttribute("searchRollNo", rollNo != null ? rollNo : "");
+
+    return "admin/programDetail";
+}
 
 
 
@@ -287,29 +310,35 @@ public class AdminController {
 
     // ---------------------- STUDENT ----------------------
     @GetMapping("/student")
-    public String showStudent(@RequestParam(value = "status", required = false) String status,
-                              @RequestParam(value = "rollNo", required = false) String rollNo,
-                              Model model) {
+    public String showStudent(
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "rollNo", required = false) String rollNo,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            Model model) {
+
         if (!isLoggedIn()) return redirectIfNotLoggedIn();
 
-        List<Student> students;
+        Pageable pageable = PageRequest.of(page, size, Sort.by("rollNo").ascending());
+        Page<Student> students;
 
         if ((status == null || status.equals("ALL")) && (rollNo == null || rollNo.isEmpty())) {
-            students = studentRepository.findAll();
+            students = studentRepository.findAll(pageable);
         } else if (status != null && !status.equals("ALL") && (rollNo == null || rollNo.isEmpty())) {
-            students = studentRepository.findByStatus(Student.Status.valueOf(status));
+            students = studentRepository.findByStatus(Student.Status.valueOf(status), pageable);
         } else if ((status == null || status.equals("ALL")) && rollNo != null && !rollNo.isEmpty()) {
-            students = studentRepository.findByRollNoContaining(rollNo);
+            students = studentRepository.findByRollNoContaining(rollNo, pageable);
         } else {
-            students = studentRepository.findByStatusAndRollNoContaining(Student.Status.valueOf(status), rollNo);
+            students = studentRepository.findByStatusAndRollNoContaining(Student.Status.valueOf(status), rollNo, pageable);
         }
 
-        model.addAttribute("students", students);
+        model.addAttribute("students", students.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", students.getTotalPages());
         model.addAttribute("selectedStatus", status != null ? status : "ALL");
         model.addAttribute("searchRollNo", rollNo != null ? rollNo : "");
         return "admin/Student";
     }
-
     @PostMapping("/student/updateStatus/{id}")
     public String updateStudentStatus(@PathVariable Long id,
                                       @RequestParam("status") Student.Status status,

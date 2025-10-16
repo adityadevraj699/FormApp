@@ -23,7 +23,8 @@
               aria-expanded="false"
               th:aria-controls="'collapse-' + ${iter.index}">
         <i class="bi bi-question-circle me-2"></i>
-        <span th:text="${entry.key.questionText}">Question text</span>
+        <span th:utext="${#strings.replace(entry.key.questionText, '\n', '<br/>')}"></span>
+
       </button>
     </h2>
 

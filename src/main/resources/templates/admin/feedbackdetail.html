@@ -21,7 +21,8 @@
     <tbody>
         <tr th:each="cat : ${categories}">
             <td th:text="${cat.id}"></td>
-            <td th:text="${cat.questionCategory.categoryName}"></td>
+            <td th:utext="${#strings.replace(cat.questionCategory.categoryName, '\n', '<br/>')}"></td>
+
             <td>
                 <a th:href="@{'/admin/category/details/' + ${cat.id}}" 
                    class="btn btn-sm btn-outline-info">

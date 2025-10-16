@@ -111,48 +111,90 @@
 </div>
   <!-- Enrolled Students Table -->
   <h4>Enrolled Students</h4>
-  <table class="table table-bordered table-hover mb-4">
-      <thead class="table-dark">
-          <tr>
-              <th>Roll No</th>
-              <th>Name</th>
-              <th>Course</th>
-              <th>Branch</th>
-              <th>Section</th>
-              <th>Semester</th>
-              <th>Year</th>
-              <th>Email</th>
-              <th>Action</th>
-          </tr>
-      </thead>
-      <tbody>
-          <tr th:each="ep : ${enrolledStudents}">
-              <td th:text="${ep.student.rollNo}"></td>
-              <td th:text="${ep.student.name}"></td>
-              <td th:text="${ep.student.course}"></td>
-              <td th:text="${ep.student.branch}"></td>
-              <td th:text="${ep.student.section}"></td>
-              <td th:text="${ep.student.semester}"></td>
-              <td th:text="${ep.student.year}"></td>
-              <td th:text="${ep.student.email}"></td>
-              <td>
-                  <!-- Update Status -->
-                  <form th:action="@{/admin/updateStatus/{id}(id=${ep.id})}" method="post" class="d-inline">
-                      <button type="submit"
-                          th:text="${ep.status}"
-                          th:classappend="${#strings.equals(ep.status.toString(), 'PENDING') 
-                                           ? 'btn btn-warning btn-sm' 
-                                           : 'btn btn-success btn-sm'}">
-                      </button>
-                  </form>
-                  <!-- Delete Enrollment -->
-                  <form th:action="@{/admin/deleteEnrollment/{id}(id=${ep.id})}" method="post" class="d-inline">
-                      <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                  </form>
-              </td>
-          </tr>
-      </tbody>
-  </table>
+<!-- Filter Form -->
+<form th:action="@{'/admin/programDetail/' + ${program.id}}" method="get" class="row g-3 mb-3">
+    <div class="col-auto">
+        <select name="status" class="form-select">
+            <option value="ALL" th:selected="${selectedStatus == 'ALL'}">All</option>
+            <option value="APPROVED" th:selected="${selectedStatus == 'APPROVED'}">APPROVED</option>
+            <option value="PENDING" th:selected="${selectedStatus == 'PENDING'}">PENDING</option>
+            <option value="DISABLED" th:selected="${selectedStatus == 'DISABLED'}">DISABLED</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <input type="text" name="rollNo" placeholder="Search Roll No" class="form-control" th:value="${searchRollNo}">
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </div>
+</form>
+
+<!-- Enrolled Students Table -->
+<table class="table table-bordered table-hover mb-4" id="enrolledTable">
+    <thead class="table-dark">
+        <tr>
+            <th>Roll No</th>
+            <th>Name</th>
+            <th>Course</th>
+            <th>Branch</th>
+            <th>Section</th>
+            <th>Semester</th>
+            <th>Year</th>
+            <th>Email</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr th:each="ep : ${enrolledStudents}">
+            <td th:text="${ep.student.rollNo}"></td>
+            <td th:text="${ep.student.name}"></td>
+            <td th:text="${ep.student.course}"></td>
+            <td th:text="${ep.student.branch}"></td>
+            <td th:text="${ep.student.section}"></td>
+            <td th:text="${ep.student.semester}"></td>
+            <td th:text="${ep.student.year}"></td>
+            <td th:text="${ep.student.email}"></td>
+            <td>
+                <form th:action="@{/admin/updateStatus/{id}(id=${ep.id})}" method="post" class="d-inline">
+                    <button type="submit"
+                            th:text="${ep.status}"
+                            th:classappend="${#strings.equals(ep.status.toString(), 'PENDING') 
+                                             ? 'btn btn-warning btn-sm' 
+                                             : 'btn btn-success btn-sm'}">
+                    </button>
+                </form>
+                <form th:action="@{/admin/deleteEnrollment/{id}(id=${ep.id})}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Pagination -->
+<nav th:if="${totalPages > 1}">
+    <ul class="pagination">
+        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+            <a class="page-link" th:href="@{'/admin/programDetail/' + ${program.id}(status=${selectedStatus}, rollNo=${searchRollNo}, page=${currentPage-1})}">Previous</a>
+        </li>
+        <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages-1)}" th:classappend="${i == currentPage} ? 'active'">
+            <a class="page-link" th:href="@{'/admin/programDetail/' + ${program.id}(status=${selectedStatus}, rollNo=${searchRollNo}, page=${i})}" th:text="${i + 1}">1</a>
+        </li>
+        <li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
+            <a class="page-link" th:href="@{'/admin/programDetail/' + ${program.id}(status=${selectedStatus}, rollNo=${searchRollNo}, page=${currentPage+1})}">Next</a>
+        </li>
+    </ul>
+</nav>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.get('page')) {
+        const table = document.getElementById("enrolledTable");
+        if(table) table.scrollIntoView({ behavior: "smooth" });
+    }
+});
+</script>
+
 
 </main>
 </body>

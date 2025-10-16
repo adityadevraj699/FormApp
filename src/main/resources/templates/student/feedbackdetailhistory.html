@@ -25,7 +25,8 @@
         <tbody>
             <tr th:each="ans, iStat : ${answers}">
                 <td th:text="${iStat.index + 1}"></td>
-                <td th:text="${ans.question.questionText}"></td>
+              <td th:utext="${#strings.replace(ans.question.questionText, '\n', '<br/>')}"></td>
+
                 <td th:text="${ans.answer}"></td>
             </tr>
             <tr th:if="${answers == null or answers.isEmpty()}">

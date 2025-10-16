@@ -24,7 +24,7 @@
         <tbody>
             <tr th:each="q, iterStat : ${questions}">
                 <td th:text="${iterStat.count}"></td>
-                <td th:text="${q.questionText}"></td>
+               <td th:utext="${#strings.replace(q.questionText, '\n', '<br/>')}"></td>
                 <td th:text="${q.answerType}"></td>
                 <td>
                     <span th:if="${q.answerType.name() == 'NUMBER'}" 

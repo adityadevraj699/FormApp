@@ -7,10 +7,16 @@
         <form th:action="@{'/Student/feedbackDetail/' + ${feedback.id}}" method="post">
             
             <div th:each="fqc : ${feedback.feedbackQuestionCategories}" class="mb-4">
-                <h4 class="text-primary mb-3" th:text="${fqc.questionCategory.categoryName}"></h4>
+                <h4 class="text-primary mb-3" 
+    th:utext="${#strings.replace(fqc.questionCategory.categoryName, '\n', '<br/>')}">
+</h4>
+
 
                 <div th:each="q : ${fqc.questionCategory.questions}" class="mb-3">
-                    <label class="form-label fw-semibold" th:text="${q.questionText}"></label>
+                    <label class="form-label fw-semibold" 
+       th:utext="${#strings.replace(q.questionText, '\n', '<br/>')}">
+</label>
+
 
                     <!-- Answer type TEXT -->
                     <div th:if="${q.answerType.name() == 'TEXT'}">
