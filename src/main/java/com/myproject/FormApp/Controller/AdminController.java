@@ -460,18 +460,26 @@ public String programDetail(
         assign.setProgram(program);
         teacherAssignRepo.save(assign);
 
-        // Prepare program details
-        String programDetails = "Program Name: " + program.getTrainingProgram()
-                              + "\nDuration: " + program.getStartDate()
-                              + "\nDescription: " + program.getEndDate();
-
-        // Send email
-        emailService.sendTeacherProgramAssignment(
-                teacher.getEmail(),
+     // Prepare full program details in professional HTML format
+        String programDetails = emailService.buildProgramAssignmentTemplate(
                 teacher.getName(),
                 program.getTrainingProgram(),
+                program.getCourse(),
+                program.getBranch(),
+                program.getYear(),
+                program.getSection(),
+                program.getSemester(),
+                program.getStartDate(),
+                program.getEndDate()
+        );
+
+        // Send email using the professional HTML template
+        emailService.sendTeacherProgramAssignment(
+                teacher.getEmail(),
+                "Program Assignment Notification - Meerut Institute of Technology",
                 programDetails
         );
+
 
         redirectAttributes.addFlashAttribute("serverMessage",
                 "Teacher " + teacher.getName() + " assigned to Program " + program.getTrainingProgram() + " successfully!");

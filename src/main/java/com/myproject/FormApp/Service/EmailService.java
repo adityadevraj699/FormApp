@@ -1,5 +1,7 @@
 package com.myproject.FormApp.Service;
 
+import java.time.LocalDate;
+
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -38,6 +40,109 @@ public class EmailService {
                    + "Regards,\nAdmin Team";
         sendEmail(to, subject, msg);
     }
+
+
+        // --- Method to send assignment email ---
+        public void sendTeacherProgramAssignment(String to, String subject, String htmlContent) {
+            try {
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+                helper.setTo(to);
+                helper.setSubject(subject);
+                helper.setText(htmlContent, true); // true = send as HTML
+
+                mailSender.send(message);
+            } catch (MessagingException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // --- Build HTML email template ---
+        public String buildProgramAssignmentTemplate(String teacherName,
+                                                     String trainingProgram,
+                                                     String course,
+                                                     String branch,
+                                                     String year,
+                                                     String section,
+                                                     String semester,
+                                                     LocalDate startDate,
+                                                     LocalDate endDate) {
+
+            return """
+            <html>
+            <body style="font-family: 'Segoe UI', sans-serif; background-color: #f4f7fc; margin: 0; padding: 0;">
+                <div style="max-width: 650px; margin: 40px auto; background-color: #ffffff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden;">
+                    
+                    <div style="background-color: #003366; padding: 20px 30px; text-align: center;">
+                        <h2 style="color: #ffffff; margin: 0;">Meerut Institute of Technology</h2>
+                        <p style="color: #d1e4ff; font-size: 14px; margin: 5px 0 0;">Empowering Excellence in Education</p>
+                    </div>
+                    
+                    <div style="padding: 30px;">
+                        <p style="font-size: 16px;">Dear <strong>%s</strong>,</p>
+                        <p style="font-size: 15px; color: #333;">
+                            You have been <strong>assigned</strong> to the following training program. Please review the details carefully.
+                        </p>
+                        
+                        <table style="width: 100%%; border-collapse: collapse; margin: 20px 0;">
+                            <tr style="background-color: #f0f4fa;">
+                                <td style="padding: 10px; font-weight: bold;">Program Name:</td>
+                                <td style="padding: 10px;">%s</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; font-weight: bold;">Course:</td>
+                                <td style="padding: 10px;">%s</td>
+                            </tr>
+                            <tr style="background-color: #f0f4fa;">
+                                <td style="padding: 10px; font-weight: bold;">Branch:</td>
+                                <td style="padding: 10px;">%s</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; font-weight: bold;">Year:</td>
+                                <td style="padding: 10px;">%s</td>
+                            </tr>
+                            <tr style="background-color: #f0f4fa;">
+                                <td style="padding: 10px; font-weight: bold;">Section:</td>
+                                <td style="padding: 10px;">%s</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px; font-weight: bold;">Semester:</td>
+                                <td style="padding: 10px;">%s</td>
+                            </tr>
+                            <tr style="background-color: #f0f4fa;">
+                                <td style="padding: 10px; font-weight: bold;">Duration:</td>
+                                <td style="padding: 10px;">%s - %s</td>
+                            </tr>
+                        </table>
+                        
+                        <p style="font-size: 15px; color: #333;">
+                            We look forward to your valuable contribution and dedicated effort in delivering this program effectively.
+                        </p>
+
+                        <p style="font-size: 15px; color: #333;">Best regards,<br>
+                        <strong>Admin Team</strong><br>
+                        Meerut Institute of Technology</p>
+                    </div>
+
+                    <div style="background-color: #003366; padding: 10px 20px; text-align: center; color: #ffffff; font-size: 12px;">
+                        © 2025 Meerut Institute of Technology. All Rights Reserved.
+                    </div>
+                </div>
+            </body>
+            </html>
+            """.formatted(
+                    teacherName,
+                    trainingProgram,
+                    course != null ? course : "N/A",
+                    branch != null ? branch : "N/A",
+                    year != null ? year : "N/A",
+                    section != null ? section : "N/A",
+                    semester != null ? semester : "N/A",
+                    startDate != null ? startDate : "N/A",
+                    endDate != null ? endDate : "N/A"
+            );
+        }
 
     // ------------------- Student -------------------
     public void sendStudentStatusUpdate(String to, String name, String rollNo, String role, String status) {
