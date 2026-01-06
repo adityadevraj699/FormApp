@@ -1,63 +1,256 @@
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{Teacher/Teacherbase::layout(~{::main})}">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
 <body>
-<main class="container my-4">
+<main class="container-fluid px-md-5 py-4">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Header with Profile Image and Logout -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="d-flex align-items-center">
-            <img th:src="${loggedInTeacher.profileImage != null} ? ${loggedInTeacher.profileImage} : '@{/images/default-profile.png}'"
-                 class="rounded-circle me-2" alt="Profile" width="50" height="50">
-            <h4 class="mb-0">Hello, <span th:text="${loggedInTeacher.name}">Teacher Name</span></h4>
-        </div>
-        <a th:href="@{/logout}" class="btn btn-outline-danger">Logout</a>
-    </div>
+    <style>
+        :root { --brand-navy: #0f172a; --brand-blue: #3b82f6; --glass-bg: rgba(255, 255, 255, 0.98); }
+        body { background: #f1f5f9; font-family: 'Inter', sans-serif; }
+        .heavy-card { background: var(--glass-bg); border-radius: 30px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 40px rgba(0,0,0,0.04); padding: 30px; transition: 0.3s; }
+        .global-tile { background: white; border-radius: 25px; padding: 25px; border-left: 6px solid var(--brand-blue); position: relative; overflow: hidden; }
+        .selection-panel { background: var(--brand-navy); color: white; border-radius: 25px; padding: 35px; margin-bottom: 40px; border-bottom: 8px solid var(--brand-blue); }
+        .expert-panel-dark { background: #0f172a; color: #f8fafc; border-radius: 30px; padding: 40px; background-image: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 40%); }
+        .fw-black { font-weight: 900; }
+        
+        /* PDF Layout Optimization Styles */
+        #report-template { display: none; padding: 40px; background: white; }
+        .pdf-header { border-bottom: 2px solid #3b82f6; padding-bottom: 20px; margin-bottom: 30px; }
+    </style>
 
-    <!-- Dashboard Stats -->
-    <div class="row text-center mb-4">
-        <div class="col-md-6 mb-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <h6>Assigned Programs</h6>
-                    <p class="display-6 text-primary" th:text="${assignedPrograms != null ? #lists.size(assignedPrograms) : 0}">0</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <h6>Total Feedbacks</h6>
-                    <p class="display-6 text-danger" th:text="${totalFeedbacks != null ? totalFeedbacks : 0}">0</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Feedback Status -->
-    <div class="row mb-4">
+    <div class="row mb-4 animate__animated animate__fadeIn">
         <div class="col-md-12">
-            <h5>Feedback Status per Program</h5>
-            <div class="list-group">
-                <div th:each="assign : ${assignedPrograms != null ? assignedPrograms : {}}"
-                     class="list-group-item d-flex justify-content-between align-items-center">
-                    <span th:text="${assign.program != null ? assign.program.trainingProgram : 'N/A'}">Program Name</span>
-                    <span>
-                        Active: <span th:text="${feedbackStatus[assign.program.id] != null ? feedbackStatus[assign.program.id]['active'] : 0}">0</span> |
-                        Inactive: <span th:text="${feedbackStatus[assign.program.id] != null ? feedbackStatus[assign.program.id]['inactive'] : 0}">0</span>
-                    </span>
+            <h1 class="fw-black text-dark display-5 mb-1">Scientific Research Node</h1>
+            <p class="text-muted fw-bold">Hello, <span th:text="${loggedInTeacher.name}">Teacher</span> | Employee ID: <span th:text="${loggedInTeacher.employeeId}">MIT-000</span></p>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5 animate__animated animate__fadeInUp">
+        <div class="col-md-3">
+            <div class="global-tile shadow-sm">
+                <small class="text-muted fw-bold text-uppercase">Assigned Nodes</small>
+                <h2 class="fw-black mb-0 text-primary" th:text="${totalPrograms}">0</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="global-tile shadow-sm" style="border-left-color: #10b981;">
+                <small class="text-muted fw-bold text-uppercase">Students Managed</small>
+                <h2 class="fw-black mb-0 text-success" th:text="${totalStudents}">0</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="global-tile shadow-sm" style="border-left-color: #f59e0b;">
+                <small class="text-muted fw-bold text-uppercase">Total Research Inputs</small>
+                <h2 class="fw-black mb-0 text-warning" th:text="${totalResponses}">0</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="global-tile shadow-sm" style="border-left-color: #ef4444;">
+                <small class="text-muted fw-bold text-uppercase">Global KPI Index</small>
+                <h2 class="fw-black mb-0 text-danger" th:text="${avgRating}">0.0</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="selection-panel shadow-lg animate__animated animate__fadeInDown">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <h3 class="fw-black text-info mb-2"><i class="bi bi-cpu-fill me-3"></i>Data Filtering Engine</h3>
+                <p class="opacity-75 mb-0">Select an assigned research node to generate multi-dimensional analytics.</p>
+            </div>
+            <div class="col-lg-5 mt-4 mt-lg-0 text-lg-end">
+                <select class="form-select form-select-lg border-0 shadow-lg py-3 rounded-4" id="programSelector" onchange="loadProgramAnalytics(this.value)">
+                    <option value="" disabled selected>-- Select Program to Analyze --</option>
+                    <option th:each="p : ${masterAnalytics}" th:value="${p.id}" th:text="${p.name}"></option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div id="analyticsContent" style="display: none;">
+        <div id="pdf-capture-area">
+            <div class="row g-4 mb-5">
+                <div class="col-md-4 text-center">
+                    <div class="heavy-card border-bottom border-primary border-5 py-4">
+                        <p class="text-muted small fw-bold mb-1">AUDIENCE</p>
+                        <h1 class="fw-black mb-0" id="statStudents">0</h1>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="heavy-card border-bottom border-success border-5 py-4">
+                        <p class="text-muted small fw-bold mb-1">SCORE</p>
+                        <h1 class="fw-black mb-0" id="statAvg">0.0</h1>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="heavy-card border-bottom border-warning border-5 py-4">
+                        <p class="text-muted small fw-bold mb-1">INPUTS</p>
+                        <h1 class="fw-black mb-0" id="statResponses">0</h1>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-5 mb-5">
+                <div class="col-lg-8">
+                    <div class="heavy-card h-100 shadow-sm">
+                        <h4 class="fw-black text-dark mb-4 border-bottom pb-2">Impact Projection</h4>
+                        <div style="height: 380px;">
+                            <canvas id="lineTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="heavy-card h-100 text-center shadow-sm">
+                        <h4 class="fw-black text-dark mb-4">Sentiment Distribution</h4>
+                        <div style="height: 250px;">
+                            <canvas id="sentimentPieChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Quick Tips / Links -->
-    <div class="alert alert-info">
-        <ul class="mb-0">
-            <li>Click on "Assigned Programs" to view all your programs.</li>
-            <li>Active feedbacks are those currently open for student responses.</li>
-            <li>Ensure your profile image is updated for better visibility.</li>
-        </ul>
+    <div class="row g-5 mb-5">
+        <div class="col-xl-8">
+            <div class="heavy-card h-100 shadow-sm border-0 overflow-hidden">
+                <h5 class="fw-black mb-4 border-bottom pb-3">Global Node Registry</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr class="small text-muted fw-bold">
+                                <th class="ps-4 py-3">Assigned Program</th>
+                                <th>Phases</th>
+                                <th class="text-end pe-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${masterAnalytics}">
+                                <td class="ps-4 py-3">
+                                    <div class="fw-black text-dark" th:text="${p.name}">Program</div>
+                                    <small class="text-muted" th:text="${p.branch}">Branch</small>
+                                </td>
+                                <td><span class="badge bg-soft-primary text-primary rounded-pill px-3" th:text="${p.labels.size()} + ' Phases'">0</span></td>
+                                <td class="text-end pe-4 text-success fw-bold">Active</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="expert-panel-dark h-100 shadow-lg d-flex flex-column">
+                <h4 class="fw-black mb-4 text-info"><i class="bi bi-stars me-2"></i>Research Insights</h4>
+                <div class="mb-4 bg-white bg-opacity-10 p-3 rounded-4">
+                    <small class="text-warning fw-bold text-uppercase d-block mb-2">Strength Index</small>
+                    <p id="insightStrength" class="small opacity-75">Select a program to view insights.</p>
+                </div>
+                <div class="mb-5 bg-white bg-opacity-10 p-3 rounded-4">
+                    <small class="text-danger fw-bold text-uppercase d-block mb-2">Critical Gap</small>
+                    <p id="insightWeakness" class="small opacity-75">Select a program to view gaps.</p>
+                </div>
+                <button onclick="downloadPDF()" class="btn btn-info btn-lg w-100 rounded-pill fw-black py-3 mt-auto shadow">
+                    <i class="bi bi-file-earmark-pdf-fill me-2"></i> DOWNLOAD AI RESEARCH PDF
+                </button>
+            </div>
+        </div>
     </div>
 
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const masterData = /*[[${masterAnalytics}]]*/ [];
+        let lineRef, pieRef;
+
+        function loadProgramAnalytics(programId) {
+            const data = masterData.find(item => item.id == programId);
+            if (!data) return;
+
+            document.getElementById('analyticsContent').style.display = 'block';
+            document.getElementById('statStudents').innerText = data.studentCount;
+            document.getElementById('statAvg').innerText = data.avgRating;
+            document.getElementById('statResponses').innerText = data.totalResponses;
+            document.getElementById('insightStrength').innerText = data.insightStrength;
+            document.getElementById('insightWeakness').innerText = data.insightWeakness;
+
+            if (lineRef) lineRef.destroy();
+            if (pieRef) pieRef.destroy();
+
+            lineRef = new Chart(document.getElementById('lineTrendChart'), {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'KPI Score', data: data.ratings,
+                        borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true, tension: 0.45, pointRadius: 8, pointBackgroundColor: '#fff'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, animation: false } // Disable animation for PDF capture
+            });
+
+            pieRef = new Chart(document.getElementById('sentimentPieChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Positive', 'Neutral', 'Negative'],
+                    datasets: [{
+                        data: data.sentiment,
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { cutout: '70%', maintainAspectRatio: false, animation: false }
+            });
+        }
+
+        // PDF Download Function
+        function downloadPDF() {
+            const element = document.getElementById('pdf-capture-area');
+            const teacherName = /*[[${loggedInTeacher.name}]]*/ 'Teacher';
+            const programName = document.getElementById('programSelector').options[document.getElementById('programSelector').selectedIndex].text;
+            
+            if(!programName || programName.includes('--')) {
+                alert("Please select a program first!");
+                return;
+            }
+
+            const opt = {
+                margin:       10,
+                filename:     `Performance_Report_${programName}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Custom Header for PDF
+            const pdfHeader = `
+                <div style="text-align: center; font-family: sans-serif;">
+                    <h1 style="color: #0f172a;">Performance Research Report</h1>
+                    <p style="color: #64748b;">Generated for: <strong>${teacherName}</strong> | Node: <strong>${programName}</strong></p>
+                    <hr/>
+                </div>
+            `;
+
+            // Adding Insights to PDF capture
+            const insights = `
+                <div style="margin-top: 30px; font-family: sans-serif;">
+                    <h3>Scientific Insights</h3>
+                    <p><strong>Strength:</strong> ${document.getElementById('insightStrength').innerText}</p>
+                    <p><strong>Opportunity:</strong> ${document.getElementById('insightWeakness').innerText}</p>
+                </div>
+            `;
+
+            const container = document.createElement('div');
+            container.innerHTML = pdfHeader + element.innerHTML + insights;
+
+            html2pdf().set(opt).from(container).save();
+        }
+        /*]]>*/
+    </script>
 </main>
 </body>
 </html>

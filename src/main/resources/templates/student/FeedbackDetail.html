@@ -1,73 +1,215 @@
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{Student/Studentbase::layout(~{::main})}">
-<body class="bg-light">
+<head>
+    
+</head>
+<body>
 <main>
-<div class="container my-5">
-    <div class="card shadow-sm p-4">
-        <h2 class="mb-4" th:text="${feedback.program.trainingProgram}"></h2>
-        <form th:action="@{'/Student/feedbackDetail/' + ${feedback.id}}" method="post">
-            
-            <div th:each="fqc : ${feedback.feedbackQuestionCategories}" class="mb-4">
-                <h4 class="text-primary mb-3" 
-    th:utext="${#strings.replace(fqc.questionCategory.categoryName, '\n', '<br/>')}">
-</h4>
+<style>
+        :root {
+            --primary-color: #1a237e; /* Deep Professional Blue */
+            --accent-color: #0d47a1;
+            --bg-light: #f8f9fa;
+        }
 
+        body { font-family: 'Inter', 'Segoe UI', sans-serif; background-color: var(--bg-light); }
 
-                <div th:each="q : ${fqc.questionCategory.questions}" class="mb-3">
-                    <label class="form-label fw-semibold" 
-       th:utext="${#strings.replace(q.questionText, '\n', '<br/>')}">
-</label>
+        .feedback-card {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
 
+        /* Top Header Branding */
+        .form-header-gradient {
+            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
 
-                    <!-- Answer type TEXT -->
-                    <div th:if="${q.answerType.name() == 'TEXT'}">
-                        <input type="text" class="form-control" th:name="${'q_' + q.id}" required/>
+        /* Category Styling */
+        .category-section {
+            background: #ffffff;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .category-title {
+            background-color: #f1f4f9;
+            padding: 15px 25px;
+            border-bottom: 2px solid var(--primary-color);
+            border-radius: 15px 15px 0 0;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Question Card */
+        .question-box {
+            padding: 25px;
+            border-bottom: 1px dashed #dee2e6;
+            transition: all 0.3s ease;
+        }
+        .question-box:last-child { border-bottom: none; }
+        .question-box:hover { background-color: #fdfdfd; }
+
+        .question-text-en { color: #2c3e50; font-weight: 600; font-size: 1.05rem; display: block; }
+        .question-text-hi { color: #546e7a; font-size: 0.95rem; margin-top: 4px; display: block; }
+
+        /* Professional Rating Scale */
+        .rating-scale-wrapper {
+            max-width: 450px;
+            margin-top: 20px;
+        }
+
+        .rating-option {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .btn-check + .btn-rating {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #ced4da;
+            background: white;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            margin: 0 auto;
+            cursor: pointer;
+        }
+
+        .btn-check:checked + .btn-rating {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            transform: scale(1.15);
+            box-shadow: 0 5px 15px rgba(26, 35, 126, 0.3);
+        }
+
+        .scale-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #90a4ae;
+            margin-top: 10px;
+        }
+
+        /* Submit Button */
+        .btn-submit-premium {
+            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+            border: none;
+            padding: 15px 40px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+        .btn-submit-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(13, 71, 161, 0.4);
+        }
+
+        /* Responsive Fixes */
+        @media (max-width: 576px) {
+            .btn-rating { width: 40px !important; height: 40px !important; }
+            .question-box { padding: 15px; }
+        }
+    </style>
+<div class="container py-5">
+    <div class="feedback-card card shadow">
+        <div class="form-header-gradient">
+            <h1 class="h3 fw-bold mb-2" th:text="${feedback.program.trainingProgram}">National Training Feedback</h1>
+            <div class="d-inline-flex align-items-center bg-white bg-opacity-10 px-3 py-1 rounded-pill">
+                <span class="small fw-light">SDG-4 Quality Education Compliance Framework</span>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <form th:action="@{'/Student/feedbackDetail/' + ${feedback.id}}" method="post" id="feedbackForm" class="p-3 p-md-5">
+                
+                <div th:each="fqc : ${feedback.feedbackQuestionCategories}" class="category-section">
+                    <div class="category-title">
+                        <i class="bi bi-bookmark-check-fill me-2"></i>
+                        <span class="fw-bold text-uppercase small" th:utext="${#strings.replace(fqc.questionCategory.categoryName, '\n', ' ')}"></span>
                     </div>
 
-                    <!-- Answer type NUMBER -->
-                    <div th:if="${q.answerType.name() == 'NUMBER' and q.rangeStart != null and q.rangeEnd != null}">
-                        <select class="form-select" th:name="${'q_' + q.id}">
-                            <option th:each="i : ${#numbers.sequence(q.rangeStart, q.rangeEnd)}"
-                                    th:value="${i}" th:text="${i}"></option>
-                        </select>
+                    <div th:each="q : ${fqc.questionCategory.questions}" class="question-box">
+                        <div class="mb-3">
+                            <span class="question-text-en" th:text="${#strings.arraySplit(q.questionText, '\n')[0]}">English Question</span>
+                            <span class="question-text-hi" th:if="${#strings.contains(q.questionText, '\n')}" 
+                                  th:text="${#strings.arraySplit(q.questionText, '\n')[1]}">Hindi Question</span>
+                        </div>
+
+                        <div th:if="${q.answerType.name() == 'NUMBER'}" class="rating-scale-wrapper">
+                            <div class="d-flex justify-content-between align-items-end">
+                                <th:block th:each="i : ${#numbers.sequence(q.rangeStart, q.rangeEnd)}">
+                                    <div class="rating-option">
+                                        <input type="radio" class="btn-check" 
+                                               th:name="${'q_' + q.id}" 
+                                               th:id="${'btn_' + q.id + '_' + i}" 
+                                               th:value="${i}" required>
+                                        <label class="btn-rating" th:for="${'btn_' + q.id + '_' + i}" th:text="${i}"></label>
+                                        
+                                        <div th:if="${i == q.rangeStart}" class="scale-label">Disagree</div>
+                                        <div th:if="${i == q.rangeEnd}" class="scale-label">Agree</div>
+                                    </div>
+                                </th:block>
+                            </div>
+                        </div>
+
+                        <div th:if="${q.answerType.name() == 'TEXT'}">
+                            <textarea class="form-control bg-light border-2" 
+                                      th:name="${'q_' + q.id}" rows="3" 
+                                      placeholder="Please enter your detailed observations here..." required></textarea>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <button type="submit" class="btn btn-primary">Submit Feedback</button>
-        </form>
+                <div class="text-center mt-5 mb-4">
+                    <p class="text-muted small mb-4">By submitting, you agree that your responses will be used for quality improvement and research purposes.</p>
+                    <button type="submit" class="btn btn-submit-premium btn-lg text-white rounded-pill px-5" id="submitBtn">
+                        <span id="btnText">FINALIZE & SUBMIT FEEDBACK</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
-<!-- Hidden input for server message -->
 <input type="hidden" id="serverMessage" th:value="${serverMessage}"/>
 
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<!-- SweetAlert2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.8.2/dist/sweetalert2.all.min.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const serverMessage = document.getElementById("serverMessage")?.value;
+    document.addEventListener("DOMContentLoaded", function () {
+        const serverMessage = document.getElementById("serverMessage")?.value;
+        if (serverMessage && serverMessage.trim() !== "") {
+            Swal.fire({
+                title: 'Submission Status',
+                text: serverMessage,
+                icon: serverMessage.toLowerCase().includes('success') ? 'success' : 'info',
+                confirmButtonColor: '#1a237e'
+            });
+        }
 
-  if (serverMessage && serverMessage.trim() !== "") {
-    const lowerMsg = serverMessage.toLowerCase();
-    const isError = lowerMsg.includes('invalid') || 
-                    lowerMsg.includes('disabled') || 
-                    lowerMsg.includes('not found');
-
-    Swal.fire({
-      title: 'Notification',
-      text: serverMessage,
-      icon: isError ? 'error' : 'success',
-      confirmButtonColor: '#2575fc',
-      background: '#f9f9f9',
-      color: '#333',
-      timer: 4000,
-      timerProgressBar: true
+        const form = document.getElementById('feedbackForm');
+        form.addEventListener('submit', function() {
+            if(form.checkValidity()) {
+                const btn = document.getElementById('submitBtn');
+                btn.disabled = true;
+                document.getElementById('btnText').innerHTML = 'Processing...';
+            }
+        });
     });
-  }
-});
 </script>
 </main>
 </body>

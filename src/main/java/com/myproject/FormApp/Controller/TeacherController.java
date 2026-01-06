@@ -72,7 +72,7 @@ import org.knowm.xchart.style.markers.SeriesMarkers;
 //✅ Cloudinary
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 //✅ Your Project Entities
 import com.myproject.FormApp.Model.CurriculumTopic;
 import com.myproject.FormApp.Model.EnrolledProgram;
@@ -220,48 +220,94 @@ public class TeacherController {
 	    @Autowired
 	    private StudentsRepository studentRepo;
 	    
+	    @Autowired
+	    private ObjectMapper objectMapper;
 	    
 	    
-	    @GetMapping("/Dashboard")
-	    public String showDashboard(Model model) {
-	        Teacher teacher = (Teacher) session.getAttribute("loggedInTeacher");
-	        if (teacher == null) {
-	            return "redirect:/";
-	        }
+	    
+	@GetMapping("/Dashboard")
+public String showDashboard(Model model) {
+    Teacher teacher = (Teacher) session.getAttribute("loggedInTeacher");
+    if (teacher == null) return "redirect:/";
 
-	        List<TeacherAssign> assignedPrograms = teacherAssignRepository.findByTeacherId(teacher.getId());
+    // 1. Basic assigned programs
+    List<TeacherAssign> assignedPrograms = teacherAssignRepository.findByTeacherId(teacher.getId());
 
-	        // Feedbacks grouped by program with active/inactive count
-	        Map<Long, Map<String, Long>> feedbackStatus = new HashMap<>();
-	        for (TeacherAssign assign : assignedPrograms) {
-	            List<Feedback> feedbacks = feedbackRepo.findByProgramId(assign.getProgram().getId());
-	            long active = feedbacks.stream()
-	            	    .filter(f -> 
-	            	        ( !f.getStartDate().isAfter(LocalDate.now()) ) &&   // startDate <= today
-	            	        ( !f.getEndDate().isBefore(LocalDate.now()) )       // endDate >= today
-	            	    )
-	            	    .count();
+    // Master list for Frontend Dropdown & Dynamic Charts
+    List<Map<String, Object>> masterAnalytics = new ArrayList<>();
+    
+    long globalStudents = 0;
+    long globalFeedbacks = 0;
+    double totalRatingSum = 0;
+    int totalRatingEntries = 0;
 
-	            long inactive = feedbacks.size() - active;
+    for (TeacherAssign assign : assignedPrograms) {
+        Program p = assign.getProgram();
+        Long pId = p.getId();
 
-	            Map<String, Long> statusMap = new HashMap<>();
-	            statusMap.put("active", active);
-	            statusMap.put("inactive", inactive);
-	            feedbackStatus.put(assign.getProgram().getId(), statusMap);
-	        }
+        // A. Performance Trends (Line Chart Data)
+        List<Feedback> phases = feedbackRepo.findByProgramIdOrderByStartDateAsc(pId);
+        List<String> phaseLabels = new ArrayList<>();
+        List<Double> phaseRatings = new ArrayList<>();
+        
+        long progPos = 0, progNeg = 0, progNeu = 0;
+        double progSum = 0;
+        int progCount = 0;
 
-	        long totalFeedbacks = feedbackStatus.values().stream()
-	                                    .mapToLong(s -> s.get("active") + s.get("inactive"))
-	                                    .sum();
+        for (Feedback fb : phases) {
+            Double avg = studentFeedbackAnswerRepo.getAverageRatingByFeedback(fb.getId());
+            double safeVal = (avg != null) ? avg : 0.0;
+            phaseLabels.add(fb.getFeedbackPhase().getPhaseName());
+            phaseRatings.add(safeVal);
 
-	        model.addAttribute("loggedInTeacher", teacher);
-	        model.addAttribute("assignedPrograms", assignedPrograms);
-	        model.addAttribute("feedbackStatus", feedbackStatus);
-	        model.addAttribute("totalFeedbacks", totalFeedbacks);
+            // B. Sentiment Data (Pie Chart Data) - Real time counting
+            progPos += studentFeedbackAnswerRepo.countBySentimentAndFeedback(fb.getId(), "POSITIVE");
+            progNeg += studentFeedbackAnswerRepo.countBySentimentAndFeedback(fb.getId(), "NEGATIVE");
+            progNeu += studentFeedbackAnswerRepo.countBySentimentAndFeedback(fb.getId(), "NEUTRAL");
 
-	        return "Teacher/Dashboard";
-	    }
+            if(safeVal > 0) {
+                progSum += safeVal;
+                progCount++;
+                totalRatingSum += safeVal;
+                totalRatingEntries++;
+            }
+        }
 
+        // C. Strength & Weakness Logic (Innovation Insight)
+        String strength = (progSum/progCount > 4.0) ? "High Student Engagement" : "Consistent Delivery";
+        String weakness = (progNeg > progPos/2) ? "Needs Pace Adjustment" : "Subject Depth Improvement";
+
+        // D. Create Program-Specific Analytics Node
+        Map<String, Object> node = new HashMap<>();
+        node.put("id", pId);
+        node.put("name", p.getTrainingProgram());
+        node.put("branch", p.getBranch());
+        node.put("studentCount", enrolledProgramRepo.countByProgramAndStatus(p, EnrolledProgram.ProgramStatus.APPROVED));
+        node.put("labels", phaseLabels);
+        node.put("ratings", phaseRatings);
+        node.put("sentiment", List.of(progPos, progNeu, progNeg)); // Array for Pie Chart
+        node.put("avgRating", String.format("%.1f", progCount > 0 ? progSum / progCount : 0.0));
+        node.put("totalResponses", progPos + progNeu + progNeg);
+        node.put("insightStrength", strength);
+        node.put("insightWeakness", weakness);
+
+        masterAnalytics.add(node);
+        
+        // Global counters for top tiles
+        globalStudents += (long)node.get("studentCount");
+        globalFeedbacks += (progPos + progNeu + progNeg);
+    }
+
+    // Model attributes injection
+    model.addAttribute("loggedInTeacher", teacher);
+    model.addAttribute("masterAnalytics", masterAnalytics); // Master JSON object for JS
+    model.addAttribute("totalPrograms", assignedPrograms.size());
+    model.addAttribute("totalStudents", globalStudents);
+    model.addAttribute("totalResponses", globalFeedbacks);
+    model.addAttribute("avgRating", totalRatingEntries > 0 ? String.format("%.2f", totalRatingSum / totalRatingEntries) : "0.0");
+
+    return "Teacher/Dashboard";
+}
 	
 	@GetMapping("/AssignProgram")
     public String showAssignProgram(Model model) {
@@ -503,58 +549,76 @@ public class TeacherController {
 	
 	
 	
-	
 	@GetMapping("/FeedbackDetail/{id}")
-	public String showFeedbackDetail(@PathVariable Long id, Model model, HttpSession session) {
-	    Teacher teacher = (Teacher) session.getAttribute("loggedInTeacher");
-	    if (teacher == null) return "redirect:/";
+public String showFeedbackDetail(
+        @PathVariable Long id,
+        Model model,
+        HttpSession session
+) {
 
-	    // Fetch feedback
-	    Feedback feedback = feedbackRepo.findById(id)
-	        .orElseThrow(() -> new RuntimeException("Feedback not found"));
+    Teacher teacher = (Teacher) session.getAttribute("loggedInTeacher");
+    if (teacher == null) return "redirect:/";
 
-	    // Fetch all answers for this feedback
-	    List<StudentFeedbackAnswer> answers = studentFeedbackAnswerRepo.findByFeedback(feedback);
+    Feedback feedback = feedbackRepo.findById(id)
+            .orElseThrow(() -> new RuntimeException("Feedback not found"));
 
-	    // Group answers by question
-	    Map<Question, List<StudentFeedbackAnswer>> answersByQuestion =
-	        answers.stream().collect(Collectors.groupingBy(StudentFeedbackAnswer::getQuestion));
+    List<StudentFeedbackAnswer> answers =
+            studentFeedbackAnswerRepo.findByFeedback(feedback);
 
-	    // Maps to hold analysis & averages
-	    Map<Long, FeedbackAnalysis> analysisByQuestion = new HashMap<>();
-	    Map<Long, Double> avgByQuestion = new HashMap<>();
+    Map<Question, List<StudentFeedbackAnswer>> answersByQuestion =
+            answers.stream().collect(Collectors.groupingBy(StudentFeedbackAnswer::getQuestion));
 
-	    for (Map.Entry<Question, List<StudentFeedbackAnswer>> entry : answersByQuestion.entrySet()) {
-	        Question question = entry.getKey();
-	        List<StudentFeedbackAnswer> ansList = entry.getValue();
+    Map<Long, FeedbackAnalysis> analysisByQuestion = new HashMap<>();
+    Map<Long, Double> avgByQuestion = new HashMap<>();
+    Map<Long, List<String>> suggestionsByQuestion = new HashMap<>();
+    Map<Long, List<String>> weakPointsByQuestion = new HashMap<>();
 
-	        // AI Analysis
-	        FeedbackAnalysis fa = analysisService.computeAndSaveTextAnalysis(feedback, question, ansList);
-	        analysisByQuestion.put(question.getId(), fa);
+    for (var entry : answersByQuestion.entrySet()) {
 
-	        if (question.getAnswerType() == Question.AnswerType.NUMBER) {
-	            double avg = ansList.stream()
-	                .mapToDouble(ans -> {
-	                    try { return Double.parseDouble(ans.getAnswer()); } 
-	                    catch (NumberFormatException e) { return 0.0; }
-	                })
-	                .average()
-	                .orElse(0.0);
+        Question q = entry.getKey();
+        List<StudentFeedbackAnswer> ansList = entry.getValue();
 
-	            avgByQuestion.put(question.getId(), avg);
+        FeedbackAnalysis fa =
+                analysisService.computeAndSaveTextAnalysis(feedback, q, ansList);
 
-	            fa.setAvgNumeric(avg);  // store in DB
-	        }
+        analysisByQuestion.put(q.getId(), fa);
 
-	    }
+        if (q.getAnswerType() == Question.AnswerType.NUMBER) {
+            double avg = ansList.stream()
+                    .mapToDouble(a -> {
+                        try { return Double.parseDouble(a.getAnswer()); }
+                        catch (Exception e) { return 0.0; }
+                    }).average().orElse(0.0);
 
-	    model.addAttribute("feedback", feedback);
-	    model.addAttribute("answersByQuestion", answersByQuestion);
-	    model.addAttribute("analysisByQuestion", analysisByQuestion);
-	    model.addAttribute("avgByQuestion", avgByQuestion);
+            avgByQuestion.put(q.getId(), avg);
+            fa.setAvgNumeric(avg);
+        }
 
-	    return "Teacher/feedbackDetail";
-	}
+        try {
+            suggestionsByQuestion.put(
+                    q.getId(),
+                    objectMapper.readValue(fa.getSuggestions(), List.class)
+            );
+            weakPointsByQuestion.put(
+                    q.getId(),
+                    objectMapper.readValue(fa.getKeyPhrases(), List.class)
+            );
+        } catch (Exception e) {
+            suggestionsByQuestion.put(q.getId(), List.of());
+            weakPointsByQuestion.put(q.getId(), List.of());
+        }
+    }
+
+    model.addAttribute("feedback", feedback);
+    model.addAttribute("answersByQuestion", answersByQuestion);
+    model.addAttribute("analysisByQuestion", analysisByQuestion);
+    model.addAttribute("avgByQuestion", avgByQuestion);
+    model.addAttribute("suggestionsByQuestion", suggestionsByQuestion);
+    model.addAttribute("weakPointsByQuestion", weakPointsByQuestion);
+
+    return "Teacher/feedbackDetail";
+}
+
 	
 	
 	@GetMapping("/FeedbackDetailGraph/{id}")

@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,34 +129,105 @@ public class StudentController {
     @PersistenceContext
     private EntityManager entityManager;
 	
-   @GetMapping("/Dashboard")
+@GetMapping("/Dashboard")
 public String showDashboard(Model model) {
+    // 1. Session and Security Check
     Student student = (Student) session.getAttribute("loggedInStudent");
-    if(student == null) return "redirect:/";
+    if (student == null) return "redirect:/login";
 
-    // 1️⃣ Enrolled Programs (only APPROVED)
+    // 2. Fetch Approved Enrolled Programs
     List<EnrolledProgram> enrolledPrograms = enrolledProgramRepo.findByStudentId(student.getId())
             .stream()
             .filter(ep -> ep.getStatus() == EnrolledProgram.ProgramStatus.APPROVED)
-            .toList();
+            .collect(Collectors.toList());
     model.addAttribute("enrolledPrograms", enrolledPrograms);
 
-    // 2️⃣ Pending Feedbacks
+    // 3. Fetch Pending Feedbacks List (For Actionable Tasks)
     List<Long> answeredFeedbackIds = studentFeedbackAnswerRepo.findAnsweredFeedbackIdsByStudent(student.getId());
-    List<Feedback> pendingFeedbacks = answeredFeedbackIds.isEmpty()
-        ? feedRepo.findByProgramIn(enrolledPrograms.stream().map(EnrolledProgram::getProgram).toList())
-        : feedRepo.findByProgramInAndIdNotIn(
-            enrolledPrograms.stream().map(EnrolledProgram::getProgram).toList(),
-            answeredFeedbackIds
-        );
+    List<Program> studentProgramsList = enrolledPrograms.stream()
+            .map(EnrolledProgram::getProgram)
+            .collect(Collectors.toList());
+
+    List<Feedback> pendingFeedbacks = new ArrayList<>();
+    if (!studentProgramsList.isEmpty()) {
+        if (answeredFeedbackIds.isEmpty()) {
+            pendingFeedbacks = feedRepo.findByProgramIn(studentProgramsList);
+        } else {
+            pendingFeedbacks = feedRepo.findByProgramInAndIdNotIn(studentProgramsList, answeredFeedbackIds);
+        }
+    }
     model.addAttribute("pendingFeedbacks", pendingFeedbacks);
 
-    // 3️⃣ Recent Programs (last 5, only APPROVED)
-    List<EnrolledProgram> recentPrograms = enrolledPrograms.stream()
-            .sorted((a,b) -> b.getRegDate().compareTo(a.getRegDate()))
-            .limit(5)
-            .toList();
-    model.addAttribute("recentPrograms", recentPrograms);
+    // 4. HEAVY ANALYTICS ENGINE (For Graphs and Scientific Matrix)
+    List<String> chartLabels = new ArrayList<>();
+    List<Long> totalCreatedData = new ArrayList<>();
+    List<Long> answeredByMeData = new ArrayList<>();
+    List<Double> avgRatingsData = new ArrayList<>();
+    List<Integer> engagementData = new ArrayList<>();
+    
+    // Map for table display
+    Map<Long, Map<String, Object>> analyticsMap = new HashMap<>();
+
+    long grandTotalCreated = 0;
+    long grandTotalAnswered = 0;
+
+    for (EnrolledProgram ep : enrolledPrograms) {
+        Program p = ep.getProgram();
+        Long pId = p.getId();
+        chartLabels.add(p.getTrainingProgram());
+
+        // A. Program-wise Feedback Stats
+        long totalPhases = feedRepo.countByProgram(p); 
+        long answeredByMe = studentFeedbackAnswerRepo.countDistinctFeedbackByStudentAndProgram(student.getId(), pId);
+        long totalPeers = enrolledProgramRepo.countByProgramAndStatus(p, EnrolledProgram.ProgramStatus.APPROVED);
+        
+        // B. KPI Rating (SDG-4 Quality Indicator)
+        Double avgRating = studentFeedbackAnswerRepo.getAverageRatingByProgram(pId);
+        double safeRating = (avgRating != null) ? avgRating : 0.0;
+
+        // C. Engagement Calculation
+        int engagementRate = (totalPhases > 0) ? (int) ((answeredByMe * 100) / totalPhases) : 0;
+
+        // D. Sentiment Analysis (From batch data)
+        long positive = studentFeedbackAnswerRepo.countBySentimentAndProgram(pId, "POSITIVE");
+        long negative = studentFeedbackAnswerRepo.countBySentimentAndProgram(pId, "NEGATIVE");
+        long neutral = studentFeedbackAnswerRepo.countBySentimentAndProgram(pId, "NEUTRAL");
+
+        // E. Store in Map for Table/UI
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("avgRating", String.format("%.1f", safeRating));
+        stats.put("totalEnrolled", totalPeers);
+        stats.put("completionRate", engagementRate);
+        stats.put("positive", positive);
+        stats.put("negative", negative);
+        stats.put("neutral", neutral);
+        stats.put("pendingCount", totalPhases - answeredByMe);
+        
+        analyticsMap.put(pId, stats);
+
+        // F. Store in Lists for Chart.js
+        totalCreatedData.add(totalPhases);
+        answeredByMeData.add(answeredByMe);
+        avgRatingsData.add(safeRating);
+        engagementData.add(engagementRate);
+
+        // G. Totals for Grand Summary
+        grandTotalCreated += totalPhases;
+        grandTotalAnswered += answeredByMe;
+    }
+
+    // 5. Add All Attributes to Model
+    model.addAttribute("analytics", analyticsMap);
+    model.addAttribute("chartLabels", chartLabels);
+    model.addAttribute("totalCreated", totalCreatedData);
+    model.addAttribute("answeredByMe", answeredByMeData);
+    model.addAttribute("avgRatings", avgRatingsData);
+    model.addAttribute("engagementData", engagementData);
+    
+    // Grand Totals
+    model.addAttribute("grandTotalCreated", grandTotalCreated);
+    model.addAttribute("grandTotalAnswered", grandTotalAnswered);
+    model.addAttribute("grandTotalPending", grandTotalCreated - grandTotalAnswered);
 
     return "Student/Dashboard";
 }

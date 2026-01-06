@@ -32,6 +32,8 @@ public interface EnrolledProgramRepository extends JpaRepository<EnrolledProgram
 	Page<EnrolledProgram> findByProgramIdAndStudentRollNoContaining(Long programId, String rollNo, Pageable pageable);
 	Page<EnrolledProgram> findByProgramIdAndStatusAndStudentRollNoContaining(Long programId, ProgramStatus status, String rollNo, Pageable pageable);
 
+	long countByProgramAndStatus(Program p, ProgramStatus approved);
+
 
 
 }
