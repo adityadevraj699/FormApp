@@ -1,177 +1,263 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{Teacher/Teacherbase::layout(~{::main})}">
+<head>
+    <title>EduInsight | Program Command Center</title>
+</head>
 <body>
-<main class="container my-4">
-
-    <!-- Back Button -->
-    <div class="mb-3">
-        <a th:href="@{/Teacher/AssignProgram}" class="btn btn-secondary">&larr; Back to Assigned Programs</a>
+<main class="container my-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-5 animate__animated animate__fadeInDown">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a th:href="@{/Teacher/AssignProgram}">Programs</a></li>
+                    <li class="breadcrumb-item active">Details</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold text-dark m-0">Program Command Center</h2>
+        </div>
+        <a th:href="@{/Teacher/AssignProgram}" class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="bi bi-arrow-left me-2"></i>Back
+        </a>
     </div>
 
-
-    <h2 class="mb-4 text-primary">Program Details</h2>
-
-    <!-- Program Info -->
-    <div class="card shadow-sm mb-4">
-    <div class="card-header bg-primary text-white">Program Information</div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-4"><strong>Name:</strong> <span th:text="${program.trainingProgram} ?: 'All'"></span></div>
-            <div class="col-md-4"><strong>Course:</strong> <span th:text="${program.course} ?: 'All'"></span></div>
-            <div class="col-md-4"><strong>Branch:</strong> <span th:text="${program.branch} ?: 'All'"></span></div>
+    <div class="row g-4 mb-5 animate__animated animate__fadeIn">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="m-0 fw-bold text-primary"><i class="bi bi-info-circle-fill me-2"></i>Core Information</h5>
+                </div>
+                <div class="card-body bg-light-soft p-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="small text-muted d-block">Program Name</label>
+                            <span class="fw-bold text-dark fs-5" th:text="${program.trainingProgram} ?: 'All'"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small text-muted d-block">Department & Branch</label>
+                            <span class="fw-bold text-dark" th:text="${program.course} + ' - ' + ${program.branch}"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="small text-muted d-block">Timeline</label>
+                            <span class="badge bg-white text-dark border rounded-pill px-3 py-2">
+                                <i class="bi bi-calendar-event me-1"></i> <span th:text="${program.startDate}"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <hr class="my-4 opacity-50">
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 bg-white rounded-3 shadow-xs text-center border">
+                                <small class="text-muted d-block">Year</small>
+                                <strong th:text="${program.year}"></strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 bg-white rounded-3 shadow-xs text-center border">
+                                <small class="text-muted d-block">Section</small>
+                                <strong th:text="${program.section}"></strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 bg-white rounded-3 shadow-xs text-center border">
+                                <small class="text-muted d-block">Semester</small>
+                                <strong th:text="${program.semester}"></strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 bg-primary text-white rounded-3 shadow-xs text-center">
+                                <small class="opacity-75 d-block text-white">Students</small>
+                                <strong class="fs-5" th:text="${enrolledCount}">0</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="row mt-2">
-            <div class="col-md-4"><strong>Year:</strong> <span th:text="${program.year} ?: 'All'"></span></div>
-            <div class="col-md-4"><strong>Section:</strong> <span th:text="${program.section} ?: 'All'"></span></div>
-            <div class="col-md-4"><strong>Semester:</strong> <span th:text="${program.semester} ?: 'All'"></span></div>
-        </div>
-        <div class="row mt-2">
-            <div class="col-md-4"><strong>Start Date:</strong> <span th:text="${program.startDate} ?: 'All'"></span></div>
-            <div class="col-md-4"><strong>End Date:</strong> <span th:text="${program.endDate} ?: 'All'"></span></div>
-            <div class="col-md-4"><strong>Total Students:</strong> <span th:text="${enrolledCount} ?: '0'"></span></div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-dark text-white">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <h5 class="fw-bold mb-3"><i class="bi bi-file-earmark-excel me-2"></i>Bulk Enrollment</h5>
+                        <p class="small text-white-50">Upload an Excel (.xlsx) file with student records. System will auto-validate emails and roll numbers.</p>
+                        <div class="alert alert-light bg-opacity-10 border-0 py-2">
+                            <code class="text-warning small">Roll No | Name | Email</code>
+                        </div>
+                    </div>
+                    <form th:action="@{/Teacher/uploadEnrollmentExcel}" method="post" enctype="multipart/form-data" class="mt-3">
+                        <input type="hidden" name="programId" th:value="${program.id}" />
+                        <div class="input-group mb-3 custom-file-upload">
+                            <input type="file" class="form-control bg-transparent text-white border-secondary" id="file" name="file" accept=".xlsx" required>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100 rounded-pill fw-bold">
+                            <i class="bi bi-cloud-arrow-up-fill me-2"></i>Process List
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-success bg-opacity-10 py-3 border-0">
+                    <h5 class="m-0 fw-bold text-success"><i class="bi bi-person-workspace me-2"></i>Assigned Faculty</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr><th>Teacher</th><th>Department</th><th class="text-center">Exp.</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="ta : ${teacherAssignments}">
+                                    <td>
+                                        <div class="fw-bold" th:text="${ta.teacher.name}"></div>
+                                        <div class="small text-muted" th:text="${ta.teacher.email}"></div>
+                                    </td>
+                                    <td th:text="${ta.teacher.department}"></td>
+                                    <td class="text-center"><span class="badge rounded-pill bg-light text-dark border" th:text="${ta.teacher.experience} + 'Y'"></span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-dark bg-opacity-10 py-3 border-0">
+                    <h5 class="m-0 fw-bold text-dark"><i class="bi bi-list-columns-reverse me-2"></i>Syllabus Overview</h5>
+                </div>
+                <div class="card-body" style="max-height: 250px; overflow-y: auto;">
+                    <div class="mb-4" th:each="module : ${modules}">
+                        <h6 class="fw-bold text-primary mb-2" th:text="${module.moduleName}">Module</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span th:each="topic : ${moduleTopicsMap[module.id]}" 
+                                  class="badge bg-soft-primary text-primary fw-normal" 
+                                  th:text="${topic.topicName}">Topic</span>
+                        </div>
+                        <hr class="my-3 opacity-25">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Teacher Info -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-success text-white">Assigned Teachers</div>
-        <div class="card-body p-0">
-            <table class="table table-striped table-bordered mb-0">
-                <thead class="table-success">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-4 px-4 border-0 d-flex justify-content-between align-items-center">
+            <h4 class="fw-bold m-0 text-dark">Enrolled Students Database</h4>
+            <div class="search-box">
+                <input type="text" class="form-control form-control-sm rounded-pill px-3" placeholder="Search students...">
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
                     <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Experience (Years)</th>
-                        <th>Department</th>
+                        <th class="ps-4">Student Identity</th>
+                        <th>Academic Info</th>
+                        <th>Contact</th>
+                        <th>Enrollment Status</th>
+                        <th class="text-end pe-4">Manage</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="ta : ${teacherAssignments}">
-                        <td th:text="${ta.teacher.name}"></td>
-                        <td th:text="${ta.teacher.email}"></td>
-                        <td th:text="${ta.teacher.experience}"></td>
-                        <td th:text="${ta.teacher.department}"></td>
+                    <tr th:each="ep : ${enrolledStudents}">
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center">
+                                <img th:src="${ep.student.profileImage != null} ? ${ep.student.profileImage} : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'"
+                                     class="rounded-circle me-3 border shadow-xs" width="45" height="45" />
+                                <div>
+                                    <div class="fw-bold text-dark" th:text="${ep.student.name}"></div>
+                                    <small class="text-muted" th:text="'Roll: ' + ${ep.student.rollNo}"></small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small">
+                                <span th:text="${ep.student.branch}"></span> | <span th:text="${ep.student.section}"></span><br>
+                                <span class="text-muted" th:text="${ep.student.semester} + ' Sem - ' + ${ep.student.year} + ' Year'"></span>
+                            </div>
+                        </td>
+                        <td class="small" th:text="${ep.student.contactNo}"></td>
+                        <td>
+                            <form th:action="@{/Teacher/updateStatus/{id}(id=${ep.id})}" method="post">
+                                <button type="submit" 
+                                    th:classappend="${#strings.equals(ep.status.toString(), 'PENDING') ? 'status-pill pending' : 'status-pill active'}"
+                                    th:text="${ep.status}">
+                                </button>
+                            </form>
+                        </td>
+                        <td class="text-end pe-4">
+                            <form th:action="@{/Teacher/deleteEnrollment/{id}(id=${ep.id})}" method="post" onsubmit="return confirm('Remove student from program?')">
+                                <button type="submit" class="btn-action-delete">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </form>
+                        </td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Modules & Topics -->
-    <h4>Curriculum: Modules & Topics</h4>
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Module</th>
-                <th>Topics</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="module : ${modules}">
-                <td th:text="${module.moduleName}"></td>
-                <td>
-                    <ul>
-                        <li th:each="topic : ${moduleTopicsMap[module.id]}" 
-                            th:text="${topic.topicName}"></li>
-                    </ul>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    
-<!-- Upload Excel for Bulk Enrollment -->
-<div class="card shadow-sm mb-4">
-    <div class="card-header bg-info text-white">
-        Upload Student List (Excel)
-    </div>
-    <div class="card-body">
-        <p class="text-muted small mb-3">
-            <strong>Note:</strong> Please upload an Excel (.xlsx) file in the following format:<br>
-            <code>S.No | Roll No | Name | Email</code><br>
-            (The first row should contain column headings.)
-        </p>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --soft-primary: #eef2ff;
+            --active: #10b981;
+            --pending: #f59e0b;
+            --delete: #ef4444;
+        }
 
-        <form th:action="@{/Teacher/uploadEnrollmentExcel}" 
-              method="post" 
-              enctype="multipart/form-data">
-              
-            <input type="hidden" name="programId" th:value="${program.id}" />
+        body { background-color: #f8f9fc; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .bg-light-soft { background-color: #fbfcfe; }
+        
+        /* Modern Status Pills */
+        .status-pill {
+            border: none;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: 0.3s;
+        }
+        .status-pill.pending { background: #fffbeb; color: #b45309; }
+        .status-pill.active { background: #ecfdf5; color: #047857; }
+        .status-pill:hover { filter: brightness(0.9); }
 
-            <div class="mb-3">
-                <label for="file" class="form-label">Select Excel File (.xlsx)</label>
-                <input type="file" class="form-control" id="file" name="file" accept=".xlsx" required>
-            </div>
+        /* Action Buttons */
+        .btn-action-delete {
+            background: #fef2f2;
+            color: var(--delete);
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+        .btn-action-delete:hover { background: var(--delete); color: white; }
 
-            <button type="submit" class="btn btn-primary">Upload & Enroll</button>
-        </form>
-    </div>
-</div>
+        .bg-soft-primary { background: var(--soft-primary); }
+        .shadow-xs { box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
 
- 
-   <h4>Enrolled Students (Total: <span th:text="${enrolledCount}"></span>)</h4>
-
-<table class="table table-bordered table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>Roll No</th>
-            <th>Name</th>
-            <th>Course</th>
-            <th>Branch</th>
-            <th>Section</th>
-            <th>Semester</th>
-            <th>Year</th>
-            <th>Contact</th>
-            <th>Status</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        <!-- ✅ EnrolledProgram loop -->
-        <tr th:each="ep : ${enrolledStudents}">
-            <td th:text="${ep.student.rollNo}"></td>
-            <td>
-                <img th:src="${ep.student.profileImage != null} ? ${ep.student.profileImage} : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'"
-                     alt="profile" width="32" height="32" class="rounded-circle me-1" />
-                <span th:text="${ep.student.name}"></span>
-            </td>
-            <td th:text="${ep.student.course}"></td>
-            <td th:text="${ep.student.branch}"></td>
-            <td th:text="${ep.student.section}"></td>
-            <td th:text="${ep.student.semester}"></td>
-            <td th:text="${ep.student.year}"></td>
-            <td th:text="${ep.student.contactNo}"></td>
-
-            <!-- Status -->
-            <td>
-               <!-- Status Button -->
-<form th:action="@{/Teacher/updateStatus/{id}(id=${ep.id})}" method="post">
-    <button type="submit"
-        th:text="${ep.status}"
-        th:classappend="${#strings.equals(ep.status.toString(), 'PENDING') 
-                         ? 'btn btn-warning btn-sm' 
-                         : 'btn btn-success btn-sm'}">
-    </button>
-</form>
-</td>
-<td>
-<!-- Delete Enrollment -->
-<form th:action="@{/Teacher/deleteEnrollment/{id}(id=${ep.id})}" method="post">
-    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-</form>
-</td>
-
-            </td>
-        </tr>
-
-        <!-- No students -->
-        <tr th:if="${#lists.isEmpty(enrolledStudents)}">
-            <td colspan="7" class="text-center">No students enrolled in this program yet.</td>
-        </tr>
-    </tbody>
-</table>
-
+        /* Animation */
+        .animate__animated { animation-duration: 0.8s; }
+        
+        .table thead th {
+            border: none;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            color: #718096;
+            padding: 15px;
+        }
+    </style>
 
 </main>
 </body>

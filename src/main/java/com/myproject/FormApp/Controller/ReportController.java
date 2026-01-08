@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,10 +19,13 @@ import com.myproject.FormApp.Dto.ChartDataDTOAll;
 import com.myproject.FormApp.Dto.ChartVisualizationDTO;
 import com.myproject.FormApp.Model.Question;
 import com.myproject.FormApp.Model.StudentFeedbackAnswer;
+import com.myproject.FormApp.Model.Teacher;
 import com.myproject.FormApp.Repository.QuestionRepository;
 import com.myproject.FormApp.Repository.StudentFeedbackAnswerRepository;
 import com.myproject.FormApp.Service.FeedbackReportService;
 import com.myproject.FormApp.Service.ReportService;
+
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 @RequestMapping("/feedback/report")
@@ -51,30 +57,47 @@ public class ReportController {
     }
     
     
+    /**
+     * 📊 Advanced Dashboard Visualization
+     */
     @GetMapping("/{feedbackId}")
-    public String showFeedbackDashboard(@PathVariable Long feedbackId, Model model) {
-        List<ChartVisualizationDTO> barCharts = feedbackReportService.buildBarCharts(feedbackId);
-        ChartVisualizationDTO lineChart = feedbackReportService.buildAverageLineChart(feedbackId);
-        ChartVisualizationDTO pieChart = feedbackReportService.buildSentimentPieChart(feedbackId);
-        ChartDataDTO rangeChart = feedbackReportService.buildRangeDistributionChart(feedbackId); // ✅ Added
+    public String showFeedbackDashboard(@PathVariable Long feedbackId, Model model, HttpSession session) {
+        
+        // 1. Security Check
+        Teacher teacher = (Teacher) session.getAttribute("loggedInTeacher");
+        if (teacher == null) return "redirect:/login";
 
-        model.addAttribute("barCharts", barCharts);
-        model.addAttribute("lineChart", lineChart);
-        model.addAttribute("pieChart", pieChart);
-        model.addAttribute("rangeChart", rangeChart); // ✅ Added
+        // 2. Data Fetching
+        List<ChartVisualizationDTO> individualCharts = feedbackReportService.buildIndividualQuestionCharts(feedbackId);
+        ChartVisualizationDTO trendChart = feedbackReportService.buildOverallTrend(feedbackId);
+        ChartDataDTO rangeChart = feedbackReportService.buildRangeDistributionChart(feedbackId);
+
+        // 3. UI Model Attributes
+        model.addAttribute("individualCharts", individualCharts);
+        model.addAttribute("trendChart", trendChart);
+        model.addAttribute("rangeChart", rangeChart);
+        model.addAttribute("feedbackId", feedbackId);
 
         return "Teacher/reportVisualization";
     }
 
-
+    /**
+     * 📥 Download PDF Report
+     */
     @GetMapping("/{feedbackId}/download")
-    public ResponseEntity<byte[]> downloadReport(@PathVariable Long feedbackId) throws Exception {
-        byte[] pdfBytes = feedbackReportService.exportToPDFForVisuals(feedbackId);
+    public ResponseEntity<byte[]> downloadReport(@PathVariable Long feedbackId, HttpSession session) {
+        Teacher teacher = (Teacher) session.getAttribute("loggedInTeacher");
+        if (teacher == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-        return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=feedback-report.pdf")
-                .header("Content-Type", "application/pdf")
-                .body(pdfBytes);
+        try {
+            byte[] pdfBytes = feedbackReportService.exportToPDFForVisuals(feedbackId);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=EduInsight_Report.pdf")
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(pdfBytes);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
 

@@ -1,30 +1,245 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{Teacher/Teacherbase::layout(~{::main})}">
+<head>
+    <title>EduInsight | Program Lifecycle Manager</title>
+</head>
 <body>
-<main class="container my-5">
+<main class="container-fluid px-4 py-5">
 
-    <h2 class="text-center text-primary mb-4">Assigned Programs</h2>
+    <div class="row mb-5 animate__animated animate__fadeIn">
+        <div class="col-lg-12">
+            <div class="glass-search-card p-4 shadow-sm rounded-4">
+                <div class="row align-items-center g-3">
+                    <div class="col-xl-3 col-lg-12">
+                        <h2 class="fw-bold text-dark m-0"><i class="bi bi-calendar-range text-primary me-2"></i>Assigned Programs</h2>
+                        <p class="text-muted small mb-0">Search and manage training cycles</p>
+                    </div>
+                    
+                    <div class="col-xl-9 col-lg-12">
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                                    <input type="text" id="nameSearch" class="form-control border-start-0" placeholder="Search by name...">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <select id="monthFilter" class="form-select" onchange="filterPrograms()">
+                                    <option value="">All Months</option>
+                                    <option value="01">January</option>
+                                    <option value="02">February</option>
+                                    <option value="03">March</option>
+                                    <option value="04">April</option>
+                                    <option value="05">May</option>
+                                    <option value="06">June</option>
+                                    <option value="07">July</option>
+                                    <option value="08">August</option>
+                                    <option value="09">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                </select>
+                            </div>
 
-    <div class="row">
-        <div class="col-md-4 mb-3" th:each="assign : ${assignedPrograms}">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title" th:text="${assign.program.trainingProgram}">Program Name</h5>
-                    <p class="card-text">
-                        <strong>Start Date:</strong> <span th:text="${assign.program.startDate}"></span><br>
-                        <strong>End Date:</strong> <span th:text="${assign.program.endDate}"></span><br>
-                        <strong>Teacher:</strong> <span th:text="${assign.teacher.name}"></span>
-                    </p>
-                    <a th:href="@{programDetail/{id}(id=${assign.program.id})}" 
-   class="btn btn-primary">View Program Details</a>
+                            <div class="col-md-2">
+                                <select id="yearFilter" class="form-select" onchange="filterPrograms()">
+                                    <option value="">All Years</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2026">2026</option>
+                                    <option value="2027">2027</option>
+                                </select>
+                            </div>
 
+                            <div class="col-md-2">
+                                <button class="btn btn-outline-danger w-100" onclick="resetFilters()">
+                                    <i class="bi bi-x-circle me-1"></i> Clear
+                                </button>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div class="btn-group w-100 shadow-sm">
+                                    <button class="btn btn-primary active btn-status" onclick="filterStatus('all', this)">All</button>
+                                    <button class="btn btn-outline-primary btn-status" onclick="filterStatus('ongoing', this)">Active</button>
+                                    <button class="btn btn-outline-primary btn-status" onclick="filterStatus('upcoming', this)">Pending</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div th:if="${#lists.isEmpty(assignedPrograms)}" class="alert alert-info text-center">
-        No programs assigned yet.
+    <div class="space-y-5">
+        
+        <div class="status-section mb-5" id="ongoingSection">
+            <h4 class="section-title text-success mb-4"><span class="pulse-indicator"></span> Ongoing Programs</h4>
+            <div class="row g-4" id="ongoingGrid">
+                <div th:each="assign : ${assignedPrograms}" 
+                     th:if="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd') >= #strings.toString(assign.program.startDate) 
+                             and #temporals.format(#temporals.createNow(), 'yyyy-MM-dd') <= #strings.toString(assign.program.endDate)}"
+                     class="col-xl-3 col-md-6 program-card"
+                     th:data-name="${assign.program.trainingProgram}" 
+                     th:data-start="${assign.program.startDate}" 
+                     th:data-end="${assign.program.endDate}">
+                    <div class="card border-0 shadow-sm h-100 premium-card active-border">
+                        <div class="card-body">
+                            <span class="badge bg-soft-success text-success rounded-pill px-3 mb-3">Ongoing</span>
+                            <h5 class="fw-bold mb-3" th:text="${assign.program.trainingProgram}">Name</h5>
+                            <small class="text-muted"><i class="bi bi-calendar-range"></i> [[${assign.program.startDate}]] to [[${assign.program.endDate}]]</small>
+                            <a th:href="@{programDetail/{id}(id=${assign.program.id})}" class="btn btn-primary w-100 mt-4 rounded-pill">Manage</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-section mb-5" id="upcomingSection">
+            <h4 class="section-title text-warning mb-4"><i class="bi bi-hourglass-split me-2"></i> Upcoming Programs</h4>
+            <div class="row g-4" id="upcomingGrid">
+                <div th:each="assign : ${assignedPrograms}" 
+                     th:if="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd') < #strings.toString(assign.program.startDate)}"
+                     class="col-xl-3 col-md-6 program-card"
+                     th:data-name="${assign.program.trainingProgram}" 
+                     th:data-start="${assign.program.startDate}" 
+                     th:data-end="${assign.program.endDate}">
+                    <div class="card border-0 shadow-sm h-100 premium-card upcoming-border">
+                        <div class="card-body text-center">
+                            <span class="badge bg-soft-warning text-warning rounded-pill px-3 mb-3">Planned</span>
+                            <h5 class="fw-bold mb-3" th:text="${assign.program.trainingProgram}">Name</h5>
+                            <p class="small text-muted mb-4">Starts: <strong th:text="${assign.program.startDate}"></strong></p>
+                            <a th:href="@{programDetail/{id}(id=${assign.program.id})}" class="btn btn-outline-warning w-100 rounded-pill">View Readiness</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-section" id="completedSection">
+            <h4 class="section-title text-secondary mb-4"><i class="bi bi-archive-fill me-2"></i> Historical Records</h4>
+            <div class="row g-4" id="completedGrid">
+                <div th:each="assign : ${assignedPrograms}" 
+                     th:if="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd') > #strings.toString(assign.program.endDate)}"
+                     class="col-xl-3 col-md-6 program-card"
+                     th:data-name="${assign.program.trainingProgram}" 
+                     th:data-start="${assign.program.startDate}" 
+                     th:data-end="${assign.program.endDate}">
+                    <div class="card border-0 shadow-sm h-100 premium-card completed-border opacity-75">
+                        <div class="card-body">
+                            <span class="badge bg-light text-secondary rounded-pill px-3 mb-2">Completed</span>
+                            <h5 class="fw-bold mb-2" th:text="${assign.program.trainingProgram}">Name</h5>
+                            <small class="text-muted d-block mb-3">Ended on: [[${assign.program.endDate}]]</small>
+                            <a th:href="@{programDetail/{id}(id=${assign.program.id})}" class="btn btn-secondary w-100 rounded-pill btn-sm">Audit</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
+
+    <script>
+        function filterPrograms() {
+            const nameQuery = document.getElementById('nameSearch').value.toLowerCase();
+            const monthQuery = document.getElementById('monthFilter').value;
+            const yearQuery = document.getElementById('yearFilter').value;
+            
+            const cards = document.querySelectorAll('.program-card');
+
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name').toLowerCase();
+                const startDate = card.getAttribute('data-start'); // yyyy-mm-dd
+                const endDate = card.getAttribute('data-end');
+
+                const startYear = startDate.split('-')[0];
+                const startMonth = startDate.split('-')[1];
+                const endYear = endDate.split('-')[0];
+                const endMonth = endDate.split('-')[1];
+
+                const matchesName = name.includes(nameQuery);
+                
+                // चेक करें कि क्या चुनी गई तारीख स्टार्ट या एंड डेट के बीच पड़ती है
+                const matchesMonth = monthQuery === "" || (startMonth === monthQuery || endMonth === monthQuery);
+                const matchesYear = yearQuery === "" || (startYear === yearQuery || endYear === yearQuery);
+
+                if (matchesName && matchesMonth && matchesYear) {
+                    card.style.display = "block";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+            
+            checkEmptySections();
+        }
+
+        // सभी इनपुट सुनने के लिए
+        document.getElementById('nameSearch').addEventListener('input', filterPrograms);
+
+        function resetFilters() {
+            document.getElementById('nameSearch').value = "";
+            document.getElementById('monthFilter').value = "";
+            document.getElementById('yearFilter').value = "";
+            filterPrograms();
+            filterStatus('all', document.querySelector('.btn-status'));
+        }
+
+        function filterStatus(status, btn) {
+            // UI Active State
+            document.querySelectorAll('.btn-status').forEach(b => {
+                b.classList.remove('btn-primary', 'active');
+                b.classList.add('btn-outline-primary');
+            });
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-primary', 'active');
+
+            const sections = {
+                'ongoing': 'ongoingSection',
+                'upcoming': 'upcomingSection',
+                'completed': 'completedSection'
+            };
+
+            if (status === 'all') {
+                Object.values(sections).forEach(id => document.getElementById(id).style.display = "block");
+            } else {
+                Object.entries(sections).forEach(([key, id]) => {
+                    document.getElementById(id).style.display = (key === status) ? "block" : "none";
+                });
+            }
+        }
+
+        // अगर किसी सेक्शन में कोई कार्ड न बचे तो उसे छुपा दें
+        function checkEmptySections() {
+            const grids = ['ongoingGrid', 'upcomingGrid', 'completedGrid'];
+            grids.forEach(gridId => {
+                const grid = document.getElementById(gridId);
+                const section = grid.closest('.status-section');
+                const visibleCards = Array.from(grid.querySelectorAll('.program-card')).filter(c => c.style.display !== 'none');
+                
+                if (visibleCards.length === 0) {
+                    section.classList.add('d-none');
+                } else {
+                    section.classList.remove('d-none');
+                }
+            });
+        }
+    </script>
+
+    <style>
+        .glass-search-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+            position: sticky;
+            top: 10px;
+            z-index: 1000;
+        }
+        .premium-card { border-radius: 1.2rem !important; overflow: hidden; transition: 0.3s; border: 1px solid #f1f5f9 !important; }
+        .bg-soft-success { background: #ecfdf5; }
+        .bg-soft-warning { background: #fffbeb; }
+        .section-title { font-size: 1.25rem; font-weight: 700; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; align-items: center; }
+        .space-y-5 > * + * { margin-top: 3rem; }
+    </style>
 
 </main>
 </body>

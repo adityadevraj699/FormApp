@@ -2,193 +2,166 @@ package com.myproject.FormApp.Service;
 
 import com.myproject.FormApp.Dto.ChartDataDTO;
 import com.myproject.FormApp.Dto.ChartVisualizationDTO;
-import com.myproject.FormApp.Model.Question;
-import com.myproject.FormApp.Model.StudentFeedbackAnswer;
-import com.myproject.FormApp.Repository.QuestionRepository;
-import com.myproject.FormApp.Repository.StudentFeedbackAnswerRepository;
+import com.myproject.FormApp.Model.*;
+import com.myproject.FormApp.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class FeedbackReportService {
 
-    @Autowired
-    private StudentFeedbackAnswerRepository answerRepo;
-
-    @Autowired
-    private QuestionRepository questionRepo;
-
-    @Autowired
-    private ChartAnalysisService aiAnalysisService;
-
-    @Autowired
-    private ReportExportService reportExportService;
+    @Autowired private StudentFeedbackAnswerRepository answerRepo;
+    @Autowired private QuestionRepository questionRepo;
+    @Autowired private FeedbackRepository feedbackRepo;
+    @Autowired private FeedbackAnalysisRepository analysisRepo;
+    @Autowired private AiAnalysisService aiService;
+    @Autowired private ReportExportService reportExportService;
 
     /**
-     * Build BAR charts for numeric questions
+     * 1. Individual Charts (Bar for Numbers, Pie for Text)
+     * केवल वही सवाल रेंडर करता है जिनका डेटा इस फीडबैक आईडी के लिए मौजूद है।
      */
-    public List<ChartVisualizationDTO> buildBarCharts(Long feedbackId) {
-        List<Question> questions = questionRepo.findByAnswerType(Question.AnswerType.NUMBER);
-        List<ChartVisualizationDTO> charts = new ArrayList<ChartVisualizationDTO>();
+    @Transactional(readOnly = true)
+    public List<ChartVisualizationDTO> buildIndividualQuestionCharts(Long feedbackId) {
+        List<ChartVisualizationDTO> charts = new ArrayList<>();
+        List<Question> questions = questionRepo.findAll();
 
         for (Question q : questions) {
             List<StudentFeedbackAnswer> answers = answerRepo.findByFeedbackIdAndQuestionId(feedbackId, q.getId());
+            
+            // 🛡️ सुरक्षा: केवल वही सवाल लें जिसका इस feedbackId में जवाब हो
+            if (answers == null || answers.isEmpty()) continue;
 
-            Map<Integer, Long> countMap = new HashMap<Integer, Long>();
-            for (StudentFeedbackAnswer a : answers) {
-                if (a.getAnswer() != null && !a.getAnswer().trim().isEmpty()) {
-                    try {
-                        Integer val = Integer.parseInt(a.getAnswer().trim());
-                        Long current = countMap.get(val);
-                        countMap.put(val, (current == null ? 1L : current + 1));
-                    } catch (NumberFormatException e) {
-                        // ignore invalid numeric input
-                    }
+            if (q.getAnswerType() == Question.AnswerType.NUMBER) {
+                charts.add(prepareBarChart(q, answers));
+            } else if (q.getAnswerType() == Question.AnswerType.TEXT) {
+                // पहले DB Cache चेक करें
+                Optional<FeedbackAnalysis> existing = analysisRepo.findByFeedbackIdAndQuestionId(feedbackId, q.getId());
+                
+                if (existing.isPresent()) {
+                    charts.add(preparePieChartFromDB(q, existing.get(), answers.size()));
+                } else {
+                    charts.add(preparePieChartWithAI(q, answers));
                 }
             }
-
-            List<String> labels = new ArrayList<String>();
-            List<Double> values = new ArrayList<Double>();
-            List<Integer> sortedKeys = new ArrayList<Integer>(countMap.keySet());
-            Collections.sort(sortedKeys);
-
-            for (Integer key : sortedKeys) {
-                labels.add(String.valueOf(key));
-                values.add(countMap.get(key).doubleValue());
-            }
-
-            charts.add(new ChartVisualizationDTO("bar", q.getQuestionText(), labels, values));
         }
-
         return charts;
     }
 
+    private ChartVisualizationDTO prepareBarChart(Question q, List<StudentFeedbackAnswer> answers) {
+        Map<Integer, Long> counts = new TreeMap<>();
+        for (int i = 1; i <= 5; i++) counts.put(i, 0L);
+
+        for (StudentFeedbackAnswer a : answers) {
+            try {
+                int val = Integer.parseInt(a.getAnswer().trim());
+                if (val >= 1 && val <= 5) counts.put(val, counts.get(val) + 1);
+            } catch (Exception ignored) {}
+        }
+        return new ChartVisualizationDTO("bar", q.getQuestionText(), 
+            counts.keySet().stream().map(k -> "Rating " + k).collect(Collectors.toList()),
+            counts.values().stream().map(Long::doubleValue).collect(Collectors.toList()));
+    }
+
+    private ChartVisualizationDTO preparePieChartFromDB(Question q, FeedbackAnalysis fa, int count) {
+        List<String> labels = Arrays.asList("Positive", "Neutral", "Negative");
+        double total = (double) count;
+
+        List<Double> values;
+        String sentiment = fa.getSentimentLabel() != null ? fa.getSentimentLabel().toUpperCase() : "NEUTRAL";
+        
+        if (sentiment.contains("POSITIVE")) values = Arrays.asList(total, 0.0, 0.0);
+        else if (sentiment.contains("NEGATIVE")) values = Arrays.asList(0.0, 0.0, total);
+        else values = Arrays.asList(0.0, total, 0.0);
+
+        return new ChartVisualizationDTO("pie", q.getQuestionText(), labels, values);
+    }
+
+    private ChartVisualizationDTO preparePieChartWithAI(Question q, List<StudentFeedbackAnswer> answers) {
+        List<String> texts = answers.stream().map(StudentFeedbackAnswer::getAnswer).collect(Collectors.toList());
+        Map<String, Integer> sentimentMap = aiService.analyzeSentimentDistribution(q.getQuestionText(), texts);
+        
+        return new ChartVisualizationDTO("pie", q.getQuestionText(), 
+            Arrays.asList("Positive", "Neutral", "Negative"),
+            Arrays.asList((double)sentimentMap.getOrDefault("positive", 0), 
+                          (double)sentimentMap.getOrDefault("neutral", 0), 
+                          (double)sentimentMap.getOrDefault("negative", 0)));
+    }
+
     /**
-     * Build LINE chart for average per numeric question
+     * 2. Overall Trend (Line Chart)
+     * सभी पैरामीटर्स का औसत स्कोर दिखाता है।
      */
-    public ChartVisualizationDTO buildAverageLineChart(Long feedbackId) {
-        List<Question> questions = questionRepo.findByAnswerType(Question.AnswerType.NUMBER);
+    public ChartVisualizationDTO buildOverallTrend(Long feedbackId) {
+        List<Question> numQuestions = questionRepo.findByAnswerType(Question.AnswerType.NUMBER);
+        List<String> labels = new ArrayList<>();
+        List<Double> averages = new ArrayList<>();
 
-        List<String> labels = new ArrayList<String>();
-        List<Double> averages = new ArrayList<Double>();
-
-        for (Question q : questions) {
+        for (Question q : numQuestions) {
             List<StudentFeedbackAnswer> answers = answerRepo.findByFeedbackIdAndQuestionId(feedbackId, q.getId());
-            List<Integer> numericAnswers = new ArrayList<Integer>();
+            
+            // 🛡️ केवल वही सवाल लें जिनका डेटा मौजूद है
+            if (answers == null || answers.isEmpty()) continue;
 
-            for (StudentFeedbackAnswer a : answers) {
-                if (a.getAnswer() != null && !a.getAnswer().trim().isEmpty()) {
-                    try {
-                        numericAnswers.add(Integer.parseInt(a.getAnswer().trim()));
-                    } catch (NumberFormatException e) {
-                        // ignore invalid
-                    }
-                }
-            }
-
-            double avg = 0.0;
-            if (!numericAnswers.isEmpty()) {
-                double sum = 0.0;
-                for (Integer n : numericAnswers) {
-                    sum += n;
-                }
-                avg = sum / numericAnswers.size();
-            }
+            double avg = answers.stream()
+                .mapToDouble(a -> {
+                    try { return Double.parseDouble(a.getAnswer()); } catch (Exception e) { return 0.0; }
+                }).average().orElse(0.0);
 
             labels.add(q.getQuestionText());
             averages.add(avg);
         }
-
-        return new ChartVisualizationDTO("line", "Average Rating per Question", labels, averages);
+        return new ChartVisualizationDTO("line", "Average Rating per Parameter", labels, averages);
     }
 
     /**
-     * Build PIE chart for sentiment analysis on text answers
-     */
-    public ChartVisualizationDTO buildSentimentPieChart(Long feedbackId) {
-        List<Question> textQuestions = questionRepo.findByAnswerType(Question.AnswerType.TEXT);
-        List<String> allTextAnswers = new ArrayList<String>();
-
-        for (Question q : textQuestions) {
-            List<StudentFeedbackAnswer> answers = answerRepo.findByFeedbackIdAndQuestionId(feedbackId, q.getId());
-            for (StudentFeedbackAnswer a : answers) {
-                if (a.getAnswer() != null && !a.getAnswer().trim().isEmpty()) {
-                    allTextAnswers.add(a.getAnswer().trim());
-                }
-            }
-        }
-
-        Map<String, Long> sentimentCounts = aiAnalysisService.analyzeSentiments(allTextAnswers);
-
-        List<String> labels = new ArrayList<String>(sentimentCounts.keySet());
-        List<Double> values = new ArrayList<Double>();
-        for (String key : labels) {
-            values.add(sentimentCounts.get(key).doubleValue());
-        }
-
-        return new ChartVisualizationDTO("pie", "Sentiment Analysis of Text Feedback", labels, values);
-    }
-
-    /**
-     * Build RANGE DISTRIBUTION chart for numeric answers
+     * 3. Range Distribution (Matrix Chart) - FIXED
+     * यह सुनिश्चित करता है कि अन्य फीडबैक के सवाल यहाँ न आएं।
      */
     public ChartDataDTO buildRangeDistributionChart(Long feedbackId) {
         List<Question> numberQuestions = questionRepo.findByAnswerType(Question.AnswerType.NUMBER);
+        ChartDataDTO dto = new ChartDataDTO();
         List<String> ratings = Arrays.asList("1", "2", "3", "4", "5");
-        List<String> questionTitles = new ArrayList<String>();
-        List<List<Integer>> distribution = new ArrayList<List<Integer>>();
+        List<String> titles = new ArrayList<>();
+        List<List<Integer>> distribution = new ArrayList<>();
 
         for (Question q : numberQuestions) {
             List<StudentFeedbackAnswer> answers = answerRepo.findByFeedbackIdAndQuestionId(feedbackId, q.getId());
-            Map<Integer, Long> countMap = new HashMap<Integer, Long>();
+            
+            // 🛡️ FIXED: अगर इस feedbackId के लिए कोई जवाब नहीं है, तो skip करें
+            if (answers == null || answers.isEmpty()) continue;
 
+            int[] counts = new int[5];
             for (StudentFeedbackAnswer a : answers) {
-                if (a.getAnswer() != null && !a.getAnswer().trim().isEmpty()) {
-                    try {
-                        Integer val = Integer.parseInt(a.getAnswer().trim());
-                        Long current = countMap.get(val);
-                        countMap.put(val, (current == null ? 1L : current + 1));
-                    } catch (NumberFormatException e) {
-                        // ignore invalid
-                    }
-                }
+                try {
+                    int v = Integer.parseInt(a.getAnswer().trim());
+                    if (v >= 1 && v <= 5) counts[v - 1]++;
+                } catch (Exception ignored) {}
             }
-
-            List<Integer> counts = new ArrayList<Integer>();
-            for (int i = 1; i <= 5; i++) {
-                counts.add(countMap.get(i) == null ? 0 : countMap.get(i).intValue());
-            }
-
-            questionTitles.add(q.getQuestionText());
-            distribution.add(counts);
+            
+            titles.add(q.getQuestionText());
+            distribution.add(Arrays.stream(counts).boxed().collect(Collectors.toList()));
         }
 
-        ChartDataDTO dto = new ChartDataDTO();
         dto.setChartType("range");
-        dto.setTitle("Rating Distribution per Question");
+        dto.setTitle("Rating Distribution Matrix");
         dto.setLabels(ratings);
-        dto.setQuestions(questionTitles);
+        dto.setQuestions(titles);
         dto.setValues(distribution);
-
         return dto;
     }
 
     /**
-     * Export all visuals to PDF
+     * 4. PDF Export
      */
     public byte[] exportToPDFForVisuals(Long feedbackId) throws Exception {
-        List<ChartVisualizationDTO> visuals = new ArrayList<ChartVisualizationDTO>();
-        visuals.addAll(buildBarCharts(feedbackId));
-        visuals.add(buildAverageLineChart(feedbackId));
-        visuals.add(buildSentimentPieChart(feedbackId));
-
-        // Include the range distribution chart
+        List<ChartVisualizationDTO> visuals = buildIndividualQuestionCharts(feedbackId);
+        visuals.add(buildOverallTrend(feedbackId));
         ChartDataDTO rangeChart = buildRangeDistributionChart(feedbackId);
-
-        // Call the correct method
         return reportExportService.exportProfessionalPDF(visuals, rangeChart);
     }
-
 }

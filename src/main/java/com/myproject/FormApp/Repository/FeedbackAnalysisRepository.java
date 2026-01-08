@@ -1,5 +1,6 @@
 package com.myproject.FormApp.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,5 +19,7 @@ public interface FeedbackAnalysisRepository extends JpaRepository<FeedbackAnalys
 	boolean existsByQuestion(Question q);
 
 	FeedbackAnalysis findByQuestionId(Long qid);
+
+	
 
 }
