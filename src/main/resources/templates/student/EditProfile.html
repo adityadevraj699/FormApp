@@ -1,170 +1,210 @@
-<html th:replace="~{Student/Studentbase::layout(~{::main})}">
+<!DOCTYPE html>
+<html th:replace="~{Student/Studentbase::layout(~{::main})}" xmlns:th="http://www.thymeleaf.org">
 <body>
-<main class="container my-5">
+<main class="container-fluid px-4 py-5">
 
-  <h2 class="mb-3">Edit Profile</h2>
-
-  <!-- Flash Messages -->
-  <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-  <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-
-  <form th:action="@{/Student/EditProfile}" method="post" enctype="multipart/form-data" th:object="${student}">
-    <div class="row">
-      <!-- Left Column -->
-      <div class="col-md-4 text-center">
-        <img th:src="${student.profileImage != null ? student.profileImage : '/images/default-avatar.png'}"
-             alt="Profile Image"
-             class="img-thumbnail mb-3"
-             style="width: 200px; height: 200px; object-fit: cover;">
-        <input type="file" name="profileImageFile" class="form-control">
-      </div>
-
-      <!-- Right Column -->
-      <div class="col-md-8">
-        <div class="mb-3">
-          <label class="form-label">Full Name</label>
-          <input type="text" th:field="*{name}" class="form-control" required>
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-dark mb-1">
+                <i class="bi bi-person-gear text-success me-2"></i>Account Settings
+            </h2>
+            <p class="text-muted">Update your academic and personal information for the AI audit system.</p>
         </div>
-
-        <div class="mb-3">
-          <label class="form-label">Contact No</label>
-          <input type="text" th:field="*{contactNo}" class="form-control">
+        <div class="col-md-4 text-md-end">
+            <a th:href="@{/Student/viewProfile}" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="bi bi-arrow-left me-2"></i>Back to Profile
+            </a>
         </div>
-
-        <!-- Course Dropdown -->
-        <div class="mb-3">
-          <label class="form-label">Course</label>
-          <select th:field="*{course}" class="form-select" required>
-            <option value="">Select Course</option>
-            <option value="B.Tech">B.Tech</option>
-            <option value="B.Pharm">B.Pharm</option>
-            <option value="BCA">BCA</option>
-            <option value="B.Com">B.Com</option>
-            <option value="BBA">BBA</option>
-            <option value="M.Tech">M.Tech</option>
-            <option value="M.Pharm">M.Pharm</option>
-            <option value="MCA">MCA</option>
-            <option value="B.Sc">B.Sc</option>
-          </select>
-        </div>
-
-        <!-- Branch Dropdown -->
-        <div class="mb-3">
-          <label class="form-label">Branch</label>
-          <select th:field="*{branch}" class="form-select">
-            <option value="">Select Branch</option>
-            <option value="CSE">CSE</option>
-            <option value="ECE">ECE</option>
-            <option value="IT">IT</option>
-            <option value="MECH">Mechanical</option>
-            <option value="CIVIL">Civil</option>
-            <option value="EEE">EEE</option>
-            <option value="CHE">Chemical</option>
-            <option value="BIO">Biotechnology</option>
-            <option value="AERO">Aeronautical</option>
-            <option value="OTHER">Other</option>
-          </select>
-        </div>
-
-        <!-- Year Dropdown -->
-        <div class="mb-3">
-          <label class="form-label">Year</label>
-          <select th:field="*{year}" class="form-select" required>
-            <option value="">Select Year</option>
-            <option value="FIRST">FIRST</option>
-            <option value="SECOND">SECOND</option>
-            <option value="THIRD">THIRD</option>
-            <option value="FOURTH">FOURTH</option>
-          </select>
-        </div>
-
-        <!-- Semester Dropdown -->
-        <div class="mb-3">
-          <label class="form-label">Semester</label>
-          <select th:field="*{semester}" class="form-select" required>
-            <option value="">Select Semester</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-          </select>
-        </div>
-
-        <!-- Section Dropdown (A–I) -->
-        <div class="mb-3">
-          <label class="form-label">Section</label>
-          <select th:field="*{section}" class="form-select">
-            <option value="">Select Section</option>
-            <option th:each="sec : ${#numbers.sequence(65,73)}"
-                    th:value="${T(java.lang.Character).toString(sec)}"
-                    th:text="${T(java.lang.Character).toString(sec)}">
-            </option>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Father's Name</label>
-          <input type="text" th:field="*{fatherName}" class="form-control">
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Mother's Name</label>
-          <input type="text" th:field="*{motherName}" class="form-control">
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Gender</label>
-          <select th:field="*{gender}" class="form-select">
-            <option value="">-- Select Gender --</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Address</label>
-          <textarea th:field="*{address}" class="form-control" rows="3"></textarea>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-        <a th:href="@{/Student/viewProfile}" class="btn btn-secondary">Cancel</a>
-      </div>
     </div>
-  </form>
 
-  <!-- Hidden flash message -->
-  <input type="hidden" id="serverMessage" th:value="${success != null ? success : (error != null ? error : '')}" />
+    <form th:action="@{/Student/EditProfile}" method="post" enctype="multipart/form-data" th:object="${student}">
+        <div class="row g-4">
+            
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 text-center p-4">
+                    <div class="card-body">
+                        <div class="position-relative d-inline-block mb-4">
+                            <img id="imagePreview" 
+                                 th:src="${student.profileImage != null ? student.profileImage : 'https://ui-avatars.com/api/?name=' + student.name + '&background=065f46&color=fff'}"
+                                 alt="Profile"
+                                 class="rounded-circle border border-4 border-light shadow-sm object-cover"
+                                 style="width: 180px; height: 180px;">
+                            
+                            <label for="profileImageFile" class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle p-2 border border-4 border-white cursor-pointer shadow" title="Upload New Photo">
+                                <i class="bi bi-camera-fill"></i>
+                                <input type="file" id="profileImageFile" name="profileImageFile" class="d-none" onchange="previewImage(this)">
+                            </label>
+                        </div>
+                        <h5 class="fw-bold mb-1" th:text="${student.name}">Student Name</h5>
+                        <p class="text-muted small mb-0" th:text="${student.rollNo}">Roll No</p>
+                        
+                        <div class="alert alert-soft-success border-0 small mt-4 rounded-3 text-start">
+                            <i class="bi bi-info-circle-fill me-2"></i> Only JPG, PNG allowed. Max size 2MB.
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const serverMessage = document.getElementById("serverMessage")?.value;
-    if (serverMessage && serverMessage.trim() !== "") {
-      const lowerMsg = serverMessage.toLowerCase();
-      const isError = lowerMsg.includes('invalid') ||
-                      lowerMsg.includes('failed') ||
-                      lowerMsg.includes('error') ||
-                      lowerMsg.includes('not found');
-      Swal.fire({
-        title: isError ? 'Error' : 'Success',
-        text: serverMessage,
-        icon: isError ? 'error' : 'success',
-        confirmButtonColor: '#2575fc',
-        background: '#f9f9f9',
-        color: '#333',
-        timer: 4000,
-        timerProgressBar: true
-      });
-    }
-  });
-  </script>
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="card-header bg-white border-0 pt-4 px-4">
+                        <ul class="nav nav-tabs card-header-tabs border-bottom-0" id="myTab" role="tablist">
+                            <li class="nav-item">
+                                <button class="nav-link active fw-bold border-0 bg-transparent text-success" type="button">Basic Information</button>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        <h6 class="text-uppercase text-muted small fw-bold mb-4 ls-1">Personal Details</h6>
+                        <div class="row g-3 mb-5">
+                            <div class="col-md-12">
+                                <label class="form-label small fw-bold">Full Name</label>
+                                <input type="text" th:field="*{name}" class="form-control rounded-3 py-2" required placeholder="Enter full name">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Father's Name</label>
+                                <input type="text" th:field="*{fatherName}" class="form-control rounded-3 py-2">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Mother's Name</label>
+                                <input type="text" th:field="*{motherName}" class="form-control rounded-3 py-2">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Gender</label>
+                                <select th:field="*{gender}" class="form-select rounded-3 py-2">
+                                    <option value="">-- Select Gender --</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Contact No</label>
+                                <input type="text" th:field="*{contactNo}" class="form-control rounded-3 py-2" placeholder="+91 XXXX XXX XXX">
+                            </div>
+                        </div>
 
-  <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+                        <h6 class="text-uppercase text-muted small fw-bold mb-4 ls-1 border-top pt-4">Academic Details</h6>
+                        <div class="row g-3 mb-5">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Course</label>
+                                <select th:field="*{course}" class="form-select rounded-3 py-2" required>
+                                    <option value="">Select Course</option>
+                                    <option value="B.Tech">B.Tech</option>
+                                    <option value="BCA">BCA</option>
+                                    <option value="MCA">MCA</option>
+                                    <option value="B.Pharm">B.Pharm</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Branch</label>
+                                <select th:field="*{branch}" class="form-select rounded-3 py-2">
+                                    <option value="">Select Branch</option>
+                                    <option value="CSE">CSE</option>
+                                    <option value="IT">IT</option>
+                                    <option value="ECE">ECE</option>
+                                    <option value="MECH">Mechanical</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Academic Year</label>
+                                <select th:field="*{year}" class="form-select rounded-3 py-2" required>
+                                    <option value="FIRST">FIRST</option>
+                                    <option value="SECOND">SECOND</option>
+                                    <option value="THIRD">THIRD</option>
+                                    <option value="FOURTH">FOURTH</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Semester</label>
+                                <select th:field="*{semester}" class="form-select rounded-3 py-2" required>
+                                    <option th:each="i : ${#numbers.sequence(1, 8)}" th:value="${i}" th:text="${i}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Section</label>
+                                <select th:field="*{section}" class="form-select rounded-3 py-2">
+                                    <option th:each="sec : ${#numbers.sequence(65,73)}"
+                                            th:value="${T(java.lang.Character).toString(sec)}"
+                                            th:text="${T(java.lang.Character).toString(sec)}">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <h6 class="text-uppercase text-muted small fw-bold mb-4 ls-1 border-top pt-4">Residential Information</h6>
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label small fw-bold">Full Address</label>
+                                <textarea th:field="*{address}" class="form-control rounded-3" rows="3" placeholder="Enter your current address..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-light border-0 p-4 text-end">
+                        <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold shadow">
+                            <i class="bi bi-save me-2"></i>Save All Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <style>
+        body { background-color: #f4f7fa; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .rounded-4 { border-radius: 1rem !important; }
+        .object-cover { object-fit: cover; }
+        .cursor-pointer { cursor: pointer; }
+        .ls-1 { letter-spacing: 1px; }
+        .alert-soft-success { background-color: #eefdf5; color: #065f46; }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.1);
+        }
+        
+        .nav-tabs .nav-link.active {
+            border-bottom: 3px solid #065f46 !important;
+        }
+        
+        .card { transition: all 0.3s ease; }
+        @media (max-width: 991px) {
+            .text-md-end { text-align: left !important; margin-top: 1rem; }
+        }
+    </style>
+
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+
+    <input type="hidden" id="serverMessage" th:value="${success != null ? success : (error != null ? error : '')}" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const serverMessage = document.getElementById("serverMessage")?.value;
+            if (serverMessage && serverMessage.trim() !== "") {
+                const isError = serverMessage.toLowerCase().includes('error') || serverMessage.toLowerCase().includes('failed');
+                Swal.fire({
+                    title: isError ? 'Oops!' : 'Success',
+                    text: serverMessage,
+                    icon: isError ? 'error' : 'success',
+                    confirmButtonColor: '#065f46',
+                    timer: 3500
+                });
+            }
+        });
+    </script>
+
 </main>
 </body>
 </html>

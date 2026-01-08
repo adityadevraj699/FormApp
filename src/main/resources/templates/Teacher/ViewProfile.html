@@ -1,109 +1,153 @@
-<html th:replace="~{Teacher/Teacherbase::layout(~{::main})}">
+<!DOCTYPE html>
+<html th:replace="~{Teacher/Teacherbase::layout(~{::main})}" xmlns:th="http://www.thymeleaf.org">
 <body>
-<main class="container my-5">
+<main class="container-fluid px-4 py-5">
 
-    <!-- Profile Header -->
-    <div class="card shadow-lg rounded-4 mb-5 border-0">
-        <div class="card-body d-flex flex-column flex-md-row align-items-center p-4">
-            
-            <!-- Profile Image (with default fallback using first letter) -->
-            <div class="text-center me-md-5 mb-3 mb-md-0">
-                <div th:if="${teacher.profileImage != null}">
-                    <img th:src="@{${teacher.profileImage}}"
-                         class="rounded-circle border border-4 border-primary shadow-sm"
-                         alt="Profile Image" width="160" height="160">
-                </div>
-                <div th:if="${teacher.profileImage == null}"
-                     class="rounded-circle border border-4 border-primary d-flex align-items-center justify-content-center shadow-sm"
-                     style="width:160px; height:160px; background-color:#f0f2f5; font-size:48px; color:#495057; font-weight:bold;">
-                    <span th:text="${teacher.name != null ? teacher.name.substring(0,1) : 'T'}">T</span>
-                </div>
-            </div>
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);">
+                <div class="card-body p-4 p-md-5">
+                    <div class="row align-items-center">
+                        <div class="col-md-auto text-center mb-4 mb-md-0">
+                            <div class="position-relative d-inline-block">
+                                <img th:if="${teacher.profileImage != null}"
+                                     th:src="@{${teacher.profileImage}}"
+                                     class="rounded-circle border border-4 border-white border-opacity-25 shadow-lg object-fit-cover"
+                                     alt="Faculty Profile"
+                                     style="width: 160px; height: 160px;">
+                                     
+                                <div th:if="${teacher.profileImage == null}"
+                                     class="rounded-circle border border-4 border-white border-opacity-25 d-flex align-items-center justify-content-center shadow-lg mx-auto bg-white text-success"
+                                     style="width: 160px; height: 160px; font-size: 64px; font-weight: 800;">
+                                    <span th:text="${teacher.name != null ? teacher.name.substring(0,1) : 'T'}">T</span>
+                                </div>
+                                <span class="position-absolute bottom-0 end-0 bg-success border border-4 border-dark-navy rounded-circle p-2 shadow-sm" title="Verified Faculty"></span>
+                            </div>
+                        </div>
 
-            <!-- Name & Role -->
-            <div class="flex-grow-1 text-center text-md-start">
-                <h3 th:text="${teacher.name}" class="fw-bold mb-1">Teacher Name</h3>
-                <span class="badge bg-primary fs-6 py-2 px-3" th:text="${teacher.role}">TEACHER</span>
-                <div class="mt-3">
-                    <p class="mb-2"><i class="fa-solid fa-envelope me-2 text-secondary"></i><span th:text="${teacher.email}">email@example.com</span></p>
-                    <p class="mb-2"><i class="fa-solid fa-phone me-2 text-secondary"></i><span th:text="${teacher.contactNo}">+91-9876543210</span></p>
-                    <p class="mb-0"><i class="fa-solid fa-briefcase me-2 text-secondary"></i>
-                        <span th:text="${teacher.department + ' - ' + teacher.designation}">CSE - Assistant Professor</span>
-                    </p>
+                        <div class="col text-center text-md-start text-white">
+                            <div class="badge bg-white text-success rounded-pill px-3 py-2 mb-3 fw-bold ls-1">FACULTY PORTAL</div>
+                            <h1 class="display-5 fw-bold mb-1" th:text="${teacher.name}">Teacher Name</h1>
+                            <p class="opacity-75 mb-3 fs-5">
+                                <i class="bi bi-briefcase me-2"></i> <span th:text="${teacher.designation}">Designation</span> | 
+                                <i class="bi bi-building me-2"></i> <span th:text="${teacher.department}">Department</span>
+                            </p>
+                            <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-3">
+                                <a th:href="@{/Teacher/EditProfile}" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm">
+                                    <i class="bi bi-pencil-square me-2"></i>Update Profile
+                                </a>
+                                <a th:href="@{/logout}" class="btn btn-outline-light rounded-pill px-4 border-2 opacity-75 hover-opacity-100">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Sign Out
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Profile Details -->
-    <div class="row g-4 mb-5">
-        <div class="col-md-6">
-            <div class="card shadow-sm rounded-4 border-0 h-100">
-                <div class="card-header bg-primary text-white fw-bold fs-6 rounded-top-4">Personal Info</div>
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex align-items-center">
+                    <div class="icon-box bg-soft-success text-success rounded-3 me-3 p-2">
+                        <i class="bi bi-award-fill fs-4"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-dark">Professional Identity</h5>
+                </div>
                 <div class="card-body p-4">
-                    <p th:if="${teacher.gender != null}"><strong>Gender:</strong> <span th:text="${teacher.gender}"></span></p>
-                    <p th:if="${teacher.address != null}"><strong>Address:</strong> <span th:text="${teacher.address}"></span></p>
-                    <p th:if="${teacher.qualification != null}"><strong>Qualification:</strong> <span th:text="${teacher.qualification}"></span></p>
-                    <p th:if="${teacher.experience > 0}"><strong>Experience:</strong> <span th:text="${teacher.experience + ' Years'}"></span></p>
-                    <p th:if="${teacher.regDate != null}"><strong>Registered On:</strong>
-                        <span th:text="${#temporals.format(teacher.regDate, 'dd MMM yyyy')}"></span>
-                    </p>
+                    <div class="row g-4">
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded-4 bg-light-subtle shadow-xs">
+                                <small class="text-muted text-uppercase fw-bold ls-1 d-block mb-1">Qualification</small>
+                                <span class="fs-5 fw-semibold text-dark" th:text="${teacher.qualification ?: 'N/A'}">Ph.D</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded-4 bg-light-subtle shadow-xs">
+                                <small class="text-muted text-uppercase fw-bold ls-1 d-block mb-1">Years of Experience</small>
+                                <span class="fs-5 fw-semibold text-dark" th:text="${teacher.experience + ' Years'}">10 Years</span>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 border rounded-4 bg-white">
+                                <small class="text-muted text-uppercase fw-bold ls-1 d-block mb-2">Office Address</small>
+                                <p class="mb-0 text-secondary" th:text="${teacher.address ?: 'Official address not updated'}">Faculty Block, Room 204</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Actions -->
-        <div class="col-md-6">
-            <div class="d-flex flex-column gap-3 h-100">
-                <a th:href="@{/Teacher/EditProfile}" class="btn btn-warning w-100 py-2 fw-bold shadow-sm rounded-4">
-                    <i class="fa-solid fa-pen-to-square me-2"></i>Edit Profile
-                </a>
-                <a th:href="@{/logout}" class="btn btn-danger w-100 py-2 fw-bold shadow-sm rounded-4">
-                    <i class="fa-solid fa-right-from-bracket me-2"></i>Logout
-                </a>
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex align-items-center">
+                    <div class="icon-box bg-soft-primary text-primary rounded-3 me-3 p-2">
+                        <i class="bi bi-telephone-inbound-fill fs-4"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-dark">Contact Information</h5>
+                </div>
+                <div class="card-body p-4">
+                    <ul class="list-group list-group-flush border-0">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-0">
+                            <div class="text-muted small"><i class="bi bi-envelope-fill me-2"></i>Email</div>
+                            <div class="fw-bold" th:text="${teacher.email}">email@example.com</div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-top border-light">
+                            <div class="text-muted small"><i class="bi bi-phone-fill me-2"></i>Mobile</div>
+                            <div class="fw-bold" th:text="${teacher.contactNo}">+91 9876543210</div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-top border-light">
+                            <div class="text-muted small"><i class="bi bi-gender-ambiguous me-2"></i>Gender</div>
+                            <div class="fw-bold text-capitalize" th:text="${teacher.gender ?: 'N/A'}">Male</div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-top border-light">
+                            <div class="text-muted small"><i class="bi bi-calendar-event me-2"></i>Join Date</div>
+                            <div class="badge bg-soft-success text-success rounded-pill fw-bold" 
+                                 th:text="${#temporals.format(teacher.regDate, 'dd MMM yyyy')}">01 Jan 2024</div>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
 
     <style>
-        .card:hover {
-            transform: translateY(-5px);
-            transition: all 0.3s ease-in-out;
-        }
-        .badge {
-            font-size: 0.95rem;
-            padding: 0.5em 0.8em;
-            text-transform: uppercase;
-        }
-        .card-header {
-            font-size: 1rem;
-        }
-        body {
-            background-color: #f8f9fa;
+        body { background-color: #f4f7fa; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .rounded-4 { border-radius: 1.25rem !important; }
+        .ls-1 { letter-spacing: 1px; }
+        .bg-soft-success { background-color: #eefdf5; }
+        .bg-soft-primary { background-color: #eef2ff; }
+        .shadow-xs { box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .object-fit-cover { object-fit: cover; }
+        .hover-opacity-100:hover { opacity: 1 !important; }
+        
+        .card { transition: all 0.3s cubic-bezier(.25,.8,.25,1); }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important; }
+        
+        .icon-box { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; }
+        
+        @media (max-width: 768px) {
+            .display-5 { font-size: 2.2rem; }
         }
     </style>
 
-    <!-- Flash Messages -->
-    <input type="hidden" id="serverMessage" 
-           th:value="${success != null ? success : (error != null ? error : '')}" />
+    <input type="hidden" id="serverMessage" th:value="${success != null ? success : (error != null ? error : '')}" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
     document.addEventListener("DOMContentLoaded", function () {
       const serverMessage = document.getElementById("serverMessage")?.value;
       if (serverMessage && serverMessage.trim() !== "") {
         const lowerMsg = serverMessage.toLowerCase();
-        const isError = lowerMsg.includes('invalid') || 
-                        lowerMsg.includes('failed') || 
-                        lowerMsg.includes('error') || 
-                        lowerMsg.includes('not found');
+        const isError = lowerMsg.includes('invalid') || lowerMsg.includes('failed') || lowerMsg.includes('error');
         Swal.fire({
-          title: isError ? 'Error' : 'Success',
+          title: isError ? 'Operation Failed' : 'Success',
           text: serverMessage,
           icon: isError ? 'error' : 'success',
-          confirmButtonColor: '#2575fc',
-          background: '#f9f9f9',
-          color: '#333',
-          timer: 4000,
+          confirmButtonColor: '#065f46',
+          timer: 3500,
           timerProgressBar: true
         });
       }

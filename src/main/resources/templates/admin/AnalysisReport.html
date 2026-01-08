@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html th:replace="~{Adminbase::layout(~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<body>
+<main>
+    <div class="container-fluid py-4 px-3 px-md-5">
+
+        <div class="row mb-4">
+            <div class="col-12 col-lg-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb bg-transparent p-0 mb-2">
+                        <li class="breadcrumb-item small"><a href="/admin/dashboard" class="text-decoration-none text-muted">Dashboard</a></li>
+                        <li class="breadcrumb-item small active fw-bold text-primary">Analysis Report</li>
+                    </ol>
+                </nav>
+                <h2 class="fw-bold text-dark h3">
+                    Performance Audit: <span class="text-primary" th:text="${program.trainingProgram}">Program</span>
+                </h2>
+                <p class="text-secondary small">AI-Powered Academic Quality Assessment Dashboard</p>
+            </div>
+            <div class="col-12 col-lg-4 text-lg-end d-print-none mt-2 mt-lg-0">
+                <button onclick="window.print()" class="btn btn-primary rounded-pill px-4 shadow-sm w-100 w-lg-auto">
+                    <i class="bi bi-printer me-2"></i>Print / Save PDF
+                </button>
+            </div>
+        </div>
+
+        <div th:if="${error}" class="card border-0 shadow-sm rounded-4 p-5 text-center">
+            <div class="card-body">
+                <i class="bi bi-graph-down fs-1 text-muted"></i>
+                <h5 class="fw-bold mt-3" th:text="${error}">No Data</h5>
+                <a href="/admin/dashboard" class="btn btn-outline-primary btn-sm mt-3">Back to Dashboard</a>
+            </div>
+        </div>
+
+        <div th:unless="${error}">
+            
+            <div class="row g-4 mb-4">
+                <div class="col-12 col-xl-3">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                        <div class="card-body text-center py-4">
+                            <span class="text-muted fw-bold small text-uppercase ls-1">Global Score</span>
+                            <h1 class="display-4 fw-bold text-primary my-2" th:text="${programAvg}">0.0</h1>
+                            <div class="progress mx-auto" style="height: 6px; width: 80%;">
+                                <div class="progress-bar bg-primary" th:style="'width:' + (${programAvg}*20) + '%'"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-xl-9">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                        <div class="card-body p-4">
+                            <div class="row align-items-center g-3">
+                                <div class="col-12 col-md-6 border-md-end">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light-primary rounded-circle p-3 me-3">
+                                            <i class="bi bi-person-workspace text-primary fs-4"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted d-block small">Faculty Lead</small>
+                                            <h5 class="fw-bold mb-0 text-dark" th:text="${program.teacherAssignments[0].teacher.name}">Expert Name</h5>
+                                        </div>
+                                    </div>
+                                    <p class="mt-3 mb-0 small text-muted">
+                                        <span class="badge bg-light text-dark fw-normal border" th:text="${program.course}">Course</span>
+                                        <span class="badge bg-light text-dark fw-normal border" th:text="${program.branch}">Branch</span>
+                                    </p>
+                                </div>
+                                <div class="col-12 col-md-6 ps-md-4">
+                                    <div class="mb-2">
+                                        <small class="text-muted small">Batch Identity</small>
+                                        <p class="fw-semibold mb-0" th:text="${program.year + ' Year | Semester ' + program.semester}">Batch</p>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted small">Timeline</small>
+                                        <p class="fw-semibold text-primary mb-0" th:text="${program.startDate + ' to ' + program.endDate}">Date</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-12 col-lg-5">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-4 small text-uppercase ls-1">Sentiment Analytics</h6>
+                            <div class="chart-container" style="position: relative; height:250px; width:100%">
+                                <canvas id="sentimentDoughnut"></canvas>
+                            </div>
+                            <div class="d-flex justify-content-center flex-wrap gap-3 mt-4">
+                                <span class="badge bg-success-soft text-success rounded-pill px-3 py-2 small">Pos: [[${posCount}]]</span>
+                                <span class="badge bg-warning-soft text-warning rounded-pill px-3 py-2 small">Neu: [[${neuCount}]]</span>
+                                <span class="badge bg-danger-soft text-danger rounded-pill px-3 py-2 small">Neg: [[${negCount}]]</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-7">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-4 small text-uppercase ls-1">Performance Benchmarking</h6>
+                            <div class="chart-container" style="position: relative; height:300px; width:100%">
+                                <canvas id="performanceBar"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden bg-white">
+                <div class="card-header bg-dark text-white py-3 px-4 border-0">
+                    <h6 class="mb-0 fw-bold small text-uppercase"><i class="bi bi-robot me-2"></i>AI Qualitative Deep-Dive</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr class="small text-muted">
+                                <th class="ps-4 border-0 py-3">Category</th>
+                                <th class="border-0 py-3 text-center">Sentiment</th>
+                                <th class="border-0 py-3" style="min-width: 300px;">AI Extracted Summary</th>
+                                <th class="pe-4 border-0 py-3">Actionable Insights</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="insight : ${aiInsights}" class="border-top border-light">
+                                <td class="ps-4 py-4">
+                                    <div class="fw-bold text-dark mb-1" th:text="${insight.question}">Question</div>
+                                    <span class="text-muted x-small ls-1">SEGMENT [[${insightStat.index + 1}]]</span>
+                                </td>
+                                <td class="text-center">
+                                    <span th:text="${insight.sentiment}" 
+                                          th:classappend="${insight.sentiment == 'POSITIVE' ? 'bg-success' : (insight.sentiment == 'NEGATIVE' ? 'bg-danger' : 'bg-warning')}"
+                                          class="badge rounded-pill px-3 py-2 text-white"></span>
+                                </td>
+                                <td>
+                                    <p class="mb-2 small lh-base text-dark" th:text="${insight.summary}">Summary</p>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <span class="badge bg-light text-primary border px-2 py-1 fw-medium" 
+                                              th:each="tag : ${#strings.arraySplit(insight.phrases, ',')}" 
+                                              th:text="${tag}">Keyword</span>
+                                    </div>
+                                </td>
+                                <td class="pe-4">
+                                    <div class="p-3 rounded-3 bg-light-primary small text-primary border-start border-3 border-primary shadow-sm" th:text="${insight.suggestions}">
+                                        Action...
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { background-color: #f7f9fc; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .ls-1 { letter-spacing: 1.5px; }
+        .x-small { font-size: 10px; }
+        .bg-light-primary { background-color: #eef2ff; }
+        .bg-success-soft { background-color: #dcfce7; }
+        .bg-warning-soft { background-color: #fef3c7; }
+        .bg-danger-soft { background-color: #fee2e2; }
+        .ls-1 { letter-spacing: 0.5px; }
+        
+        @media (min-width: 768px) {
+            .border-md-end { border-right: 1px solid #dee2e6 !important; }
+        }
+
+        @media print {
+            .d-print-none, nav, .breadcrumb, button { display: none !important; }
+            .card { box-shadow: none !important; border: 1px solid #eee !important; }
+            body { background: white !important; }
+            main { padding: 0 !important; }
+            .container-fluid { padding: 0 !important; margin: 0 !important; width: 100% !important; }
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:inline="javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            // Data
+            const pos = /*[[${posCount}]]*/ 0;
+            const neu = /*[[${neuCount}]]*/ 0;
+            const neg = /*[[${negCount}]]*/ 0;
+            const barLabels = /*[[${questionRatings.keySet()}]]*/ [];
+            const barValues = /*[[${questionRatings.values()}]]*/ [];
+
+            // Sentiment Chart
+            new Chart(document.getElementById('sentimentDoughnut'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Positive', 'Neutral', 'Negative'],
+                    datasets: [{
+                        data: [pos, neu, neg],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    cutout: '75%',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Performance Chart
+            new Chart(document.getElementById('performanceBar'), {
+                type: 'bar',
+                data: {
+                    labels: barLabels,
+                    datasets: [{
+                        label: 'Average Score',
+                        data: barValues,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 5,
+                        barThickness: 20
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { beginAtZero: true, max: 5, grid: { display: false }, ticks: { stepSize: 1 } },
+                        y: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold' } } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        });
+    </script>
+</main>
+</body>
+</html>

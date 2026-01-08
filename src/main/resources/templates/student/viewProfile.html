@@ -1,155 +1,173 @@
-<html th:replace="~{Student/Studentbase::layout(~{::main})}">
+<!DOCTYPE html>
+<html th:replace="~{Student/Studentbase::layout(~{::main})}" xmlns:th="http://www.thymeleaf.org">
 <body>
-<main class="container my-5">
+<main class="container-fluid px-4 py-5">
 
-<!-- Profile Header -->
-  <div class="card shadow-lg rounded-4 mb-4 border-0">
-    <div class="card-body d-flex flex-column flex-md-row align-items-center p-4 gap-4">
-      
-    <div class="text-center" style="min-width: 120px; max-width: 160px; margin: auto;">
-    <img th:if="${student.profileImage != null}"
-         th:src="@{${student.profileImage}}"
-         class="rounded-circle border border-4 border-primary shadow-sm img-fluid"
-         alt="Profile Image"
-         style="width: 100%; height: auto; object-fit: cover; aspect-ratio: 1 / 1;">
-         
-    <div th:if="${student.profileImage == null}"
-         class="rounded-circle border border-4 border-primary d-flex align-items-center justify-content-center shadow-sm"
-         style="width: 100%; height: auto; aspect-ratio: 1 / 1; max-width: 160px; background-color:#f0f2f5; font-size:48px; color:#495057; font-weight:bold; margin:auto;">
-        <span th:text="${student.name != null ? student.name.substring(0,1) : 'S'}">S</span>
-    </div>
-</div>
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);">
+                <div class="card-body p-4 p-md-5">
+                    <div class="row align-items-center">
+                        <div class="col-md-auto text-center mb-4 mb-md-0">
+                            <div class="position-relative d-inline-block">
+                                <img th:if="${student.profileImage != null}"
+                                     th:src="@{${student.profileImage}}"
+                                     class="rounded-circle border border-4 border-white border-opacity-25 shadow-lg object-cover"
+                                     alt="Profile"
+                                     style="width: 150px; height: 150px;">
+                                     
+                                <div th:if="${student.profileImage == null}"
+                                     class="rounded-circle border border-4 border-white border-opacity-25 d-flex align-items-center justify-content-center shadow-lg mx-auto bg-white text-success"
+                                     style="width: 150px; height: 150px; font-size: 64px; font-weight: 800;">
+                                    <span th:text="${student.name != null ? student.name.substring(0,1) : 'S'}">S</span>
+                                </div>
+                                <span class="position-absolute bottom-0 end-0 bg-success border border-4 border-dark-navy rounded-circle p-2 shadow-sm" title="Active Account"></span>
+                            </div>
+                        </div>
 
-
-      <!-- Main Info -->
-      <div class="flex-grow-1 w-100">
-        <div class="d-flex justify-content-between align-items-start flex-column flex-md-row gap-3">
-          <div>
-            <h3 class="fw-bold mb-1" th:text="${student.name}">Student Name</h3>
-            <div>
-              <span class="badge bg-primary fs-6 py-2 px-3" th:text="${student.role != null ? student.role : 'STUDENT'}">STUDENT</span>
+                        <div class="col text-center text-md-start text-white">
+                            <div class="badge bg-white text-success rounded-pill px-3 py-2 mb-2 fw-bold ls-1" th:text="${student.role != null ? student.role : 'STUDENT'}">VERIFIED STUDENT</div>
+                            <h1 class="display-5 fw-bold mb-1" th:text="${student.name}">Student Name</h1>
+                            <p class="opacity-75 mb-3 fs-5">
+                                <i class="bi bi-hash me-1"></i> Roll No: <span th:text="${student.rollNo}">123</span> | 
+                                <i class="bi bi-calendar3 me-1"></i> Joined <span th:text="${#temporals.format(student.regDate, 'MMM yyyy')}">Jan 2024</span>
+                            </p>
+                            <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                                <a th:href="@{/Student/EditProfile}" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm">
+                                    <i class="bi bi-pencil-square me-2"></i>Edit Profile
+                                </a>
+                                <a th:href="@{/logout}" class="btn btn-outline-light rounded-pill px-4 border-2 opacity-75 hover-opacity-100">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Sign Out
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <p class="text-muted mt-2 mb-0"><small th:text="'Roll No: ' + ${student.rollNo}">Roll No: 123</small></p>
-          </div>
-
-          <div class="text-md-end">
-            <a th:href="@{/Student/EditProfile}" class="btn btn-sm btn-outline-warning me-2">Edit Profile</a>
-            <a th:href="@{/logout}" class="btn btn-sm btn-outline-danger">Logout</a>
-          </div>
         </div>
-
-        <!-- Contact & Academics -->
-        <div class="row mt-3 g-3">
-          <div class="col-12 col-md-6">
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item px-0">
-                <strong>Email:</strong>
-                <span class="text-muted ms-2" th:text="${student.email}">email@example.com</span>
-              </li>
-              <li class="list-group-item px-0" th:if="${student.contactNo != null}">
-                <strong>Contact:</strong>
-                <span class="text-muted ms-2" th:text="${student.contactNo}">+91-1234567890</span>
-              </li>
-              <li class="list-group-item px-0" th:if="${student.address != null}">
-                <strong>Address:</strong>
-                <span class="text-muted ms-2" th:text="${student.address}">City, State</span>
-              </li>
-            </ul>
-          </div>
-
-          <div class="col-12 col-md-6">
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item px-0" th:if="${student.course != null}">
-                <strong>Course:</strong>
-                <span class="text-muted ms-2" th:text="${student.course}">B.Tech</span>
-              </li>
-              <li class="list-group-item px-0" th:if="${student.branch != null}">
-                <strong>Branch:</strong>
-                <span class="text-muted ms-2" th:text="${student.branch}">CSE</span>
-              </li>
-              <li class="list-group-item px-0" th:if="${student.year != null}">
-                <strong>Year:</strong>
-                <span class="text-muted ms-2" th:text="${student.year}">Third</span>
-              </li>
-              <li class="list-group-item px-0" th:if="${student.semester != null}">
-                <strong>Semester:</strong>
-                <span class="text-muted ms-2" th:text="${student.semester}">5</span>
-              </li>
-              <li class="list-group-item px-0" th:if="${student.section != null}">
-                <strong>Section:</strong>
-                <span class="text-muted ms-2" th:text="${student.section}">A</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-      </div>
     </div>
-  </div>
 
-  <!-- Additional Info Cards -->
-  <div class="row g-4">
-    <div class="col-12 col-md-6">
-      <div class="card h-100 shadow-sm">
-        <div class="card-header bg-white border-0 fw-bold">Personal Info</div>
-        <div class="card-body">
-          <p th:if="${student.fatherName != null}"><strong>Father Name:</strong> <span th:text="${student.fatherName}"></span></p>
-          <p th:if="${student.motherName != null}"><strong>Mother Name:</strong> <span th:text="${student.motherName}"></span></p>
-          <p th:if="${student.gender != null}"><strong>Gender:</strong> <span th:text="${student.gender}"></span></p>
-          <p th:if="${student.regDate != null}"><strong>Registered On:</strong> <span th:text="${#temporals.format(student.regDate, 'dd MMM yyyy')}"></span></p>
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex align-items-center">
+                    <div class="icon-box bg-soft-success text-success rounded-3 me-3 p-2">
+                        <i class="bi bi-mortarboard-fill fs-4"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-dark">Academic Credentials</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded-3 bg-light-subtle">
+                                <small class="text-muted text-uppercase fw-bold ls-1 d-block mb-1">Course & Degree</small>
+                                <span class="fs-5 fw-semibold" th:text="${student.course ?: 'N/A'}">B.Tech</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded-3 bg-light-subtle">
+                                <small class="text-muted text-uppercase fw-bold ls-1 d-block mb-1">Specialization/Branch</small>
+                                <span class="fs-5 fw-semibold" th:text="${student.branch ?: 'N/A'}">CSE</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="text-center p-3 border rounded-3">
+                                <small class="text-muted d-block mb-1">Current Year</small>
+                                <span class="badge bg-success-light text-success px-3 py-2 rounded-pill fw-bold" th:text="${student.year ?: 'N/A'}">Third</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="text-center p-3 border rounded-3">
+                                <small class="text-muted d-block mb-1">Semester</small>
+                                <span class="fs-4 fw-bold text-primary" th:text="${student.semester ?: '0'}">5</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="text-center p-3 border rounded-3">
+                                <small class="text-muted d-block mb-1">Section</small>
+                                <span class="fs-4 fw-bold text-warning" th:text="${student.section ?: 'N/A'}">A</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex align-items-center">
+                    <div class="icon-box bg-soft-primary text-primary rounded-3 me-3 p-2">
+                        <i class="bi bi-person-lines-fill fs-4"></i>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-dark">Contact Details</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <label class="small text-muted d-block mb-1"><i class="bi bi-envelope-at me-2"></i>Official Email</label>
+                        <span class="fw-bold" th:text="${student.email}">student@college.edu</span>
+                    </div>
+                    <div class="mb-4">
+                        <label class="small text-muted d-block mb-1"><i class="bi bi-telephone me-2"></i>Contact Number</label>
+                        <span class="fw-bold" th:text="${student.contactNo ?: 'Not Provided'}">+91 0000000000</span>
+                    </div>
+                    <div class="mb-0">
+                        <label class="small text-muted d-block mb-1"><i class="bi bi-geo-alt me-2"></i>Residential Address</label>
+                        <span class="fw-medium text-secondary" th:text="${student.address ?: 'Update your address'}">City, State</span>
+                    </div>
+                </div>
+                <div class="card-footer bg-light border-0 p-4">
+                    <h6 class="fw-bold small text-muted text-uppercase mb-3">Family Information</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <small class="text-muted">Father:</small>
+                        <small class="fw-bold text-dark" th:text="${student.fatherName ?: 'N/A'}"></small>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">Mother:</small>
+                        <small class="fw-bold text-dark" th:text="${student.motherName ?: 'N/A'}"></small>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
     <style>
-        .card:hover {
-            transform: translateY(-5px);
-            transition: all 0.3s ease-in-out;
-        }
-        .badge {
-            font-size: 0.95rem;
-            padding: 0.5em 0.8em;
-            text-transform: uppercase;
-        }
-        .card-header {
-            font-size: 1rem;
-        }
-        body {
-            background-color: #f8f9fa;
+        body { background-color: #f4f7fa; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .rounded-4 { border-radius: 1rem !important; }
+        .ls-1 { letter-spacing: 1px; }
+        .bg-soft-success { background-color: #eefdf5; }
+        .bg-soft-primary { background-color: #eef2ff; }
+        .bg-success-light { background-color: #dcfce7; }
+        .text-dark-navy { color: #064e3b; }
+        .object-cover { object-fit: cover; }
+        .hover-opacity-100:hover { opacity: 1 !important; }
+        
+        .card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important; }
+        
+        @media (max-width: 768px) {
+            .display-5 { font-size: 2rem; }
         }
     </style>
-<!-- Hidden input to pass flash message -->
-<input type="hidden" id="serverMessage" 
-       th:value="${success != null ? success : (error != null ? error : '')}" />
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const serverMessage = document.getElementById("serverMessage")?.value;
 
-  if (serverMessage && serverMessage.trim() !== "") {
-    // Lowercase version for easy keyword matching
-    const lowerMsg = serverMessage.toLowerCase();
-
-    // Error check (keywords)
-    const isError = lowerMsg.includes('invalid') || 
-                    lowerMsg.includes('failed') || 
-                    lowerMsg.includes('error') || 
-                    lowerMsg.includes('not found');
-
-    Swal.fire({
-      title: isError ? 'Error' : 'Success',
-      text: serverMessage,
-      icon: isError ? 'error' : 'success',
-      confirmButtonColor: '#2575fc',
-      background: '#f9f9f9',
-      color: '#333',
-      timer: 4000,
-      timerProgressBar: true
+    <input type="hidden" id="serverMessage" th:value="${success != null ? success : (error != null ? error : '')}" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const serverMessage = document.getElementById("serverMessage")?.value;
+      if (serverMessage && serverMessage.trim() !== "") {
+        const lowerMsg = serverMessage.toLowerCase();
+        const isError = lowerMsg.includes('invalid') || lowerMsg.includes('failed') || lowerMsg.includes('error');
+        Swal.fire({
+          title: isError ? 'Error' : 'Profile Updated',
+          text: serverMessage,
+          icon: isError ? 'error' : 'success',
+          confirmButtonColor: '#065f46',
+          timer: 3500,
+          timerProgressBar: true
+        });
+      }
     });
-  }
-});
-</script>
+    </script>
 
 </main>
 </body>

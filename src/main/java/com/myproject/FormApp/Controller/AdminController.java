@@ -29,6 +29,7 @@ import com.myproject.FormApp.Model.EnrolledProgram;
 import com.myproject.FormApp.Model.EnrolledProgram.ProgramStatus;
 import com.myproject.FormApp.Model.FeedBackPhase;
 import com.myproject.FormApp.Model.Feedback;
+import com.myproject.FormApp.Model.FeedbackAnalysis;
 import com.myproject.FormApp.Model.FeedbackQuestionCategory;
 import com.myproject.FormApp.Model.Module;
 import com.myproject.FormApp.Model.Program;
@@ -74,10 +75,13 @@ import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -150,30 +154,262 @@ public class AdminController {
         return "redirect:/"; // login page
     }
 
-    // ---------------------- DASHBOARD ----------------------
-    @GetMapping("/dashboard")
-    public String showDashboard(Model model) {
-        if (!isLoggedIn()) return redirectIfNotLoggedIn();
+   @GetMapping("/dashboard")
+public String showDashboard(Model model) {
+    if (!isLoggedIn()) return "redirect:/";
 
-        // Teacher Assignments
-        List<TeacherAssign> programList = teacherAssignRepo.findAll();
-        model.addAttribute("programList", programList);
+    // --- Stats ---
+    long totalStudents = studentRepository.count();
+    long approvedTeachers = teacherRepository.findByStatus(Teacher.Status.APPROVED).size();
+    long activeFeedbacksCount = feedRepo.findAll().stream()
+            .filter(f -> !f.getStartDate().isAfter(LocalDate.now()) && !f.getEndDate().isBefore(LocalDate.now()))
+            .count();
 
-        // Quick Stats
-        long totalStudents = studentRepository.count();
-        long approvedTeachers = teacherRepository.findByStatus(Teacher.Status.APPROVED).size();
-        long activeFeedbacks = feedRepo.findAll().stream()
-                .filter(f -> !f.getStartDate().isAfter(LocalDate.now()) && !f.getEndDate().isBefore(LocalDate.now()))
-                .count();
+    // --- AI Analytics ---
+    List<FeedbackAnalysis> allAnalyses = feedbackAnalysisRepo.findAll();
+    long posCount = allAnalyses.stream().filter(a -> "POSITIVE".equalsIgnoreCase(a.getSentimentLabel())).count();
+    long neuCount = allAnalyses.stream().filter(a -> "NEUTRAL".equalsIgnoreCase(a.getSentimentLabel())).count();
+    long negCount = allAnalyses.stream().filter(a -> "NEGATIVE".equalsIgnoreCase(a.getSentimentLabel())).count();
 
-        model.addAttribute("totalStudents", totalStudents);
-        model.addAttribute("approvedTeachers", approvedTeachers);
-        model.addAttribute("activeFeedbacks", activeFeedbacks);
+    double globalAvgRating = allAnalyses.stream()
+            .filter(a -> a.getAvgNumeric() != null)
+            .mapToDouble(FeedbackAnalysis::getAvgNumeric)
+            .average().orElse(0.0);
 
-        return "admin/Dashboard";
+    // --- Dynamic Status Check ---
+    Set<Long> analyzedProgramIds = allAnalyses.stream()
+            .map(a -> a.getFeedback().getProgram().getId())
+            .collect(Collectors.toSet());
+
+    // --- CORRECTED PARTICIPATION LOGIC ---
+    // Denominator: Total Enrollments (Agar 1 bacha 5 courses mein hai toh ye 5 count karega)
+    long totalPotentialFeedbacks = enrolledProgramRepo.count(); 
+
+    // Numerator: Total actual feedback completions (Student + Feedback combination)
+    long totalActualFeedbacks = answerRepo.countTotalSubmittedFeedbacks();
+    
+    // Debugging print
+    System.out.println("Total Potential: " + totalPotentialFeedbacks + " | Total Actual: " + totalActualFeedbacks);
+
+    double participationRate = totalPotentialFeedbacks == 0 ? 0 : (double) totalActualFeedbacks / totalPotentialFeedbacks * 100;
+
+    // --- Dynamic AI Recommendations ---
+    List<String> aiSuggestions = new ArrayList<>();
+    if (negCount > posCount * 0.15) {
+        aiSuggestions.add("Warning: Negative sentiment exceeds 15% threshold. Review module delivery.");
+    }
+    allAnalyses.stream()
+            .filter(a -> "NEGATIVE".equalsIgnoreCase(a.getSentimentLabel()) && a.getSuggestions() != null)
+            .limit(2)
+            .forEach(a -> aiSuggestions.add("Action: " + a.getSuggestions()));
+
+    // --- Model Attributes ---
+    model.addAttribute("totalStudents", totalStudents);
+    model.addAttribute("approvedTeachers", approvedTeachers);
+    model.addAttribute("activeFeedbacks", activeFeedbacksCount);
+    model.addAttribute("globalAvgRating", String.format("%.2f", globalAvgRating));
+    model.addAttribute("positivePercent", allAnalyses.isEmpty() ? 0 : (posCount * 100 / allAnalyses.size()));
+    model.addAttribute("posCount", posCount);
+    model.addAttribute("neuCount", neuCount);
+    model.addAttribute("negCount", negCount);
+    model.addAttribute("participationRate", String.format("%.1f", participationRate));
+    model.addAttribute("aiSuggestions", aiSuggestions);
+    model.addAttribute("analyzedProgramIds", analyzedProgramIds);
+    model.addAttribute("programList", teacherAssignRepo.findAll());
+    model.addAttribute("criticalAlerts", allAnalyses.stream().filter(a -> (a.getAvgNumeric() != null && a.getAvgNumeric() < 3.0) || "NEGATIVE".equalsIgnoreCase(a.getSentimentLabel())).collect(Collectors.toList()));
+
+    return "admin/Dashboard";
+}
+   
+   @GetMapping("/viewAnalysis/{programId}")
+public String viewProgramAnalysis(@PathVariable("programId") Long programId, Model model) {
+    if (!isLoggedIn()) return "redirect:/";
+
+    // 1. Program details
+    Program program = programRepo.findById(programId)
+            .orElseThrow(() -> new RuntimeException("Program not found"));
+
+    // 2. Fetch all analyses for this specific program
+    List<FeedbackAnalysis> programAnalyses = feedbackAnalysisRepo.findAll().stream()
+            .filter(a -> a.getFeedback().getProgram().getId().equals(programId))
+            .collect(Collectors.toList());
+
+    if (programAnalyses.isEmpty()) {
+        model.addAttribute("error", "Is program ke liye abhi koi AI analysis available nahi hai.");
+        model.addAttribute("program", program);
+        return "admin/AnalysisReport"; 
     }
 
+    // --- DATA FOR PIE CHART ---
+    long posCount = programAnalyses.stream().filter(a -> "POSITIVE".equalsIgnoreCase(a.getSentimentLabel())).count();
+    long neuCount = programAnalyses.stream().filter(a -> "NEUTRAL".equalsIgnoreCase(a.getSentimentLabel())).count();
+    long negCount = programAnalyses.stream().filter(a -> "NEGATIVE".equalsIgnoreCase(a.getSentimentLabel())).count();
 
+    // --- DATA FOR BAR CHART (Question-wise Rating) ---
+    // LinkedHashMap use kiya hai taaki questions ka order maintain rahe
+    Map<String, Double> questionRatings = new java.util.LinkedHashMap<>();
+    programAnalyses.stream()
+            .filter(a -> a.getQuestion().getAnswerType() == Question.AnswerType.NUMBER)
+            .forEach(a -> {
+                questionRatings.put(a.getQuestion().getQuestionText(), a.getAvgNumeric() != null ? a.getAvgNumeric() : 0.0);
+            });
+
+    // --- DATA FOR TEXT ANALYSIS (AI Summaries) ---
+    List<Map<String, String>> aiInsights = programAnalyses.stream()
+            .map(a -> {
+                Map<String, String> map = new HashMap<>();
+                // ERROR FIXED: map.put() used instead of map.add()
+                map.put("question", a.getQuestion().getQuestionText());
+                map.put("summary", a.getSummary() != null ? a.getSummary() : "No summary generated");
+                map.put("suggestions", a.getSuggestions() != null ? a.getSuggestions() : "N/A");
+                map.put("phrases", a.getKeyPhrases() != null ? a.getKeyPhrases() : "N/A");
+                map.put("sentiment", a.getSentimentLabel());
+                return map;
+            }).collect(Collectors.toList());
+
+    // --- GLOBAL KPI ---
+    double programAvg = programAnalyses.stream()
+            .filter(a -> a.getAvgNumeric() != null)
+            .mapToDouble(FeedbackAnalysis::getAvgNumeric)
+            .average().orElse(0.0);
+
+    // 3. Model Attributes
+    model.addAttribute("program", program);
+    model.addAttribute("posCount", posCount);
+    model.addAttribute("neuCount", neuCount);
+    model.addAttribute("negCount", negCount);
+    model.addAttribute("questionRatings", questionRatings); 
+    model.addAttribute("aiInsights", aiInsights);
+    model.addAttribute("programAvg", String.format("%.2f", programAvg));
+
+    return "admin/AnalysisReport"; 
+}
+   
+ @GetMapping("/export-master-list")
+public ResponseEntity<byte[]> exportMasterList() {
+    try (Workbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook();
+         ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+        Sheet sheet = workbook.createSheet("EduInsight Master Analytics");
+
+        // 1. Styling
+        org.apache.poi.ss.usermodel.CellStyle headerStyle = createHeaderStyle(workbook);
+
+        // 2. Updated Headers for Professional Audit
+        String[] columns = {
+            "ID", "Program Name", "Teacher", "Timeline", 
+            "Total Modules", "Total Topics", "Enrolled Students", 
+            "Feedback Phases", "Avg Rating (Global)", "Majority Sentiment"
+        };
+        
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < columns.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(columns[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        // 3. Data Fetching
+        List<TeacherAssign> assignments = teacherAssignRepo.findAll();
+        List<FeedbackAnalysis> allAnalyses = feedbackAnalysisRepo.findAll();
+        List<EnrolledProgram> allEnrollments = enrolledProgramRepo.findAll();
+        List<Feedback> allFeedbacks = feedRepo.findAll(); // feedbackRepository instance
+
+        int rowIdx = 1;
+        for (TeacherAssign assign : assignments) {
+            Row row = sheet.createRow(rowIdx++);
+            Program program = assign.getProgram();
+            Long pId = program.getId();
+
+            // Basic Info
+            row.createCell(0).setCellValue(pId);
+            row.createCell(1).setCellValue(program.getTrainingProgram());
+            row.createCell(2).setCellValue(assign.getTeacher().getName());
+            row.createCell(3).setCellValue(program.getStartDate() + " to " + program.getEndDate());
+
+            // --- CURRICULUM STATS ---
+            // Modules Count
+            int moduleCount = program.getModules() != null ? program.getModules().size() : 0;
+            row.createCell(4).setCellValue(moduleCount);
+
+            // Total Topics Count (Nested in Modules)
+            long topicCount = program.getModules().stream()
+                    .flatMap(m -> m.getTopics().stream())
+                    .count();
+            row.createCell(5).setCellValue(topicCount);
+
+            // --- ENROLLMENT STATS ---
+            long studentCount = allEnrollments.stream()
+                    .filter(e -> e.getProgram().getId().equals(pId))
+                    .count();
+            row.createCell(6).setCellValue(studentCount);
+
+            // --- FEEDBACK PHASES COUNT ---
+            long phaseCount = allFeedbacks.stream()
+                    .filter(f -> f.getProgram().getId().equals(pId))
+                    .count();
+            row.createCell(7).setCellValue(phaseCount);
+
+            // --- AI & KPI ANALYSIS ---
+            List<FeedbackAnalysis> programData = allAnalyses.stream()
+                    .filter(a -> a.getFeedback().getProgram().getId().equals(pId))
+                    .collect(Collectors.toList());
+
+            if (!programData.isEmpty()) {
+                // Global Avg Rating (Sum of ratings / Total questions analysed)
+                double sumOfRatings = programData.stream()
+                        .filter(a -> a.getAvgNumeric() != null)
+                        .mapToDouble(FeedbackAnalysis::getAvgNumeric)
+                        .sum();
+                double globalAvg = sumOfRatings / programData.size();
+
+                // Majority Sentiment Logic
+                Map<String, Long> counts = programData.stream()
+                        .filter(a -> a.getSentimentLabel() != null)
+                        .collect(Collectors.groupingBy(a -> a.getSentimentLabel().toUpperCase(), Collectors.counting()));
+
+                String majoritySentiment = counts.entrySet().stream()
+                        .max(Map.Entry.comparingByValue())
+                        .map(Map.Entry::getKey).orElse("NEUTRAL");
+
+                row.createCell(8).setCellValue(Double.parseDouble(String.format("%.2f", globalAvg)));
+                row.createCell(9).setCellValue(majoritySentiment);
+            } else {
+                row.createCell(8).setCellValue("N/A");
+                row.createCell(9).setCellValue("NO DATA");
+            }
+        }
+
+        // Auto-sizing columns
+        for (int i = 0; i < columns.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        workbook.write(out);
+        String filename = "EduInsight_Comprehensive_Report_" + LocalDate.now() + ".xlsx";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(out.toByteArray());
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.internalServerError().build();
+    }
+}
+
+// Helper method for styling
+private org.apache.poi.ss.usermodel.CellStyle createHeaderStyle(Workbook workbook) {
+    org.apache.poi.ss.usermodel.CellStyle style = workbook.createCellStyle();
+    org.apache.poi.ss.usermodel.Font font = workbook.createFont();
+    font.setBold(true);
+    font.setColor(org.apache.poi.ss.usermodel.IndexedColors.WHITE.getIndex());
+    style.setFont(font);
+    style.setFillForegroundColor(org.apache.poi.ss.usermodel.IndexedColors.DARK_BLUE.getIndex());
+    style.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
+    return style;
+}
     
     @GetMapping("/programDetail/{id}")
 public String programDetail(
@@ -813,11 +1049,21 @@ public String saveFeedback(@RequestParam Long programId,
             return "redirect:/";
         }
 
-        List<Feedback> feedbacks = feedRepo.findAll();
+        // 1. Saare feedbacks fetch karein
+        List<Feedback> allFeedbacks = feedRepo.findAll();
 
-        // Create a map of feedbackId -> unique students
+        // 2. Feedbacks ko Program ke basis par group karein
+        // Key: Program, Value: List of Feedbacks (Phases) for that program
+        Map<Program, List<Feedback>> groupedFeedbacks = allFeedbacks.stream()
+                .collect(Collectors.groupingBy(
+                    Feedback::getProgram,
+                    LinkedHashMap::new, // Insertion order maintain karne ke liye
+                    Collectors.toList()
+                ));
+
+        // 3. Feedback ID -> Unique Students Map (Pehle ki tarah hi)
         Map<Long, List<Student>> feedbackStudentsMap = new HashMap<>();
-        for (Feedback feedback : feedbacks) {
+        for (Feedback feedback : allFeedbacks) {
             List<Student> uniqueStudents = feedback.getStudentFeedbackAnswers().stream()
                     .map(StudentFeedbackAnswer::getStudent)
                     .distinct()
@@ -825,7 +1071,8 @@ public String saveFeedback(@RequestParam Long programId,
             feedbackStudentsMap.put(feedback.getId(), uniqueStudents);
         }
 
-        model.addAttribute("feedbacks", feedbacks);
+        // Model mein attributes add karein
+        model.addAttribute("groupedFeedbacks", groupedFeedbacks);
         model.addAttribute("feedbackStudentsMap", feedbackStudentsMap);
 
         return "admin/studentFeedback";

@@ -1,335 +1,299 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>College ERP Registration</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Register | EduInsight AI Portal</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
   <style>
-    /* Background Gradient */
-    body {
-      background: linear-gradient(135deg, #4e73df, #1cc88a);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      min-height: 100vh;
+    :root {
+      --primary-green: #065f46;
+      --accent-green: #10b981;
+      --bg-light: #f0fdf4;
+      --dark-navy: #064e3b;
+    }
+
+    body, html {
+      margin: 0; padding: 0;
+      height: 100vh; width: 100vw;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-light);
+      overflow: hidden;
+    }
+
+    .sliding-container {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+      height: 100vh; width: 100vw;
+      transition: all 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+      position: relative;
     }
 
-    /* Card */
-    .card {
-      width: 100%;
-      max-width: 900px;
-      border-radius: 15px;
-      padding: 40px;
-      box-shadow: 0 15px 25px rgba(0,0,0,0.2);
-      background: #ffffff;
-      transition: transform 0.3s ease;
-    }
-    .card:hover {
-      transform: translateY(-5px);
+    .form-panel, .info-panel {
+      flex: 1; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px; transition: all 0.8s ease;
     }
 
-    h3 {
-      font-weight: 700;
-      color: #343a40;
+    .info-panel {
+      background: linear-gradient(155deg, var(--dark-navy) 0%, var(--primary-green) 50%, var(--accent-green) 100%);
+      color: white; text-align: center; position: relative; z-index: 2;
     }
 
-    .form-label {
-      font-weight: 600;
+    .form-panel {
+      background: white; overflow-y: auto; z-index: 1;
     }
 
-    .form-section {
-      display: none;
-      margin-top: 20px;
-      animation: fadeIn 0.5s ease-in-out;
+    /* Toggle Capsule */
+    .toggle-wrapper {
+      position: absolute; top: 25px; left: 50%;
+      transform: translateX(-50%); z-index: 1000;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 6px; border-radius: 50px;
+      display: flex; backdrop-filter: blur(15px);
+      border: 1px solid rgba(255,255,255,0.3);
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px);}
-      to { opacity: 1; transform: translateY(0);}
+    .toggle-btn {
+      padding: 10px 25px; border-radius: 50px; border: none;
+      font-weight: 700; cursor: pointer; transition: 0.4s;
+      background: transparent; color: white; font-size: 0.9rem;
     }
 
-    /* Buttons */
-    .btn-primary {
-      background-color: #1cc88a;
-      border: none;
-      border-radius: 10px;
-      padding: 0.8rem;
-      font-size: 1rem;
-      font-weight: 600;
-      transition: background-color 0.3s, transform 0.2s;
-    }
-    .btn-primary:hover {
-      background-color: #17a673;
-      transform: translateY(-2px);
+    .toggle-btn.active {
+      background: white; color: var(--primary-green);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
 
-    /* Form Inputs */
+    /* Sliding Logic */
+    .mode-teacher { flex-direction: row; }
+    .mode-student { flex-direction: row-reverse; }
+
+    .reg-card { width: 100%; max-width: 650px; padding: 20px; }
     .form-control, .form-select {
-      border-radius: 10px;
-      padding: 1rem;
-      font-size: 0.95rem;
+      border-radius: 12px; border: 1.5px solid #e5e7eb; padding: 10px 15px;
+      background-color: #f9fafb; font-size: 0.9rem;
     }
     .form-control:focus, .form-select:focus {
-      border-color: #1cc88a;
-      box-shadow: 0 0 8px rgba(28, 200, 138, 0.4);
+      border-color: var(--accent-green); background-color: #fff;
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
     }
 
-    .role-select {
-      width: 50%;
-      margin: 0 auto 30px;
+    .btn-register {
+      background: linear-gradient(to right, var(--primary-green), var(--accent-green));
+      color: white; border: none; padding: 14px; border-radius: 12px;
+      font-weight: 700; width: 100%; transition: 0.3s;
+    }
+    .btn-register:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+    .brand-content h1 { font-size: 3.5rem; font-weight: 800; margin-bottom: 15px; }
+    .feature-badge {
+      background: rgba(255,255,255,0.1); padding: 12px 20px;
+      border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
+      font-size: 0.85rem; margin-bottom: 10px; display: inline-block;
     }
 
-    /* Optional placeholder style */
-    .optional::placeholder {
-      color: #999;
-      font-style: italic;
+    .back-to-login {
+      position: absolute; bottom: 20px; left: 50%;
+      transform: translateX(-50%); color: white;
+      text-decoration: none; font-weight: 600; font-size: 0.9rem;
+      z-index: 1001; transition: 0.3s;
     }
+    .back-to-login:hover { color: var(--accent-green); }
+
+    /* Custom Scrollbar for Form */
+    .form-panel::-webkit-scrollbar { width: 6px; }
+    .form-panel::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
   </style>
 </head>
 <body>
 
-<div class="card">
-  <h3 class="text-center mb-4">College ERP Registration</h3>
-
-  <form method="post" action="/register" id="regForm">
-    <!-- Role Select -->
-    <div class="text-center mb-4">
-      <label for="roleSelect" class="form-label">Select Role</label>
-      <select class="form-select role-select" id="roleSelect" name="role" required>
-        <option value="" selected disabled>Select Role</option>
-        <option value="STUDENT">Student</option>
-        <option value="TEACHER">Teacher</option>
-      </select>
-    </div>
-
-    <!-- Student Fields -->
-    <div id="studentFields" class="form-section">
-      <h5 class="mb-3 text-secondary">Student Details</h5>
-      <div class="row g-3">
-        <div class="col-md-6"><input type="text" class="form-control" name="student_name" placeholder="Full Name" required></div>
-        <div class="col-md-6"><input type="text" class="form-control" name="rollNo" placeholder="Roll Number" required></div>
-        <div class="col-md-6"><input type="text" class="form-control optional" name="fatherName" placeholder="Father Name "></div>
-        <div class="col-md-6"><input type="text" class="form-control optional" name="motherName" placeholder="Mother Name "></div>
-        <div class="col-md-6"><input type="email" class="form-control" name="email" placeholder="Email" required></div>
-        <div class="col-md-6"><input type="password" class="form-control" name="password" placeholder="Password" required></div>
-        
-       <!-- Course Dropdown -->
-<div class="col-md-6">
-  <select class="form-select" name="course" required>
-    <option value="" selected disabled>Select Course</option>
-    <option value="B.Tech">B.Tech</option>
-    <option value="B.Pharm">B.Pharm</option>
-    <option value="BCA">BCA</option>
-    <option value="B.Com">B.Com</option>
-    <option value="BBA">BBA</option>
-    <option value="M.Tech">M.Tech</option>
-    <option value="M.Pharm">M.Pharm</option>
-    <option value="MCA">MCA</option>
-    <option value="B.Sc">B.Sc</option>
-  </select>
-</div>
-
-<!-- Semester Dropdown -->
-<div class="col-md-6">
-  <select class="form-select" name="semester" required>
-    <option value="" selected disabled>Select Semester</option>
-    <option value="1">1</option>
-    <option value="2">2</option>
-    <option value="3">3</option>
-    <option value="4">4</option>
-    <option value="5">5</option>
-    <option value="6">6</option>
-    <option value="7">7</option>
-    <option value="8">8</option>
-  </select>
-</div>
-
-<!-- Year Dropdown -->
-<div class="col-md-6">
-  <select class="form-select" name="year" required>
-    <option value="" selected disabled>Select Year</option>
-    <option value="FIRST">FIRST</option>
-    <option value="SECOND">SECOND</option>
-    <option value="THIRD">THIRD</option>
-    <option value="FOURTH">FOURTH</option>
-  </select>
-</div>
-
-<!-- Branch Dropdown (Optional) -->
-<div class="col-md-6">
-  <select class="form-select optional" name="branch">
-    <option value="" selected disabled>Select Branch (Optional)</option>
-    <option value="CSE">CSE</option>
-    <option value="ECE">ECE</option>
-    <option value="IT">IT</option>
-    <option value="MECH">Mechanical</option>
-    <option value="CIVIL">Civil</option>
-    <option value="EEE">EEE</option>
-    <option value="CHE">Chemical</option>
-    <option value="BIO">Biotechnology</option>
-    <option value="AERO">Aeronautical</option>
-    <option value="OTHER">Other</option>
-  </select>
-</div>
-
-<!-- Section Input (Optional, will be saved in UPPERCASE) -->
-<!-- Section Dropdown (A–I) -->
-<div class="col-md-6">
-  <select class="form-select optional" name="section">
-    <option value="" selected disabled>Select Section (Optional)</option>
-    <option value="A">A</option>
-    <option value="B">B</option>
-    <option value="C">C</option>
-    <option value="D">D</option>
-    <option value="E">E</option>
-    <option value="F">F</option>
-    <option value="G">G</option>
-    <option value="H">H</option>
-    <option value="I">I</option>
-  </select>
-</div>
-
-
-        <!-- Gender Dropdown -->
-        <div class="col-md-6">
-          <select class="form-select optional" name="gender">
-            <option value="" selected disabled>Gender </option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-
-        <div class="col-md-6"><input type="text" class="form-control optional" name="contactNo" placeholder="Contact Number "></div>
-        <div class="col-12"><input type="text" class="form-control optional" name="address" placeholder="Address "></div>
-      </div>
-    </div>
-
-    <!-- Teacher Fields -->
-    <div id="teacherFields" class="form-section">
-      <h5 class="mb-3 text-secondary">Teacher Details</h5>
-      <div class="row g-3">
-        <div class="col-md-6"><input type="text" class="form-control" name="teacher_name" placeholder="Full Name" required></div>
-        <div class="col-md-6"><input type="email" class="form-control" name="email" placeholder="Email" required></div>
-        <div class="col-md-6"><input type="password" class="form-control" name="password" placeholder="Password" required></div>
-       <!-- Department Dropdown -->
-<div class="col-md-6">
-  <select class="form-select optional" name="department">
-    <option value="" selected disabled>Department</option>
-    <option value="CSE">CSE</option>
-    <option value="ECE">ECE</option>
-    <option value="MECH">Mechanical</option>
-    <option value="CIVIL">Civil</option>
-    <option value="IT">IT</option>
-    <option value="EEE">EEE</option>
-    <option value="OTHER">Other</option>
-  </select>
-</div>
-     <!-- Designation Dropdown -->
-<div class="col-md-6">
-  <select class="form-select optional" name="designation">
-    <option value="" selected disabled>Designation</option>
-    <option value="Professor">Professor</option>
-    <option value="Assistant Professor">Assistant Professor</option>
-    <option value="Lecturer">Lecturer</option>
-    <option value="Lab Instructor">Lab Instructor</option>
-    <option value="HOD">Head of Department (HOD)</option>
-    <option value="Administrator">Administrator</option>
-  </select>
-</div>
-
-<!-- Qualification Dropdown -->
-<div class="col-md-6">
-  <select class="form-select optional" name="qualification">
-    <option value="" selected disabled>Qualification</option>
-    <option value="B.Tech">B.Tech / B.E.</option>
-    <option value="M.Tech">M.Tech / M.E.</option>
-    <option value="B.Sc">B.Sc</option>
-    <option value="M.Sc">M.Sc</option>
-    <option value="Ph.D">Ph.D</option>
-    <option value="M.A">M.A</option>
-    <option value="B.A">B.A</option>
-    <option value="Diploma">Diploma</option>
-  </select>
-</div>
-        <div class="col-md-6"><input type="number" class="form-control optional" name="experience" placeholder="Experience (Years) "></div>
-        
-        <!-- Teacher Gender Dropdown -->
-        <div class="col-md-6">
-          <select class="form-select optional" name="gender">
-            <option value="" selected disabled>Gender </option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-
-        <div class="col-md-6"><input type="text" class="form-control optional" name="contactNo" placeholder="Contact Number "></div>
-        <div class="col-md-6"><input type="text" class="form-control optional" name="address" placeholder="Address "></div>
-      </div>
-    </div>
-
-    <button type="submit" class="btn btn-primary w-100 mt-4 py-2">Register</button>
-  </form>
-
-  <!-- Login Link -->
-  <div class="text-center mt-3">
-    <p class="mb-0">Already have an account? <a href="/" class="text-decoration-none fw-bold">Login here</a></p>
+  <div class="toggle-wrapper shadow-lg">
+    <button class="toggle-btn active" id="btnTeacher" onclick="switchMode('TEACHER')">
+        <i class="bi bi-person-workspace me-2"></i>Teacher
+    </button>
+    <button class="toggle-btn" id="btnStudent" onclick="switchMode('STUDENT')">
+        <i class="bi bi-mortarboard me-2"></i>Student
+    </button>
   </div>
-</div>
 
-<input type="hidden" id="serverMessage" th:value="${msg != null ? msg : (success != null ? success : '')}" />
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <div class="sliding-container mode-teacher" id="mainContainer">
+    
+    <div class="form-panel">
+      <div class="reg-card">
+        <h3 class="fw-bold mb-4" id="formTitle" style="color: var(--dark-navy);">Teacher Registration</h3>
+        
+        <form method="post" th:action="@{/register}" id="regForm">
+          <input type="hidden" name="role" id="roleInput" value="TEACHER">
 
-<script>
-  const roleSelect = document.getElementById('roleSelect');
-  const studentFields = document.getElementById('studentFields');
-  const teacherFields = document.getElementById('teacherFields');
+          <div id="teacherFields">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="small fw-bold text-muted">Full Name</label>
+                <input type="text" class="form-control" name="teacher_name" placeholder="Dr. John Smith" required>
+              </div>
+              <div class="col-md-6">
+                <label class="small fw-bold text-muted">Email Address</label>
+                <input type="email" class="form-control" name="email" placeholder="john@college.edu" required>
+              </div>
+              <div class="col-md-6">
+                <label class="small fw-bold text-muted">Password</label>
+                <input type="password" class="form-control" name="password" placeholder="••••••••" required>
+              </div>
+              <div class="col-md-6">
+                <label class="small fw-bold text-muted">Department</label>
+                <select class="form-select" name="department">
+                  <option selected disabled>Select Dept</option>
+                  <option value="CSE">CSE</option><option value="IT">IT</option><option value="ECE">ECE</option>
+                  <option value="MECH">Mechanical</option><option value="CIVIL">Civil</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="small fw-bold text-muted">Designation</label>
+                <select class="form-select" name="designation">
+                  <option selected disabled>Designation</option>
+                  <option value="Professor">Professor</option><option value="HOD">HOD</option>
+                  <option value="Assistant Professor">Assistant Professor</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="small fw-bold text-muted">Qualification</label>
+                <select class="form-select" name="qualification">
+                  <option selected disabled>Qualification</option>
+                  <option value="Ph.D">Ph.D</option><option value="M.Tech">M.Tech</option><option value="B.Tech">B.Tech</option>
+                </select>
+              </div>
+              <div class="col-md-4"><input type="number" class="form-control" name="experience" placeholder="Experience"></div>
+              <div class="col-md-4">
+                <select class="form-select" name="gender">
+                  <option selected disabled>Gender</option>
+                  <option value="Male">Male</option><option value="Female">Female</option>
+                </select>
+              </div>
+              <div class="col-md-4"><input type="text" class="form-control" name="contactNo" placeholder="Contact No"></div>
+              <div class="col-12"><input type="text" class="form-control" name="address" placeholder="Residential Address"></div>
+            </div>
+          </div>
 
-  function enableFields(section, enable) {
-      const inputs = section.querySelectorAll('input, select, textarea');
-      inputs.forEach(input => input.disabled = !enable);
-  }
+          <div id="studentFields" style="display: none;">
+            <div class="row g-3">
+              <div class="col-md-6"><input type="text" class="form-control" name="student_name" placeholder="Full Name" required></div>
+              <div class="col-md-6"><input type="text" class="form-control" name="rollNo" placeholder="Roll Number" required></div>
+              <div class="col-md-6"><input type="text" class="form-control" name="fatherName" placeholder="Father's Name"></div>
+              <div class="col-md-6"><input type="text" class="form-control" name="motherName" placeholder="Mother's Name"></div>
+              <div class="col-md-6"><input type="email" class="form-control" name="email" placeholder="Email" required></div>
+              <div class="col-md-6"><input type="password" class="form-control" name="password" placeholder="Password" required></div>
+              
+              <div class="col-md-6">
+                <select class="form-select" name="course" required>
+                  <option value="" selected disabled>Course</option>
+                  <option value="B.Tech">B.Tech</option><option value="BCA">BCA</option><option value="MCA">MCA</option><option value="B.Pharm">B.Pharm</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <select class="form-select" name="branch">
+                  <option value="" selected disabled>Branch</option>
+                  <option value="CSE">CSE</option><option value="IT">IT</option><option value="ECE">ECE</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <select class="form-select" name="year">
+                  <option value="" selected disabled>Year</option>
+                  <option value="FIRST">1st Year</option><option value="SECOND">2nd Year</option>
+                  <option value="THIRD">3rd Year</option><option value="FOURTH">4th Year</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <select class="form-select" name="semester">
+                   <option value="" selected disabled>Sem</option>
+                   <option th:each="i : ${#numbers.sequence(1, 8)}" th:value="${i}" th:text="${i}"></option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <select class="form-select" name="section">
+                  <option value="" selected disabled>Sec</option>
+                  <option th:each="char : ${#strings.arraySplit('A,B,C,D,E,F,G,H,I', ',')}" th:value="${char}" th:text="${char}"></option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <select class="form-select" name="gender">
+                  <option value="" selected disabled>Gender</option>
+                  <option value="Male">Male</option><option value="Female">Female</option>
+                </select>
+              </div>
+              <div class="col-md-6"><input type="text" class="form-control" name="contactNo" placeholder="Contact Number"></div>
+              <div class="col-12"><input type="text" class="form-control" name="address" placeholder="Complete Address"></div>
+            </div>
+          </div>
 
-  roleSelect.addEventListener('change', function() {
-    if (this.value === 'STUDENT') {
-      studentFields.style.display = 'block';
-      teacherFields.style.display = 'none';
-      enableFields(studentFields, true);
-      enableFields(teacherFields, false);
-    } else if (this.value === 'TEACHER') {
-      teacherFields.style.display = 'block';
-      studentFields.style.display = 'none';
-      enableFields(teacherFields, true);
-      enableFields(studentFields, false);
+          <button type="submit" class="btn-register mt-4 shadow-sm">
+            Verify & Create Account <i class="bi bi-arrow-right-circle ms-2"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="info-panel">
+      <div class="brand-content px-5">
+        <div class="sdg-badge badge bg-white text-success px-3 py-2 rounded-pill fw-bold mb-4">SDG-4 QUALITY COMPLIANT</div>
+        <h1 class="brand-title">EduInsight</h1>
+        <p class="lead mb-5 opacity-75">Join the next generation of AI-driven academic excellence. Secure, automated, and objective feedback systems.</p>
+        
+        <div class="d-flex flex-column align-items-center gap-3">
+          <div class="feature-badge"><i class="bi bi-shield-lock me-2"></i> Encrypted Data Storage</div>
+          <div class="feature-badge"><i class="bi bi-cpu me-2"></i> Neural Sentiment Processing</div>
+          <div class="feature-badge"><i class="bi bi-file-earmark-pdf me-2"></i> Automated Audit Reports</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a th:href="@{/}" class="back-to-login"><i class="bi bi-arrow-left"></i> Back to Login Portal</a>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    function switchMode(mode) {
+      const container = document.getElementById('mainContainer');
+      const btnT = document.getElementById('btnTeacher');
+      const btnS = document.getElementById('btnStudent');
+      const tFields = document.getElementById('teacherFields');
+      const sFields = document.getElementById('studentFields');
+      const roleInput = document.getElementById('roleInput');
+      const formTitle = document.getElementById('formTitle');
+
+      if (mode === 'STUDENT') {
+        container.className = 'sliding-container mode-student';
+        btnS.classList.add('active');
+        btnT.classList.remove('active');
+        tFields.style.display = 'none';
+        sFields.style.display = 'block';
+        roleInput.value = 'STUDENT';
+        formTitle.innerText = 'Student Registration';
+        enableFields(sFields, true);
+        enableFields(tFields, false);
+      } else {
+        container.className = 'sliding-container mode-teacher';
+        btnT.classList.add('active');
+        btnS.classList.remove('active');
+        sFields.style.display = 'none';
+        tFields.style.display = 'block';
+        roleInput.value = 'TEACHER';
+        formTitle.innerText = 'Teacher Registration';
+        enableFields(tFields, true);
+        enableFields(sFields, false);
+      }
     }
-  });
 
-  enableFields(studentFields, false);
-  enableFields(teacherFields, false);
-
-  document.addEventListener("DOMContentLoaded", function () {
-    const serverMessage = document.getElementById("serverMessage")?.value;
-    if (serverMessage && serverMessage.trim() !== "") {
-        const lowerMsg = serverMessage.toLowerCase();
-        const isError = lowerMsg.includes('error') || lowerMsg.includes('please') || lowerMsg.includes('already');
-
-        Swal.fire({
-            title: 'Notification',
-            text: serverMessage,
-            icon: isError ? 'error' : 'success',
-            confirmButtonColor: '#2575fc',
-            background: '#f9f9f9',
-            color: '#333',
-            timer: 4000,
-            timerProgressBar: true
-        });
+    function enableFields(section, enable) {
+        const inputs = section.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => input.disabled = !enable);
     }
-  });
-</script>
-
+    
+    // Default State: Teacher
+    enableFields(document.getElementById('studentFields'), false);
+  </script>
 </body>
 </html>

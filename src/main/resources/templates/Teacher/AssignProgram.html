@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{Teacher/Teacherbase::layout(~{::main})}">
 <head>
     <title>EduInsight | Program Lifecycle Manager</title>
@@ -7,62 +8,53 @@
 
     <div class="row mb-5 animate__animated animate__fadeIn">
         <div class="col-lg-12">
-            <div class="glass-search-card p-4 shadow-sm rounded-4">
+            <div class="glass-search-card p-4 shadow-sm rounded-4 border-0">
                 <div class="row align-items-center g-3">
                     <div class="col-xl-3 col-lg-12">
-                        <h2 class="fw-bold text-dark m-0"><i class="bi bi-calendar-range text-primary me-2"></i>Assigned Programs</h2>
-                        <p class="text-muted small mb-0">Search and manage training cycles</p>
+                        <h2 class="fw-bold text-dark m-0 d-flex align-items-center">
+                            <span class="icon-circle bg-success text-white me-3"><i class="bi bi-calendar-range"></i></span>
+                            Assigned Programs
+                        </h2>
                     </div>
                     
                     <div class="col-xl-9 col-lg-12">
-                        <div class="row g-2">
+                        <div class="row g-2 justify-content-end">
                             <div class="col-md-3">
                                 <div class="input-group">
-                                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                                    <input type="text" id="nameSearch" class="form-control border-start-0" placeholder="Search by name...">
+                                    <span class="input-group-text bg-light border-0"><i class="bi bi-search text-success"></i></span>
+                                    <input type="text" id="nameSearch" class="form-control border-0 bg-light" placeholder="Search curriculum...">
                                 </div>
                             </div>
                             
                             <div class="col-md-2">
-                                <select id="monthFilter" class="form-select" onchange="filterPrograms()">
+                                <select id="monthFilter" class="form-select border-0 bg-light" onchange="filterPrograms()">
                                     <option value="">All Months</option>
-                                    <option value="01">January</option>
-                                    <option value="02">February</option>
-                                    <option value="03">March</option>
-                                    <option value="04">April</option>
-                                    <option value="05">May</option>
-                                    <option value="06">June</option>
-                                    <option value="07">July</option>
-                                    <option value="08">August</option>
-                                    <option value="09">September</option>
-                                    <option value="10">October</option>
-                                    <option value="11">November</option>
-                                    <option value="12">December</option>
+                                    <option th:each="m : ${#numbers.sequence(1,12)}" 
+                                            th:value="${m < 10 ? '0'+m : m}" 
+                                            th:text="${T(java.time.Month).of(m)}"></option>
                                 </select>
                             </div>
 
                             <div class="col-md-2">
-                                <select id="yearFilter" class="form-select" onchange="filterPrograms()">
+                                <select id="yearFilter" class="form-select border-0 bg-light" onchange="filterPrograms()">
                                     <option value="">All Years</option>
-                                    <option value="2024">2024</option>
                                     <option value="2025">2025</option>
                                     <option value="2026">2026</option>
-                                    <option value="2027">2027</option>
                                 </select>
-                            </div>
-
-                            <div class="col-md-2">
-                                <button class="btn btn-outline-danger w-100" onclick="resetFilters()">
-                                    <i class="bi bi-x-circle me-1"></i> Clear
-                                </button>
                             </div>
 
                             <div class="col-md-3">
-                                <div class="btn-group w-100 shadow-sm">
-                                    <button class="btn btn-primary active btn-status" onclick="filterStatus('all', this)">All</button>
-                                    <button class="btn btn-outline-primary btn-status" onclick="filterStatus('ongoing', this)">Active</button>
-                                    <button class="btn btn-outline-primary btn-status" onclick="filterStatus('upcoming', this)">Pending</button>
+                                <div class="btn-group w-100 shadow-xs rounded-3 overflow-hidden">
+                                    <button class="btn btn-success active btn-status py-2" onclick="filterStatus('all', this)">All</button>
+                                    <button class="btn btn-outline-success btn-status py-2" onclick="filterStatus('ongoing', this)">Active</button>
+                                    <button class="btn btn-outline-success btn-status py-2" onclick="filterStatus('upcoming', this)">Planned</button>
                                 </div>
+                            </div>
+                            
+                            <div class="col-md-1">
+                                <button class="btn btn-light w-100 py-2 border" onclick="resetFilters()" title="Reset All">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -71,10 +63,15 @@
         </div>
     </div>
 
-    <div class="space-y-5">
+    <div class="timeline-container">
         
         <div class="status-section mb-5" id="ongoingSection">
-            <h4 class="section-title text-success mb-4"><span class="pulse-indicator"></span> Ongoing Programs</h4>
+            <div class="d-flex align-items-center mb-4">
+                <div class="pulse-indicator me-3"></div>
+                <h4 class="section-title text-success m-0">LIVE TRAINING CYCLES</h4>
+                <hr class="flex-grow-1 ms-4 opacity-10">
+            </div>
+            
             <div class="row g-4" id="ongoingGrid">
                 <div th:each="assign : ${assignedPrograms}" 
                      th:if="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd') >= #strings.toString(assign.program.startDate) 
@@ -83,12 +80,20 @@
                      th:data-name="${assign.program.trainingProgram}" 
                      th:data-start="${assign.program.startDate}" 
                      th:data-end="${assign.program.endDate}">
-                    <div class="card border-0 shadow-sm h-100 premium-card active-border">
-                        <div class="card-body">
-                            <span class="badge bg-soft-success text-success rounded-pill px-3 mb-3">Ongoing</span>
-                            <h5 class="fw-bold mb-3" th:text="${assign.program.trainingProgram}">Name</h5>
-                            <small class="text-muted"><i class="bi bi-calendar-range"></i> [[${assign.program.startDate}]] to [[${assign.program.endDate}]]</small>
-                            <a th:href="@{programDetail/{id}(id=${assign.program.id})}" class="btn btn-primary w-100 mt-4 rounded-pill">Manage</a>
+                    
+                    <div class="card border-0 shadow-sm h-100 premium-card ongoing-border">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between mb-3">
+                                <span class="badge bg-soft-success text-success px-3 py-2 rounded-pill">ONGOING</span>
+                                <i class="bi bi-broadcast text-danger"></i>
+                            </div>
+                            <h5 class="fw-bold mb-3 text-dark-navy" th:text="${assign.program.trainingProgram}">Name</h5>
+                            <div class="small text-muted mb-4">
+                                <i class="bi bi-calendar-check me-2"></i> Ends: [[${assign.program.endDate}]]
+                            </div>
+                            <a th:href="@{programDetail/{id}(id=${assign.program.id})}" class="btn btn-success w-100 rounded-pill fw-bold">
+                                MANAGE CYCLE
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -96,7 +101,12 @@
         </div>
 
         <div class="status-section mb-5" id="upcomingSection">
-            <h4 class="section-title text-warning mb-4"><i class="bi bi-hourglass-split me-2"></i> Upcoming Programs</h4>
+            <div class="d-flex align-items-center mb-4 text-warning">
+                <i class="bi bi-hourglass-split me-3 fs-4"></i>
+                <h4 class="section-title m-0">UPCOMING SCHEDULES</h4>
+                <hr class="flex-grow-1 ms-4 opacity-10">
+            </div>
+            
             <div class="row g-4" id="upcomingGrid">
                 <div th:each="assign : ${assignedPrograms}" 
                      th:if="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd') < #strings.toString(assign.program.startDate)}"
@@ -104,12 +114,15 @@
                      th:data-name="${assign.program.trainingProgram}" 
                      th:data-start="${assign.program.startDate}" 
                      th:data-end="${assign.program.endDate}">
-                    <div class="card border-0 shadow-sm h-100 premium-card upcoming-border">
-                        <div class="card-body text-center">
-                            <span class="badge bg-soft-warning text-warning rounded-pill px-3 mb-3">Planned</span>
+                    
+                    <div class="card border-0 shadow-sm h-100 premium-card upcoming-border bg-white">
+                        <div class="card-body p-4">
+                            <span class="badge bg-soft-warning text-warning px-3 py-2 rounded-pill mb-3">PLANNED</span>
                             <h5 class="fw-bold mb-3" th:text="${assign.program.trainingProgram}">Name</h5>
-                            <p class="small text-muted mb-4">Starts: <strong th:text="${assign.program.startDate}"></strong></p>
-                            <a th:href="@{programDetail/{id}(id=${assign.program.id})}" class="btn btn-outline-warning w-100 rounded-pill">View Readiness</a>
+                            <p class="small text-muted">Verification required by:<br><strong th:text="${assign.program.startDate}"></strong></p>
+                            <a th:href="@{programDetail/{id}(id=${assign.program.id})}" class="btn btn-outline-warning w-100 rounded-pill fw-bold">
+                                VIEW READINESS
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -117,7 +130,12 @@
         </div>
 
         <div class="status-section" id="completedSection">
-            <h4 class="section-title text-secondary mb-4"><i class="bi bi-archive-fill me-2"></i> Historical Records</h4>
+            <div class="d-flex align-items-center mb-4 text-secondary">
+                <i class="bi bi-archive-fill me-3 fs-4"></i>
+                <h4 class="section-title m-0">HISTORICAL AUDITS</h4>
+                <hr class="flex-grow-1 ms-4 opacity-10">
+            </div>
+            
             <div class="row g-4" id="completedGrid">
                 <div th:each="assign : ${assignedPrograms}" 
                      th:if="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd') > #strings.toString(assign.program.endDate)}"
@@ -125,12 +143,15 @@
                      th:data-name="${assign.program.trainingProgram}" 
                      th:data-start="${assign.program.startDate}" 
                      th:data-end="${assign.program.endDate}">
-                    <div class="card border-0 shadow-sm h-100 premium-card completed-border opacity-75">
-                        <div class="card-body">
-                            <span class="badge bg-light text-secondary rounded-pill px-3 mb-2">Completed</span>
-                            <h5 class="fw-bold mb-2" th:text="${assign.program.trainingProgram}">Name</h5>
-                            <small class="text-muted d-block mb-3">Ended on: [[${assign.program.endDate}]]</small>
-                            <a th:href="@{programDetail/{id}(id=${assign.program.id})}" class="btn btn-secondary w-100 rounded-pill btn-sm">Audit</a>
+                    
+                    <div class="card border-0 shadow-sm h-100 premium-card completed-border opacity-75 grayscale-hover">
+                        <div class="card-body p-4 text-center">
+                            <div class="mb-3"><i class="bi bi-check-all text-success fs-3"></i></div>
+                            <h5 class="fw-bold mb-2 text-muted" th:text="${assign.program.trainingProgram}">Name</h5>
+                            <small class="text-muted d-block mb-3">Pedagogy Archive: [[${assign.program.endDate}]]</small>
+                            <a th:href="@{programDetail/{id}(id=${assign.program.id})}" class="btn btn-light-soft text-dark w-100 rounded-pill btn-sm fw-bold border">
+                                FINAL AUDIT
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -149,7 +170,7 @@
 
             cards.forEach(card => {
                 const name = card.getAttribute('data-name').toLowerCase();
-                const startDate = card.getAttribute('data-start'); // yyyy-mm-dd
+                const startDate = card.getAttribute('data-start');
                 const endDate = card.getAttribute('data-end');
 
                 const startYear = startDate.split('-')[0];
@@ -158,22 +179,14 @@
                 const endMonth = endDate.split('-')[1];
 
                 const matchesName = name.includes(nameQuery);
-                
-                // चेक करें कि क्या चुनी गई तारीख स्टार्ट या एंड डेट के बीच पड़ती है
                 const matchesMonth = monthQuery === "" || (startMonth === monthQuery || endMonth === monthQuery);
                 const matchesYear = yearQuery === "" || (startYear === yearQuery || endYear === yearQuery);
 
-                if (matchesName && matchesMonth && matchesYear) {
-                    card.style.display = "block";
-                } else {
-                    card.style.display = "none";
-                }
+                card.style.display = (matchesName && matchesMonth && matchesYear) ? "block" : "none";
             });
-            
             checkEmptySections();
         }
 
-        // सभी इनपुट सुनने के लिए
         document.getElementById('nameSearch').addEventListener('input', filterPrograms);
 
         function resetFilters() {
@@ -185,60 +198,54 @@
         }
 
         function filterStatus(status, btn) {
-            // UI Active State
             document.querySelectorAll('.btn-status').forEach(b => {
-                b.classList.remove('btn-primary', 'active');
-                b.classList.add('btn-outline-primary');
+                b.classList.remove('btn-success', 'active');
+                b.classList.add('btn-outline-success');
             });
-            btn.classList.remove('btn-outline-primary');
-            btn.classList.add('btn-primary', 'active');
+            btn.classList.replace('btn-outline-success', 'btn-success');
+            btn.classList.add('active');
 
-            const sections = {
-                'ongoing': 'ongoingSection',
-                'upcoming': 'upcomingSection',
-                'completed': 'completedSection'
-            };
-
+            const sections = {'ongoing': 'ongoingSection', 'upcoming': 'upcomingSection', 'completed': 'completedSection'};
             if (status === 'all') {
-                Object.values(sections).forEach(id => document.getElementById(id).style.display = "block");
+                Object.values(sections).forEach(id => document.getElementById(id).classList.remove('d-none'));
             } else {
                 Object.entries(sections).forEach(([key, id]) => {
-                    document.getElementById(id).style.display = (key === status) ? "block" : "none";
+                    document.getElementById(id).classList.toggle('d-none', key !== status);
                 });
             }
         }
 
-        // अगर किसी सेक्शन में कोई कार्ड न बचे तो उसे छुपा दें
         function checkEmptySections() {
-            const grids = ['ongoingGrid', 'upcomingGrid', 'completedGrid'];
-            grids.forEach(gridId => {
+            ['ongoingGrid', 'upcomingGrid', 'completedGrid'].forEach(gridId => {
                 const grid = document.getElementById(gridId);
                 const section = grid.closest('.status-section');
                 const visibleCards = Array.from(grid.querySelectorAll('.program-card')).filter(c => c.style.display !== 'none');
-                
-                if (visibleCards.length === 0) {
-                    section.classList.add('d-none');
-                } else {
-                    section.classList.remove('d-none');
-                }
+                section.classList.toggle('d-none', visibleCards.length === 0);
             });
         }
     </script>
 
     <style>
-        .glass-search-card {
-            background: white;
-            border: 1px solid #e2e8f0;
-            margin-bottom: 2rem;
-            position: sticky;
-            top: 10px;
-            z-index: 1000;
-        }
-        .premium-card { border-radius: 1.2rem !important; overflow: hidden; transition: 0.3s; border: 1px solid #f1f5f9 !important; }
-        .bg-soft-success { background: #ecfdf5; }
+        body { background-color: #f4f7fa; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-search-card { background: white; position: sticky; top: 10px; z-index: 1000; border: 1px solid #e2e8f0; }
+        .premium-card { border-radius: 1.5rem !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid transparent !important; }
+        .premium-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important; }
+        
+        .ongoing-border { border-left: 6px solid #10b981 !important; }
+        .upcoming-border { border-left: 6px solid #f59e0b !important; }
+        .completed-border { border-left: 6px solid #64748b !important; }
+        
+        .bg-soft-success { background: #eefdf5; }
         .bg-soft-warning { background: #fffbeb; }
-        .section-title { font-size: 1.25rem; font-weight: 700; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; align-items: center; }
-        .space-y-5 > * + * { margin-top: 3rem; }
+        .text-dark-navy { color: #064e3b; }
+        
+        .icon-circle { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+        .pulse-indicator { width: 14px; height: 14px; background: #10b981; border-radius: 50%; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+        
+        .grayscale-hover:hover { filter: grayscale(0); opacity: 1 !important; }
+        .section-title { font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; font-size: 0.9rem; }
+        .btn-light-soft { background: #f1f5f9; border: 1px solid #e2e8f0; }
     </style>
 
 </main>

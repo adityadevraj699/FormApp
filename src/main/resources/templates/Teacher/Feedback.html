@@ -1,23 +1,29 @@
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{Teacher/Teacherbase::layout(~{::main})}">
-<head>
-    <title>EduInsight | Enterprise Analytics</title>
-</head>
 <body>
-<main class="container py-5">
+<main class="container-fluid px-4 py-5">
     
-    <div class="glass-hero p-5 mb-5 shadow-lg animate__animated animate__fadeIn">
+    <div class="glass-hero p-5 mb-5 shadow-lg animate__animated animate__fadeIn border-0" 
+         style="background: linear-gradient(135deg, #064e3b 0%, #065f46 100%); border-radius: 24px;">
         <div class="row align-items-center">
-            <div class="col-lg-7 text-white">
-                <span class="badge bg-white text-primary rounded-pill px-3 py-2 mb-3 fw-bold">
-                    <i class="bi bi-patch-check-fill me-1"></i> SDG 4: Quality Education Initiative
+            <div class="col-lg-8 text-white">
+                <span class="badge bg-white text-success rounded-pill px-3 py-2 mb-3 fw-bold shadow-sm">
+                    <i class="bi bi-robot me-2"></i> Gemma-3-27B AI Integrated
                 </span>
-                <h1 class="display-4 fw-800 mb-2">Faculty Insight Portal</h1>
-                <p class="lead opacity-75">Automated feedback processing with Gemma-3-27B LLM Integration for deep pedagogical analysis.</p>
+                <h1 class="display-4 fw-bold mb-2 ls-n1">Pedagogical Insights</h1>
+                <p class="lead opacity-75 mb-0 fs-5">Deciphering student sentiment and teaching quality through advanced Neural Analysis pipelines.</p>
             </div>
-            <div class="col-lg-5 d-none d-lg-block text-end">
-                <div class="hero-stats p-4 bg-white rounded-4 shadow-sm d-inline-block">
-                    <h2 class="text-primary fw-bold mb-0" th:text="${#lists.size(assignedPrograms)}">0</h2>
-                    <small class="text-uppercase tracking-wider text-muted fw-bold">Active Programs</small>
+            <div class="col-lg-4 d-none d-lg-block text-end">
+                <div class="hero-stats p-4 bg-white bg-opacity-10 rounded-4 border border-white border-opacity-25 backdrop-blur shadow-sm d-inline-block text-start">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="icon-circle bg-white text-success rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px;">
+                            <i class="bi bi-journal-check fs-4"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-white fw-bold mb-0" th:text="${#lists.size(assignedPrograms)}">0</h2>
+                            <small class="text-uppercase ls-1 text-white opacity-75 fw-bold" style="font-size: 10px;">Active Streams</small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -25,58 +31,65 @@
 
     <div th:each="assign, iter : ${assignedPrograms}" class="program-wrapper mb-5">
         <div class="d-flex align-items-center mb-4 px-2">
-            <div class="icon-box-sm bg-primary text-white me-3">
-                <i class="bi bi-journal-code"></i>
+            <div class="icon-box-sm bg-success text-white me-3 rounded-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                <i class="bi bi-layers-half"></i>
             </div>
-            <h3 class="fw-bold text-dark m-0" th:text="${assign.program.trainingProgram}">Program Name</h3>
+            <div>
+                <h3 class="fw-bold text-dark m-0" th:text="${assign.program.trainingProgram}">Program Name</h3>
+                <small class="text-muted fw-semibold">Academic Stream: <span th:text="${assign.program.course}">-</span></small>
+            </div>
             <div class="ms-auto">
-                <span class="badge bg-soft-primary text-primary border px-3 py-2 rounded-pill">
-                    <span th:text="${#lists.size(programFeedbacks[assign.program.id])}">0</span> Assessment Cycles
+                <span class="badge bg-soft-success text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold">
+                    <i class="bi bi-arrow-repeat me-1"></i> <span th:text="${#lists.size(programFeedbacks[assign.program.id])}">0</span> Assessment Cycles
                 </span>
             </div>
         </div>
 
         <div class="row g-4">
             <div th:each="fb, index : ${programFeedbacks[assign.program.id]}" class="col-xl-6">
-                <div class="feedback-card bg-white p-4 shadow-sm border-0 rounded-4 transition-hover">
-                    <div class="row align-items-center">
-                        <div class="col-md-5 border-end">
-                            <div class="d-flex align-items-center mb-2">
-                                <div class="dot-indicator me-2" th:classappend="${index.index % 2 == 0 ? 'bg-primary' : 'bg-accent'}"></div>
-                                <h5 class="fw-bold text-dark mb-0" th:text="${fb.feedbackPhase.phaseName}">Phase</h5>
-                            </div>
-                            <div class="text-muted small mb-3">
-                                <i class="bi bi-calendar-range me-1"></i> 
-                                <span th:text="${fb.startDate}"></span> — <span th:text="${fb.endDate}"></span>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <a th:href="@{'/Teacher/FeedbackDetail/' + ${fb.id}}" class="btn btn-light-soft btn-sm text-primary fw-bold">
-                                    <i class="bi bi-eye"></i> View Data
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="col-md-7 ps-md-4">
-                            <label class="text-uppercase small fw-bold text-muted mb-3 d-block">AI Analytics & Reporting</label>
-                            <div class="d-grid gap-2">
-                                <div class="btn-group w-100 shadow-xs">
-                                    <a th:href="@{/feedback/report/{id}(id=${fb.id})}" class="btn btn-primary btn-analytics py-2">
-                                        <i class="bi bi-cpu-fill me-2"></i>AI DASHBOARD
-                                    </a>
-                                    <a th:href="@{'/Teacher/FeedbackDetailGraph/' + ${fb.id}}" class="btn btn-outline-primary py-2">
-                                        <i class="bi bi-graph-up-arrow"></i>
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden feedback-card transition-all">
+                    <div class="card-body p-0">
+                        <div class="row g-0 h-100">
+                            <div class="col-md-5 p-4 border-end bg-light-subtle">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="pulse-indicator me-2" th:classappend="${index.index % 2 == 0 ? 'bg-success' : 'bg-primary'}"></div>
+                                    <h5 class="fw-bold text-dark mb-0" th:text="${fb.feedbackPhase.phaseName}">Phase Name</h5>
+                                </div>
+                                <div class="text-muted small mb-4">
+                                    <div class="mb-1"><i class="bi bi-calendar3 me-2 text-success"></i><span th:text="${fb.startDate}">-</span></div>
+                                    <div><i class="bi bi-calendar3-range me-2 text-danger"></i><span th:text="${fb.endDate}">-</span></div>
+                                </div>
+                                <div class="mt-auto">
+                                    <a th:href="@{'/Teacher/FeedbackDetail/' + ${fb.id}}" class="btn btn-outline-success btn-sm w-100 rounded-pill fw-bold">
+                                        <i class="bi bi-table me-2"></i>Explore Raw Data
                                     </a>
                                 </div>
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <a th:href="@{/feedback/report/{id}/download(id=${fb.id})}" class="btn btn-soft-success w-100 py-2">
-                                            <i class="bi bi-magic me-1"></i> AI PDF
+                            </div>
+
+                            <div class="col-md-7 p-4 bg-white">
+                                <label class="text-uppercase small fw-bold text-muted mb-3 d-block ls-1">AI Intelligence Pipeline</label>
+                                
+                                <div class="d-grid gap-2">
+                                    <div class="btn-group w-100 shadow-xs rounded-3 overflow-hidden">
+                                        <a th:href="@{/feedback/report/{id}(id=${fb.id})}" class="btn btn-success py-2 fw-bold d-flex align-items-center justify-content-center">
+                                            <i class="bi bi-cpu-fill me-2"></i> AI DASHBOARD
+                                        </a>
+                                        <a th:href="@{'/Teacher/FeedbackDetailGraph/' + ${fb.id}}" class="btn btn-outline-success border-start-0 py-2" title="View Statistical Graphs">
+                                            <i class="bi bi-graph-up-arrow"></i>
                                         </a>
                                     </div>
-                                    <div class="col-6">
-                                        <a th:href="@{'/Teacher/feedbackReport/allStudents/' + ${fb.id}}" class="btn btn-soft-dark w-100 py-2">
-                                            <i class="bi bi-download me-1"></i> RAW PDF
-                                        </a>
+                                    
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <a th:href="@{/feedback/report/{id}/download(id=${fb.id})}" class="btn bg-soft-success text-success border-0 w-100 py-2 fw-bold rounded-3 hover-lift">
+                                                <i class="bi bi-magic me-1"></i> AI REPORT
+                                            </a>
+                                        </div>
+                                        <div class="col-6">
+                                            <a th:href="@{'/Teacher/feedbackReport/allStudents/' + ${fb.id}}" class="btn bg-soft-dark text-dark border-0 w-100 py-2 fw-bold rounded-3 hover-lift">
+                                                <i class="bi bi-file-earmark-pdf me-1"></i> RAW PDF
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -85,65 +98,36 @@
                 </div>
             </div>
 
-            <div th:if="${#lists.isEmpty(programFeedbacks[assign.program.id])}" class="col-12 text-center py-4">
-                <div class="bg-white rounded-4 p-5 shadow-sm border border-dashed">
-                    <i class="bi bi-inbox text-light display-1"></i>
-                    <p class="text-muted mt-2">No pedagogical feedback cycles found for this program.</p>
+            <div th:if="${#lists.isEmpty(programFeedbacks[assign.program.id])}" class="col-12">
+                <div class="bg-white rounded-4 p-5 text-center border-dashed border-2 border-muted opacity-50">
+                    <i class="bi bi-folder-x display-4 text-muted"></i>
+                    <p class="fw-bold text-muted mt-3">No pedagogical cycles detected for this training program.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
-        :root {
-            --primary: #4361ee; --accent: #7209b7; --dark: #1e293b;
-            --soft-blue: #f0f3ff; --soft-success: #ecfdf5; --soft-dark: #f1f5f9;
-        }
-
-        body { background: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--dark); }
-
-        .fw-800 { font-weight: 800; }
-        .shadow-xs { box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-
-        /* Glass Hero Section */
-        .glass-hero {
-            background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
-            border-radius: 30px;
-            position: relative;
-        }
-
-        /* Icon Box */
-        .icon-box-sm {
-            width: 40px; height: 40px; border-radius: 10px;
-            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
-        }
-
-        /* Feedback Card */
-        .feedback-card {
-            border: 1px solid rgba(0,0,0,0.05);
-            transition: 0.3s ease;
-        }
-        .feedback-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important;
-        }
-
-        /* Indicators */
-        .dot-indicator { width: 10px; height: 10px; border-radius: 50%; }
-
-        /* Modern Buttons */
-        .btn { border-radius: 12px; font-weight: 700; font-size: 0.8rem; transition: 0.3s; text-transform: uppercase; letter-spacing: 0.5px; }
-        .btn-analytics { background: var(--primary); border: none; }
+        body { background-color: #f4f7fa; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .ls-1 { letter-spacing: 1px; }
+        .ls-n1 { letter-spacing: -1px; }
+        .backdrop-blur { backdrop-filter: blur(10px); }
+        .bg-soft-success { background-color: #eefdf5; }
+        .bg-soft-dark { background-color: #f1f5f9; }
         
-        .btn-soft-success { background: var(--soft-success); color: #10b981; border: none; }
-        .btn-soft-success:hover { background: #10b981; color: white; }
+        .feedback-card { transition: all 0.3s cubic-bezier(.25,.8,.25,1); }
+        .feedback-card:hover { transform: translateY(-8px); box-shadow: 0 1.5rem 4rem rgba(0,0,0,.1) !important; }
         
-        .btn-soft-dark { background: var(--soft-dark); color: var(--dark); border: none; }
-        .btn-light-soft { background: var(--soft-blue); color: var(--primary); border: none; }
+        .pulse-indicator { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
 
-        .bg-soft-primary { background: var(--soft-blue); }
-        .transition-hover { cursor: pointer; }
+        .hover-lift:hover { filter: brightness(0.95); transform: translateY(-1px); }
+        .border-dashed { border-style: dashed !important; }
+        
+        @media (max-width: 768px) {
+            .glass-hero { padding: 2rem !important; }
+            .display-4 { font-size: 2.2rem; }
+        }
     </style>
 </main>
 </body>

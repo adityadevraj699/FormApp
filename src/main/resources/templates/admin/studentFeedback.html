@@ -1,108 +1,135 @@
-<html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{Adminbase::layout(~{::main})}">
-
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{Adminbase::layout(~{::main})}">
 <body>
-<main class="container my-4">
-<link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+<main class="container-fluid px-md-5 py-4">
+
+    <div class="row mb-5 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-dark mb-1">
+                <i class="bi bi-person-check-fill text-primary me-2"></i>Student Feedback Insights
+            </h2>
+            <p class="text-muted small">Grouped by Training Programs and their respective Feedback Phases.</p>
+        </div>
+        <div class="col-md-4 text-md-end d-print-none">
+            <button onclick="window.print()" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
+                <i class="bi bi-printer me-2"></i>Print Global Overview
+            </button>
+        </div>
+    </div>
+
+    <div class="container-fluid p-0">
+        
+        <div th:each="entry : ${groupedFeedbacks}" class="program-wrapper mb-5">
+            
+            <div class="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden">
+                <div class="card-header bg-dark text-white py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-mortarboard-fill me-2 text-warning"></i>
+                        <span th:text="${entry.key.trainingProgram}">Program Name</span>
+                    </h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-secondary rounded-pill fw-normal">Batch: [[${entry.key.year}]] Year</span>
+                        <span class="badge bg-primary rounded-pill">ID: #EP-[[${entry.key.id}]]</span>
+                    </div>
+                </div>
+
+                <div class="card-body bg-light-subtle p-4">
+                    
+                    <div th:each="feedback : ${entry.value}" class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden feedback-card">
+                        
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-0">
+                            <div class="d-flex align-items-center flex-grow-1" 
+                                 data-bs-toggle="collapse" 
+                                 th:data-bs-target="'#collapse' + ${feedback.id}" 
+                                 style="cursor: pointer;">
+                                
+                                <div class="bg-soft-primary text-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-stack"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark">
+                                        Phase: <span class="text-primary" th:text="${feedback.feedbackPhase.phaseName}">Phase Name</span>
+                                    </h6>
+                                    <small class="text-muted">Audit Tenure: [[${feedback.startDate}]] to [[${feedback.endDate}]]</small>
+                                </div>
+                            </div>
+
+                            <div class="ms-3 d-print-none">
+                                <a th:href="@{'/admin/feedbackReport/allStudents/' + ${feedback.id}}" 
+                                   class="btn btn-success btn-sm rounded-pill px-3 shadow-sm">
+                                    <i class="bi bi-cloud-arrow-down-fill me-1"></i> Phase Results PDF
+                                </a>
+                            </div>
+                        </div>
+
+                        <div th:id="'collapse' + ${feedback.id}" class="collapse show">
+                            <div class="card-body p-0 border-top">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="bg-light text-muted small text-uppercase">
+                                            <tr>
+                                                <th class="ps-4 py-3">Student Info</th>
+                                                <th class="py-3 text-center">Batch Details</th>
+                                                <th class="py-3 text-center">Contact</th>
+                                                <th class="pe-4 py-3 text-end">Operations</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="student : ${feedbackStudentsMap[feedback.id]}" class="border-light">
+                                                <td class="ps-4">
+                                                    <div class="fw-bold text-dark" th:text="${student.name}">Student Name</div>
+                                                    <small class="text-muted">Roll No: [[${student.rollNo}]]</small>
+                                                </td>
+                                                <td class="text-center fw-medium">
+                                                    <span class="badge bg-light text-dark border fw-normal px-2">[[${student.branch}]]</span><br>
+                                                    <small class="text-muted">[[${student.year}]] Year</small>
+                                                </td>
+                                                <td class="text-center small text-secondary" th:text="${student.contactNo}">Contact</td>
+                                                <td class="pe-4 text-end">
+                                                    <div class="btn-group shadow-sm rounded-pill overflow-hidden bg-white border">
+                                                        <a th:href="@{'/admin/studentFeedback/detail/' + ${student.id} + '/' + ${feedback.id}}" 
+                                                           class="btn btn-sm btn-white text-primary border-end px-3">
+                                                            <i class="bi bi-eye"></i> View
+                                                        </a>
+                                                        <a th:href="@{'/admin/studentFeedbackReport/detail/' + ${student.id} + '/' + ${feedback.id}}" 
+                                                           class="btn btn-sm btn-white text-danger px-3">
+                                                            <i class="bi bi-file-pdf"></i> PDF
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr th:if="${#lists.isEmpty(feedbackStudentsMap[feedback.id])}">
+                                                <td colspan="4" class="text-center py-5 text-muted small">
+                                                    <i class="bi bi-inbox fs-3 d-block mb-1 opacity-50"></i>
+                                                    No submissions recorded for this phase yet.
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div> </div>
+            </div> </div>
+
+    </div>
+
     <style>
-        .feedback-card {
-            margin-bottom: 1rem;
-        }
-        .feedback-header {
-            cursor: pointer;
+        body { background-color: #f6f8fb; font-family: 'Inter', sans-serif; }
+        .rounded-4 { border-radius: 1rem !important; }
+        .bg-soft-primary { background-color: #eef2ff; }
+        .bg-light-subtle { background-color: #fafbfc; }
+        .btn-white { background-color: #fff; border: none; font-size: 0.8rem; }
+        .btn-white:hover { background-color: #f8f9fa; }
+        .program-wrapper { border-left: 4px solid #0d6efd; padding-left: 5px; }
+        .table thead th { font-weight: 600; font-size: 0.75rem; letter-spacing: 0.5px; border: none; }
+        
+        @media print {
+            .collapse { display: block !important; height: auto !important; }
+            .btn-group, .d-print-none, .btn { display: none !important; }
+            .card { box-shadow: none !important; border: 1px solid #eee !important; }
         }
     </style>
-
-<div class="container mt-5">
-    <h2 class="mb-4 text-center">Student Feedback</h2>
-
-<div th:each="feedback : ${feedbacks}" class="card feedback-card">
-
-    <!-- Card header with left (toggle) + right (button) -->
-    <div class="d-flex justify-content-between align-items-center card-header">
-
-        <!-- Left side: feedback info acts as collapse toggle -->
-        <div class="feedback-header flex-grow-1"
-             data-bs-toggle="collapse"
-             th:data-bs-target="'#collapse'+${feedback.id}"
-             aria-expanded="false"
-             th:aria-controls="'collapse'+${feedback.id}"
-             style="cursor: pointer;">
-             
-            <strong th:text="${feedback.program.trainingProgram}">Program Name</strong> - 
-            Phase: <span th:text="${feedback.feedbackPhase.phaseName}">Phase Name</span> 
-            | From: <span th:text="${feedback.startDate}">Start</span> 
-            To: <span th:text="${feedback.endDate}">End</span>
-        </div>
-
-        <!-- Right side: Download button (NOT part of collapse toggle) -->
-        <div class="ms-3">
-            <a th:href="@{'/admin/feedbackReport/allStudents/' + ${feedback.id}}"
-               class="btn btn-sm btn-success">
-                Download All Students PDF
-            </a>
-        </div>
-    </div>
-
-    <!-- Collapsible section -->
-    <div th:id="'collapse'+${feedback.id}" class="collapse">
-        <div class="card-body p-0">
-            <table class="table table-striped table-hover mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Roll No</th>
-                        <th>Name</th>
-                        <th>Branch</th>
-                        <th>Year</th>
-                        <th>Contact</th>
-                        <th>View Feedback</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="student : ${feedbackStudentsMap[feedback.id]}">
-                        <td th:text="${student.rollNo}">RollNo</td>
-                        <td th:text="${student.name}">Name</td>
-                        <td th:text="${student.branch}">Branch</td>
-                        <td th:text="${student.year}">Year</td>
-                        <td th:text="${student.contactNo}">Contact</td>
-                        <td>
-                            <a th:href="@{'/admin/studentFeedback/detail/' + ${student.id} + '/' + ${feedback.id}}" 
-                               class="btn btn-sm btn-primary mb-1">
-                                View
-                            </a>
-                            <a th:href="@{'/admin/studentFeedbackReport/detail/' + ${student.id} + '/' + ${feedback.id}}" 
-                               class="btn btn-sm btn-primary mb-1">
-                                Report PDF
-                            </a>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(feedbackStudentsMap[feedback.id])}">
-                        <td colspan="6" class="text-center">No feedback submitted yet.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-</div>
-
-<script th:src="@{/js/bootstrap.bundle.min.js}"></script>
-<script>
-    // Optional: make only one collapse open at a time
-    document.addEventListener("DOMContentLoaded", function() {
-        const feedbackCollapses = document.querySelectorAll('.collapse');
-        feedbackCollapses.forEach(collapseEl => {
-            collapseEl.addEventListener('show.bs.collapse', () => {
-                feedbackCollapses.forEach(other => {
-                    if(other !== collapseEl) {
-                        bootstrap.Collapse.getInstance(other)?.hide();
-                    }
-                });
-            });
-        });
-    });
-</script>
 
 </main>
 </body>

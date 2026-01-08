@@ -59,4 +59,11 @@ public interface StudentFeedbackAnswerRepository extends JpaRepository<StudentFe
  // Sahi tarika: FeedbackAnalysis table ka use karke count nikalna
     @Query("SELECT COUNT(fa) FROM FeedbackAnalysis fa WHERE fa.feedback.id = :fbId AND fa.sentimentLabel = :sentiment")
     long countBySentimentAndFeedback(@Param("fbId") Long fbId, @Param("sentiment") String sentiment);
+
+ // Sahi Query: Yeh check karega ki total kitne UNIQUE students ne feedback diya hai
+    @Query("SELECT COUNT(DISTINCT s.student.id) FROM StudentFeedbackAnswer s")
+    long countUniqueStudents();
+
+    @Query("SELECT COUNT(DISTINCT s.student.id, s.feedback.id) FROM StudentFeedbackAnswer s")
+    long countTotalSubmittedFeedbacks();
 }

@@ -1,103 +1,178 @@
-<html th:replace="~{Teacher/Teacherbase::layout(~{::main})}">
+<!DOCTYPE html>
+<html th:replace="~{Teacher/Teacherbase::layout(~{::main})}" xmlns:th="http://www.thymeleaf.org">
 <body>
-<main class="container my-5">
+<main class="container-fluid px-4 py-5">
 
-    <h2 class="mb-3">Edit Profile</h2>
-
-    <!-- Flash Messages -->
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-dark mb-1">
+                <i class="bi bi-person-gear text-success me-2"></i>Update Faculty Profile
+            </h2>
+            <p class="text-muted">Ensure your academic and professional details are up-to-date for accurate AI analytics.</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a th:href="@{/Teacher/ViewProfile}" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="bi bi-arrow-left me-2"></i>Back to Portfolio
+            </a>
+        </div>
+    </div>
 
     <form th:action="@{/Teacher/EditProfile}" method="post" enctype="multipart/form-data" th:object="${teacher}">
-        <div class="row">
-            <!-- Left Column: Profile Image -->
-            <div class="col-md-4 text-center">
-                <img th:src="${teacher.profileImage != null ? teacher.profileImage : '/images/default-avatar.png'}"
-                     alt="Profile Image"
-                     class="img-thumbnail mb-3"
-                     style="width: 200px; height: 200px; object-fit: cover;">
-
-                <input type="file" name="profileImageFile" class="form-control">
+        <div class="row g-4">
+            
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 text-center p-4 sticky-lg-top" style="top: 100px;">
+                    <div class="card-body">
+                        <div class="position-relative d-inline-block mb-4">
+                            <img id="imagePreview" 
+                                 th:src="${teacher.profileImage != null ? teacher.profileImage : 'https://ui-avatars.com/api/?name=' + teacher.name + '&background=065f46&color=fff&size=200'}"
+                                 alt="Profile"
+                                 class="rounded-circle border border-4 border-light shadow-sm object-fit-cover"
+                                 style="width: 200px; height: 200px;">
+                            
+                            <label for="profileImageFile" class="position-absolute bottom-0 end-0 bg-success text-white rounded-circle p-3 border border-4 border-white cursor-pointer shadow-lg transition-hover" title="Change Photo">
+                                <i class="bi bi-camera-fill fs-5"></i>
+                                <input type="file" id="profileImageFile" name="profileImageFile" class="d-none" onchange="previewImage(this)">
+                            </label>
+                        </div>
+                        <h5 class="fw-bold mb-1" th:text="${teacher.name}">Faculty Name</h5>
+                        <p class="badge bg-soft-success text-success rounded-pill px-3" th:text="${teacher.designation}">Designation</p>
+                        
+                        <div class="mt-4 p-3 bg-light rounded-4 text-start">
+                            <h6 class="small fw-bold text-muted text-uppercase mb-2">Photo Guidelines</h6>
+                            <ul class="list-unstyled mb-0 x-small text-muted">
+                                <li class="mb-1"><i class="bi bi-check2-circle text-success me-1"></i> Clear professional headshot</li>
+                                <li class="mb-1"><i class="bi bi-check2-circle text-success me-1"></i> Aspect ratio 1:1 (Square)</li>
+                                <li><i class="bi bi-check2-circle text-success me-1"></i> Max file size 2MB (JPG/PNG)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Right Column: Info -->
-            <div class="col-md-8">
-                <div class="mb-3">
-                    <label class="form-label">Full Name</label>
-                    <input type="text" th:field="*{name}" class="form-control" required>
-                </div>
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="progress rounded-0" style="height: 4px;">
+                        <div class="progress-bar bg-success" style="width: 100%"></div>
+                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Contact No</label>
-                    <input type="text" th:field="*{contactNo}" class="form-control">
-                </div>
+                    <div class="card-body p-4 p-md-5">
+                        <div class="d-flex align-items-center mb-4">
+                            <span class="badge bg-success rounded-circle p-2 me-3"><i class="bi bi-briefcase fs-5"></i></span>
+                            <h5 class="mb-0 fw-bold">Professional Credentials</h5>
+                        </div>
+                        
+                        <div class="row g-3 mb-5">
+                            <div class="col-md-12">
+                                <label class="form-label small fw-bold text-muted">Full Name</label>
+                                <input type="text" th:field="*{name}" class="form-control rounded-3 py-2 bg-light-subtle" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Academic Department</label>
+                                <input type="text" th:field="*{department}" class="form-control rounded-3 py-2" placeholder="e.g. Computer Science">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Current Designation</label>
+                                <input type="text" th:field="*{designation}" class="form-control rounded-3 py-2" placeholder="e.g. Assistant Professor">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Highest Qualification</label>
+                                <input type="text" th:field="*{qualification}" class="form-control rounded-3 py-2" placeholder="e.g. Ph.D in AI">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Total Experience (Years)</label>
+                                <input type="number" th:field="*{experience}" class="form-control rounded-3 py-2" min="0">
+                            </div>
+                        </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Department</label>
-                    <input type="text" th:field="*{department}" class="form-control">
-                </div>
+                        <div class="d-flex align-items-center mb-4 pt-4 border-top">
+                            <span class="badge bg-primary rounded-circle p-2 me-3"><i class="bi bi-person-lines-fill fs-5"></i></span>
+                            <h5 class="mb-0 fw-bold">Personal & Contact Information</h5>
+                        </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Designation</label>
-                    <input type="text" th:field="*{designation}" class="form-control">
-                </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Contact Number</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="bi bi-telephone"></i></span>
+                                    <input type="text" th:field="*{contactNo}" class="form-control border-start-0 rounded-end-3 py-2" placeholder="+91 00000 00000">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Gender</label>
+                                <select th:field="*{gender}" class="form-select rounded-3 py-2">
+                                    <option value="">-- Select --</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-muted">Correspondence Address</label>
+                                <textarea th:field="*{address}" class="form-control rounded-3" rows="3" placeholder="Enter your full official/residential address"></textarea>
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Qualification</label>
-                    <input type="text" th:field="*{qualification}" class="form-control">
+                    <div class="card-footer bg-light border-0 p-4 text-end">
+                        <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold shadow transition-hover">
+                            <i class="bi bi-cloud-arrow-up me-2"></i>Apply Changes
+                        </button>
+                    </div>
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Experience (Years)</label>
-                    <input type="number" th:field="*{experience}" class="form-control" min="0">
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Gender</label>
-                    <select th:field="*{gender}" class="form-select">
-                        <option value="">-- Select --</option>
-                        <option value="Male" th:selected="${teacher.gender == 'Male'}">Male</option>
-                        <option value="Female" th:selected="${teacher.gender == 'Female'}">Female</option>
-                        <option value="Other" th:selected="${teacher.gender == 'Other'}">Other</option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Address</label>
-                    <textarea th:field="*{address}" class="form-control" rows="3"></textarea>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Save Changes</button>
-                <a th:href="@{/Teacher/ViewProfile}" class="btn btn-secondary">Cancel</a>
             </div>
         </div>
     </form>
 
-    <!-- Flash message (SweetAlert) -->
-    <input type="hidden" id="serverMessage" 
-           th:value="${success != null ? success : (error != null ? error : '')}" />
+    <style>
+        body { background-color: #f4f7fa; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .rounded-4 { border-radius: 1.25rem !important; }
+        .bg-soft-success { background-color: #eefdf5; }
+        .object-fit-cover { object-fit: cover; }
+        .cursor-pointer { cursor: pointer; }
+        .transition-hover { transition: all 0.3s ease; }
+        .transition-hover:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .x-small { font-size: 11px; }
+        .ls-1 { letter-spacing: 0.5px; }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.1);
+            background-color: #fff;
+        }
+
+        .input-group-text { color: #6c757d; }
+    </style>
+
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imagePreview').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+
+    <input type="hidden" id="serverMessage" th:value="${success != null ? success : (error != null ? error : '')}" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const serverMessage = document.getElementById("serverMessage")?.value;
-      if (serverMessage && serverMessage.trim() !== "") {
-        const lowerMsg = serverMessage.toLowerCase();
-        const isError = lowerMsg.includes('invalid') || 
-                        lowerMsg.includes('failed') || 
-                        lowerMsg.includes('error') || 
-                        lowerMsg.includes('not found');
-        Swal.fire({
-          title: isError ? 'Error' : 'Success',
-          text: serverMessage,
-          icon: isError ? 'error' : 'success',
-          confirmButtonColor: '#2575fc',
-          background: '#f9f9f9',
-          color: '#333',
-          timer: 4000,
-          timerProgressBar: true
+        document.addEventListener("DOMContentLoaded", function () {
+            const serverMessage = document.getElementById("serverMessage")?.value;
+            if (serverMessage && serverMessage.trim() !== "") {
+                const isError = serverMessage.toLowerCase().includes('error') || serverMessage.toLowerCase().includes('failed');
+                Swal.fire({
+                    title: isError ? 'Oops!' : 'Updated',
+                    text: serverMessage,
+                    icon: isError ? 'error' : 'success',
+                    confirmButtonColor: '#065f46',
+                    timer: 3500,
+                    timerProgressBar: true
+                });
+            }
         });
-      }
-    });
     </script>
 
 </main>
