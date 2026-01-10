@@ -34,6 +34,8 @@ public interface EnrolledProgramRepository extends JpaRepository<EnrolledProgram
 
 	long countByProgramAndStatus(Program p, ProgramStatus approved);
 
+	List<EnrolledProgram> findByStudent(Student student);
+
 
 
 }

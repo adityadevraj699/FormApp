@@ -1,65 +1,158 @@
-<html th:replace="~{Adminbase::layout(~{::main})}">
+<!DOCTYPE html>
+<html th:replace="~{Adminbase::layout(~{::main})}" xmlns:th="http://www.thymeleaf.org">
 <body>
-<main class="container mt-4">
-    <h2>Registered Teachers</h2>
+<main class="container-fluid px-4 py-5 animate__animated animate__fadeIn">
 
-    <!-- Filter & Search Form -->
-    <form th:action="@{/admin/teacher}" method="get" class="row g-3 mb-3">
-        <div class="col-auto">
-            <select name="status" class="form-select">
-                <option value="ALL" th:selected="${selectedStatus == 'ALL'}">All</option>
-                <option value="APPROVED" th:selected="${selectedStatus == 'APPROVED'}">APPROVED</option>
-                <option value="PENDING" th:selected="${selectedStatus == 'PENDING'}">PENDING</option>
-                <option value="DISABLED" th:selected="${selectedStatus == 'DISABLED'}">DISABLED</option>
-            </select>
+    <div class="row mb-5 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-dark mb-1">
+                <i class="bi bi-person-badge-fill text-success me-2"></i>Faculty Management Hub
+            </h2>
+            <p class="text-muted small">Manage faculty credentials, approval status, and performance indexing.</p>
         </div>
-        <div class="col-auto">
-            <input type="text" name="employeeId" placeholder="Search Employee ID"
-                   class="form-control" th:value="${searchEmployeeId}">
+        <div class="col-md-4 text-md-end">
+            <a th:href="@{/admin/leaderboard}" class="btn btn-warning rounded-pill px-4 fw-bold shadow-sm py-2">
+                <i class="bi bi-trophy-fill me-2"></i>Faculty Leaderboard Rank
+            </a>
         </div>
-        <div class="col-auto">
-            <button type="submit" class="btn btn-primary">Filter</button>
-        </div>
-    </form>
+    </div>
 
-    <!-- Teacher Table -->
-    <table border="1" class="table table-striped">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Employee ID</th>
-                <th>Email</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="teacher : ${teachers}">
-                <td th:text="${teacher.name}"></td>
-                <td th:text="${teacher.employeeId}"></td>
-                <td th:text="${teacher.email}"></td>
-                <td th:text="${teacher.status}"></td>
-                <td class="d-flex gap-2">
-                    <!-- Update Status -->
-                    <form th:action="@{'/admin/teacher/updateStatus/' + ${teacher.id}}" method="post" style="display:inline-block;">
-                        <select name="status" class="form-select form-select-sm">
-                            <option th:value="PENDING" th:selected="${teacher.status == 'PENDING'}">PENDING</option>
-                            <option th:value="APPROVED" th:selected="${teacher.status == 'APPROVED'}">APPROVED</option>
-                            <option th:value="DISABLED" th:selected="${teacher.status == 'DISABLED'}">DISABLED</option>
-                        </select>
-                        <button type="submit" class="btn btn-sm btn-primary mt-1">Update</button>
-                    </form>
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+            <div class="d-flex align-items-center">
+                <span class="badge bg-soft-success text-success p-2 rounded-circle me-3">
+                    <i class="bi bi-funnel-fill fs-5"></i>
+                </span>
+                <h5 class="mb-0 fw-bold">Search & Filter Intelligence</h5>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <form th:action="@{/admin/teacher}" method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="small fw-bold text-muted mb-2">Account Status</label>
+                    <select name="status" class="form-select rounded-3 border-light-subtle shadow-none">
+                        <option value="ALL" th:selected="${selectedStatus == 'ALL'}">View All Members</option>
+                        <option value="APPROVED" th:selected="${selectedStatus == 'APPROVED'}">✅ APPROVED</option>
+                        <option value="PENDING" th:selected="${selectedStatus == 'PENDING'}">⏳ PENDING</option>
+                        <option value="DISABLED" th:selected="${selectedStatus == 'DISABLED'}">🚫 DISABLED</option>
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="small fw-bold text-muted mb-2">Employee Identification</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-light-subtle"><i class="bi bi-search"></i></span>
+                        <input type="text" name="employeeId" class="form-control rounded-end-3 border-light-subtle" 
+                               placeholder="Enter Employee ID..." th:value="${searchEmployeeId}">
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold py-2 shadow-sm">
+                        Apply Filters <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-                    <!-- Details Button -->
-<a th:href="@{'/admin/teacher/details/' + ${teacher.id}}" 
-   class="btn btn-info text-white"
-   style="height: 38px; display: flex; align-items: center; justify-content: center;">
-    Details
-</a>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted small text-uppercase">
+                    <tr>
+                        <th class="ps-4 py-3">Faculty Information</th>
+                        <th class="py-3">Employee ID</th>
+                        <th class="py-3 text-center">Status</th>
+                        <th class="py-3">Permission Control</th>
+                        <th class="pe-4 py-3 text-end">Audit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="teacher : ${teachers}" class="border-light">
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm me-3 rounded-circle overflow-hidden shadow-xs d-flex align-items-center justify-content-center bg-soft-primary" 
+                                     style="width: 45px; height: 45px; border: 2px solid #fff;">
+                                    
+                                    <img th:if="${teacher.profileImage != null and !teacher.profileImage.isEmpty()}" 
+                                         th:src="@{${teacher.profileImage}}" 
+                                         alt="Profile" 
+                                         style="width: 100%; height: 100%; object-fit: cover;">
+                                    
+                                    <span th:unless="${teacher.profileImage != null and !teacher.profileImage.isEmpty()}" 
+                                          class="text-primary fw-bold" 
+                                          th:text="${teacher.name.substring(0,1)}">T</span>
+                                </div>
+                                
+                                <div>
+                                    <div class="fw-bold text-dark" th:text="${teacher.name}">Teacher Name</div>
+                                    <div class="small text-muted x-small" th:text="${teacher.email}">email@domain.com</div>
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <td>
+                            <span class="badge bg-light text-dark border fw-normal" th:text="${teacher.employeeId}">ID-123</span>
+                        </td>
+
+                        <td class="text-center">
+                            <span th:if="${teacher.status.toString() == 'APPROVED'}" class="status-badge bg-soft-success text-success">APPROVED</span>
+                            <span th:if="${teacher.status.toString() == 'PENDING'}" class="status-badge bg-soft-warning text-warning">PENDING</span>
+                            <span th:if="${teacher.status.toString() == 'DISABLED'}" class="status-badge bg-soft-danger text-danger">DISABLED</span>
+                        </td>
+
+                        <td>
+                            <form th:action="@{'/admin/teacher/updateStatus/' + ${teacher.id}}" method="post" class="d-flex gap-2 align-items-center">
+                                <select name="status" class="form-select form-select-sm rounded-pill border-light-subtle shadow-none" style="width: 130px; font-size: 0.85rem;">
+                                    <option th:value="PENDING" th:selected="${teacher.status.toString() == 'PENDING'}">PENDING</option>
+                                    <option th:value="APPROVED" th:selected="${teacher.status.toString() == 'APPROVED'}">APPROVED</option>
+                                    <option th:value="DISABLED" th:selected="${teacher.status.toString() == 'DISABLED'}">DISABLED</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-outline-success rounded-circle shadow-none" title="Update Status">
+                                    <i class="bi bi-check2"></i>
+                                </button>
+                            </form>
+                        </td>
+
+                        <td class="pe-4 text-end">
+                            <a th:href="@{'/admin/teacher/details/' + ${teacher.id}}" 
+                               class="btn btn-sm btn-white border rounded-pill px-3 shadow-xs">
+                                <i class="bi bi-eye-fill me-1 text-info"></i> View Audit
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <style>
+        body { background-color: #f8f9fc; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .rounded-4 { border-radius: 1rem !important; }
+        .bg-soft-success { background-color: #ecfdf5; }
+        .bg-soft-warning { background-color: #fffbeb; }
+        .bg-soft-danger { background-color: #fef2f2; }
+        .bg-soft-primary { background-color: #eef2ff; }
+        
+        .status-badge {
+            padding: 0.35rem 1rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .x-small { font-size: 0.75rem !important; }
+        .shadow-xs { box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-white { background-color: #fff; transition: 0.2s; }
+        .btn-white:hover { background-color: #f1f5f9; }
+        
+        .table thead th { border-bottom: none; color: #64748b; }
+        .card { border: 1px solid rgba(0,0,0,0.05); }
+        
+        tr:hover { background-color: #fcfdfe !important; }
+    </style>
+
 </main>
 </body>
 </html>

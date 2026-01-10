@@ -30,5 +30,7 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
 
 	List<Feedback> findByProgramIdOrderByStartDateAsc(Long id);
 
+	long countByProgramId(Long id);
+
 
 }

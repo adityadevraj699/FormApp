@@ -10,9 +10,11 @@ import org.apache.poi.ss.usermodel.CellType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
@@ -57,6 +59,26 @@ import com.myproject.FormApp.Repository.TeacherAssignRepository;
 import com.myproject.FormApp.Repository.TeacherRepository;
 import com.myproject.FormApp.Service.EmailService;
 
+
+import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.element.*;
+import com.itextpdf.layout.properties.HorizontalAlignment;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.labels.StandardCategoryItemLabelGenerator;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.SpiderWebPlot;
+import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.chart.renderer.category.LineAndShapeRenderer;
+import org.jfree.data.category.DefaultCategoryDataset;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
@@ -76,6 +98,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -285,7 +308,7 @@ public String viewProgramAnalysis(@PathVariable("programId") Long programId, Mod
     return "admin/AnalysisReport"; 
 }
    
- @GetMapping("/export-master-list")
+@GetMapping("/export-master-list")
 public ResponseEntity<byte[]> exportMasterList() {
     try (Workbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook();
          ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -294,12 +317,14 @@ public ResponseEntity<byte[]> exportMasterList() {
 
         // 1. Styling
         org.apache.poi.ss.usermodel.CellStyle headerStyle = createHeaderStyle(workbook);
+        org.apache.poi.ss.usermodel.CellStyle percentStyle = workbook.createCellStyle();
+        percentStyle.setDataFormat(workbook.createDataFormat().getFormat("0.00%"));
 
-        // 2. Updated Headers for Professional Audit
+        // 2. Updated Headers with Sentiment Percentages
         String[] columns = {
-            "ID", "Program Name", "Teacher", "Timeline", 
-            "Total Modules", "Total Topics", "Enrolled Students", 
-            "Feedback Phases", "Avg Rating (Global)", "Majority Sentiment"
+            "Program ID", "Program Name", "Teacher", "Timeline", 
+            "Enrolled", "Phases", "Global KPI (Avg)", 
+            "Positive %", "Neutral %", "Negative %", "Majority Sentiment"
         };
         
         Row headerRow = sheet.createRow(0);
@@ -313,7 +338,7 @@ public ResponseEntity<byte[]> exportMasterList() {
         List<TeacherAssign> assignments = teacherAssignRepo.findAll();
         List<FeedbackAnalysis> allAnalyses = feedbackAnalysisRepo.findAll();
         List<EnrolledProgram> allEnrollments = enrolledProgramRepo.findAll();
-        List<Feedback> allFeedbacks = feedRepo.findAll(); // feedbackRepository instance
+        List<Feedback> allFeedbacks = feedRepo.findAll();
 
         int rowIdx = 1;
         for (TeacherAssign assign : assignments) {
@@ -321,62 +346,63 @@ public ResponseEntity<byte[]> exportMasterList() {
             Program program = assign.getProgram();
             Long pId = program.getId();
 
-            // Basic Info
+            // Basic Information
             row.createCell(0).setCellValue(pId);
             row.createCell(1).setCellValue(program.getTrainingProgram());
             row.createCell(2).setCellValue(assign.getTeacher().getName());
             row.createCell(3).setCellValue(program.getStartDate() + " to " + program.getEndDate());
 
-            // --- CURRICULUM STATS ---
-            // Modules Count
-            int moduleCount = program.getModules() != null ? program.getModules().size() : 0;
-            row.createCell(4).setCellValue(moduleCount);
-
-            // Total Topics Count (Nested in Modules)
-            long topicCount = program.getModules().stream()
-                    .flatMap(m -> m.getTopics().stream())
-                    .count();
-            row.createCell(5).setCellValue(topicCount);
-
-            // --- ENROLLMENT STATS ---
+            // Enrollment & Phases
             long studentCount = allEnrollments.stream()
-                    .filter(e -> e.getProgram().getId().equals(pId))
-                    .count();
-            row.createCell(6).setCellValue(studentCount);
-
-            // --- FEEDBACK PHASES COUNT ---
+                    .filter(e -> e.getProgram().getId().equals(pId)).count();
             long phaseCount = allFeedbacks.stream()
-                    .filter(f -> f.getProgram().getId().equals(pId))
-                    .count();
-            row.createCell(7).setCellValue(phaseCount);
+                    .filter(f -> f.getProgram().getId().equals(pId)).count();
+            
+            row.createCell(4).setCellValue(studentCount);
+            row.createCell(5).setCellValue(phaseCount);
 
-            // --- AI & KPI ANALYSIS ---
-            List<FeedbackAnalysis> programData = allAnalyses.stream()
+            // --- AI ANALYTICS DATA ---
+            List<FeedbackAnalysis> progAnalyses = allAnalyses.stream()
                     .filter(a -> a.getFeedback().getProgram().getId().equals(pId))
                     .collect(Collectors.toList());
 
-            if (!programData.isEmpty()) {
-                // Global Avg Rating (Sum of ratings / Total questions analysed)
-                double sumOfRatings = programData.stream()
+            if (!progAnalyses.isEmpty()) {
+                // Global KPI Avg
+                double programAvg = progAnalyses.stream()
                         .filter(a -> a.getAvgNumeric() != null)
                         .mapToDouble(FeedbackAnalysis::getAvgNumeric)
-                        .sum();
-                double globalAvg = sumOfRatings / programData.size();
+                        .average().orElse(0.0);
+                row.createCell(6).setCellValue(Double.parseDouble(String.format("%.2f", programAvg)));
 
-                // Majority Sentiment Logic
-                Map<String, Long> counts = programData.stream()
-                        .filter(a -> a.getSentimentLabel() != null)
-                        .collect(Collectors.groupingBy(a -> a.getSentimentLabel().toUpperCase(), Collectors.counting()));
+                // Sentiment Calculation
+                double totalAnalyses = progAnalyses.size();
+                long pos = progAnalyses.stream().filter(a -> "POSITIVE".equalsIgnoreCase(a.getSentimentLabel())).count();
+                long neu = progAnalyses.stream().filter(a -> "NEUTRAL".equalsIgnoreCase(a.getSentimentLabel())).count();
+                long neg = progAnalyses.stream().filter(a -> "NEGATIVE".equalsIgnoreCase(a.getSentimentLabel())).count();
 
-                String majoritySentiment = counts.entrySet().stream()
-                        .max(Map.Entry.comparingByValue())
-                        .map(Map.Entry::getKey).orElse("NEUTRAL");
+                // 🟢 Percentage Calculation (e.g. 0.85 for 85%)
+                Cell cellPos = row.createCell(7);
+                cellPos.setCellValue(pos / totalAnalyses);
+                cellPos.setCellStyle(percentStyle);
 
-                row.createCell(8).setCellValue(Double.parseDouble(String.format("%.2f", globalAvg)));
-                row.createCell(9).setCellValue(majoritySentiment);
+                Cell cellNeu = row.createCell(8);
+                cellNeu.setCellValue(neu / totalAnalyses);
+                cellNeu.setCellStyle(percentStyle);
+
+                Cell cellNeg = row.createCell(9);
+                cellNeg.setCellValue(neg / totalAnalyses);
+                cellNeg.setCellStyle(percentStyle);
+
+                // Majority Sentiment Label
+                String majority = (pos >= neu && pos >= neg) ? "POSITIVE" : (neu >= neg ? "NEUTRAL" : "NEGATIVE");
+                row.createCell(10).setCellValue(majority);
+
             } else {
-                row.createCell(8).setCellValue("N/A");
-                row.createCell(9).setCellValue("NO DATA");
+                row.createCell(6).setCellValue(0.00);
+                row.createCell(7).setCellValue(0);
+                row.createCell(8).setCellValue(0);
+                row.createCell(9).setCellValue(0);
+                row.createCell(10).setCellValue("NO DATA");
             }
         }
 
@@ -386,7 +412,7 @@ public ResponseEntity<byte[]> exportMasterList() {
         }
 
         workbook.write(out);
-        String filename = "EduInsight_Comprehensive_Report_" + LocalDate.now() + ".xlsx";
+        String filename = "EduInsight_Sentiment_Audit_" + LocalDate.now() + ".xlsx";
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
@@ -544,7 +570,7 @@ public String programDetail(
         return "redirect:/admin/curriculumTopic";
     }
 
-    // ---------------------- STUDENT ----------------------
+ // ---------------------- STUDENT ----------------------
     @GetMapping("/student")
     public String showStudent(
             @RequestParam(value = "status", required = false) String status,
@@ -556,23 +582,33 @@ public String programDetail(
         if (!isLoggedIn()) return redirectIfNotLoggedIn();
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("rollNo").ascending());
-        Page<Student> students;
+        Page<Student> studentsPage; // Rename kiya taaki confusion na ho
 
+        // Logic for filtering
         if ((status == null || status.equals("ALL")) && (rollNo == null || rollNo.isEmpty())) {
-            students = studentRepository.findAll(pageable);
+            studentsPage = studentRepository.findAll(pageable);
         } else if (status != null && !status.equals("ALL") && (rollNo == null || rollNo.isEmpty())) {
-            students = studentRepository.findByStatus(Student.Status.valueOf(status), pageable);
+            studentsPage = studentRepository.findByStatus(Student.Status.valueOf(status), pageable);
         } else if ((status == null || status.equals("ALL")) && rollNo != null && !rollNo.isEmpty()) {
-            students = studentRepository.findByRollNoContaining(rollNo, pageable);
+            studentsPage = studentRepository.findByRollNoContaining(rollNo, pageable);
         } else {
-            students = studentRepository.findByStatusAndRollNoContaining(Student.Status.valueOf(status), rollNo, pageable);
+            studentsPage = studentRepository.findByStatusAndRollNoContaining(Student.Status.valueOf(status), rollNo, pageable);
         }
 
-        model.addAttribute("students", students.getContent());
+        // --- Mukhya Badlav (Total Count Logic) ---
+        
+        // 1. Total Students based on current filter (Search/Status ke baad kitne bache)
+        model.addAttribute("totalFilteredStudents", studentsPage.getTotalElements()); 
+        
+        // 2. Absolute total in database (Bina kisi filter ke - Badge ke liye)
+        model.addAttribute("absoluteTotal", studentRepository.count());
+
+        model.addAttribute("students", studentsPage.getContent());
         model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", students.getTotalPages());
+        model.addAttribute("totalPages", studentsPage.getTotalPages());
         model.addAttribute("selectedStatus", status != null ? status : "ALL");
         model.addAttribute("searchRollNo", rollNo != null ? rollNo : "");
+
         return "admin/Student";
     }
     @PostMapping("/student/updateStatus/{id}")
@@ -592,14 +628,57 @@ public String programDetail(
         return "redirect:/admin/student";
     }
 
-    @GetMapping("/student/details/{id}")
-    public String showStudentDetails(@PathVariable Long id, Model model) {
-        if (!isLoggedIn()) return redirectIfNotLoggedIn();
+	@GetMapping("/student/details/{id}")
+public String showStudentDetails(@PathVariable Long id, Model model) {
+    if (!isLoggedIn()) return "redirect:/login";
 
-        Student student = studentRepository.findById(id).orElseThrow();
-        model.addAttribute("student", student);
-        return "admin/StudentDetails";
+    Student student = studentRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Student not found"));
+
+    List<EnrolledProgram> enrollments = enrolledProgramRepo.findByStudent(student);
+    
+    List<Map<String, Object>> programStats = new ArrayList<>();
+    int totalFeedbackCreatedForStudent = 0;
+    int totalFeedbackCompletedByStudent = 0;
+
+    for (EnrolledProgram enrollment : enrollments) {
+        // 🟢 SAFETY CHECK: Pehle Program nikalien
+        Program prog = enrollment.getProgram();
+        
+        if (prog != null) {
+            Map<String, Object> stat = new HashMap<>();
+            
+            // Yahan error tab aata hai agar trainingProgram field ka getter sahi na ho
+            stat.put("programName", prog.getTrainingProgram());
+
+            // A. Total Feedback Phases Created in this Program
+            long createdInProg = feedRepo.countByProgramId(prog.getId());
+            totalFeedbackCreatedForStudent += createdInProg;
+
+            // B. Feedback phases completed by THIS student
+            long completedInProg = answerRepo.countUniqueFeedbacksByProgramAndStudent(prog, student);
+            totalFeedbackCompletedByStudent += completedInProg;
+
+            stat.put("created", createdInProg);
+            stat.put("completed", completedInProg);
+            programStats.add(stat);
+        }
     }
+
+    double activityRate = (totalFeedbackCreatedForStudent > 0) 
+            ? ((double) totalFeedbackCompletedByStudent / totalFeedbackCreatedForStudent) * 100 
+            : 0;
+
+    model.addAttribute("student", student);
+    model.addAttribute("enrollments", enrollments);
+    model.addAttribute("programStats", programStats);
+    model.addAttribute("totalEnrolled", enrollments.size());
+    model.addAttribute("totalCreated", totalFeedbackCreatedForStudent);
+    model.addAttribute("totalCompleted", totalFeedbackCompletedByStudent);
+    model.addAttribute("activityRate", Math.round(activityRate));
+
+    return "admin/StudentDetails";
+}
 
     // ---------------------- TEACHER ----------------------
     @GetMapping("/teacher")
@@ -625,8 +704,126 @@ public String programDetail(
         model.addAttribute("searchEmployeeId", employeeId != null ? employeeId : "");
         return "admin/Teacher";
     }
+    
+@GetMapping("/leaderboard")
+public String showTeacherLeaderBoard(Model model) {
+    if (!isLoggedIn()) return "redirect:/";
 
-    @PostMapping("/teacher/updateStatus/{id}")
+    List<Teacher> allTeachers = teacherRepository.findByStatus(Teacher.Status.APPROVED);
+    List<Map<String, Object>> leaderboardData = new ArrayList<>();
+
+    for (Teacher teacher : allTeachers) {
+        Map<String, Object> stats = new HashMap<>();
+        List<TeacherAssign> assignments = teacherAssignRepo.findByTeacherId(teacher.getId());
+        
+        List<Map<String, Object>> programBreakdown = new ArrayList<>(); 
+        List<Map<String, Object>> cycleTimeline = new ArrayList<>();   
+        List<Map<String, Object>> participationTable = new ArrayList<>();
+        
+        List<Long> allFeedbackIds = new ArrayList<>();
+        long totalTeacherEnrolledStudents = 0;
+        
+        for (TeacherAssign ta : assignments) {
+            Program prog = ta.getProgram();
+            long progEnrolled = enrolledProgramRepo.countByProgramAndStatus(prog, EnrolledProgram.ProgramStatus.APPROVED);
+            totalTeacherEnrolledStudents += progEnrolled;
+            
+            Map<String, Object> row = new HashMap<>();
+            row.put("programName", prog.getTrainingProgram());
+            row.put("totalEnrolled", progEnrolled);
+            
+            // Dynamic list for this specific program's feedbacks
+            List<Map<String, String>> phaseData = new ArrayList<>();
+            
+            double progSum = 0;
+            int progCount = 0;
+            List<Feedback> feedbacks = feedRepo.findByProgramId(prog.getId());
+            
+            for (Feedback fb : feedbacks) {
+                allFeedbackIds.add(fb.getId());
+                Double cycleAvg = answerRepo.getAverageRatingByFeedback(fb.getId());
+                double safeVal = (cycleAvg != null) ? cycleAvg : 0.0;
+                
+                long cycleParticipated = answerRepo.countUniqueStudentsByFeedbackId(fb.getId());
+                
+                // Phase name aur ratio store karein
+                Map<String, String> phaseInfo = new HashMap<>();
+                phaseInfo.put("phaseName", fb.getFeedbackPhase().getPhaseName());
+                phaseInfo.put("ratio", cycleParticipated + " / " + progEnrolled);
+                phaseData.add(phaseInfo);
+
+                cycleTimeline.add(Map.of(
+                    "label", prog.getTrainingProgram() + " (" + fb.getFeedbackPhase().getPhaseName() + ")",
+                    "rating", safeVal
+                ));
+
+                if (safeVal > 0) {
+                    progSum += safeVal;
+                    progCount++;
+                }
+            }
+            
+            row.put("phases", phaseData); 
+            participationTable.add(row);
+
+            programBreakdown.add(Map.of(
+                "programName", prog.getTrainingProgram(),
+                "avgPerformance", progCount > 0 ? (progSum / progCount) : 0.0
+            ));
+        }
+
+        // --- Metrics Calculation (Rest is same as your previous code) ---
+        long totalUniqueActiveStudents = 0;
+        long totalPos = 0, totalNeg = 0, totalNeu = 0;
+        double globalRatingSum = 0;
+        int globalRatingEntries = 0;
+
+        if (!allFeedbackIds.isEmpty()) {
+            totalUniqueActiveStudents = answerRepo.countUniqueStudentsInFeedbackList(allFeedbackIds);
+            for (Long fid : allFeedbackIds) {
+                Double avg = answerRepo.getAverageRatingByFeedback(fid);
+                if (avg != null && avg > 0) {
+                    globalRatingSum += avg;
+                    globalRatingEntries++;
+                }
+                totalPos += answerRepo.countBySentimentAndFeedback(fid, "POSITIVE");
+                totalNeg += answerRepo.countBySentimentAndFeedback(fid, "NEGATIVE");
+                totalNeu += answerRepo.countBySentimentAndFeedback(fid, "NEUTRAL");
+            }
+        }
+
+        double finalGlobalAvg = (globalRatingEntries > 0) ? (globalRatingSum / globalRatingEntries) : 0.0;
+        double sentimentPercent = (totalPos + totalNeg + totalNeu > 0) ? (double) totalPos / (totalPos + totalNeg + totalNeu) * 100 : 0;
+        double pedagogicalPower = (finalGlobalAvg * 10) + (sentimentPercent * 0.5);
+
+        stats.put("teacher", teacher);
+        stats.put("avgRating", String.format("%.2f", finalGlobalAvg));
+        stats.put("pedagogicalPower", Math.round(pedagogicalPower * 10) / 10.0);
+        stats.put("sentimentScore", Math.round(sentimentPercent));
+        stats.put("totalResponses", totalUniqueActiveStudents + " / " + totalTeacherEnrolledStudents);
+        stats.put("programBreakdown", programBreakdown);
+        stats.put("cycleTimeline", cycleTimeline);
+        stats.put("participationTable", participationTable); 
+        stats.put("topStrength", (finalGlobalAvg > 4.0) ? "High Student Engagement" : "Consistent Delivery");
+
+        leaderboardData.add(stats);
+    }
+
+    leaderboardData.sort((a, b) -> Double.compare(
+            Double.parseDouble(b.get("pedagogicalPower").toString()), 
+            Double.parseDouble(a.get("pedagogicalPower").toString())));
+
+    model.addAttribute("leaderboard", leaderboardData);
+    if (!leaderboardData.isEmpty()) model.addAttribute("topTeacherAnalytics", leaderboardData.get(0));
+    model.addAttribute("generatedAt", LocalDateTime.now());
+
+    return "admin/TeacherLeader";
+}
+   
+   
+
+
+@PostMapping("/teacher/updateStatus/{id}")
     public String updateTeacherStatus(@PathVariable Long id,
                                       @RequestParam("status") Teacher.Status status,
                                       RedirectAttributes attr) {
@@ -643,14 +840,25 @@ public String programDetail(
         return "redirect:/admin/teacher";
     }
 
-    @GetMapping("/teacher/details/{id}")
-    public String showTeacherDetails(@PathVariable Long id, Model model) {
-        if (!isLoggedIn()) return redirectIfNotLoggedIn();
+@GetMapping("/teacher/details/{id}")
+public String showTeacherDetails(@PathVariable Long id, Model model) {
+    if (!isLoggedIn()) return "redirect:/login";
 
-        Teacher teacher = teacherRepository.findById(id).orElseThrow();
-        model.addAttribute("teacher", teacher);
-        return "admin/TeacherDetails";
-    }
+    Teacher teacher = teacherRepository.findById(id).orElseThrow();
+    
+    // 1. Teacher ke assigned programs fetch karein
+    List<TeacherAssign> assignments = teacherAssignRepo.findByTeacherId(id);
+    
+    // 2. Performance Stats (Jaise humne report mein calculate kiya tha)
+    Map<String, Object> stats = getTeacherStats(id); // Global KPI, Sentiment, etc.
+    
+    model.addAttribute("teacher", teacher);
+    model.addAttribute("assignments", assignments);
+    model.addAttribute("stats", stats);
+    model.addAttribute("participationData", stats.get("participationTable")); // For Charts
+    
+    return "admin/TeacherDetails";
+}
     
     
  // ---------------------- TEACHER ASSIGN ----------------------
@@ -1982,7 +2190,357 @@ public String saveFeedback(@RequestParam Long programId,
         }
     }
 
-   
+    
+    
+    
 
+
+
+@GetMapping("/teacher/leaderboard/report/{teacherId}")
+public ResponseEntity<byte[]> generateTeacherPerformancePDF(@PathVariable("teacherId") Long teacherId) {
+    Teacher teacher = teacherRepository.findById(teacherId).orElse(null);
+    if (teacher == null) return ResponseEntity.notFound().build();
+
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+        PdfWriter writer = new PdfWriter(baos);
+        PdfDocument pdfDoc = new PdfDocument(writer);
+        pdfDoc.setDefaultPageSize(PageSize.A4.rotate());
+        Document document = new Document(pdfDoc);
+
+        PdfFont bold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+        PdfFont normal = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+
+     // --- PAGE 1: CENTERED HEADER (NO LOGO) ---
+        Paragraph headerName = new Paragraph("MEERUT INSTITUTE OF TECHNOLOGY, MEERUT")
+                .setFont(bold).setFontSize(24).setFontColor(ColorConstants.BLUE).setTextAlignment(TextAlignment.CENTER);
+        Paragraph headerTagline = new Paragraph("National Quality Audit: SDG-4 Pedagogical Excellence Index")
+                .setFontSize(10).setItalic().setFontColor(ColorConstants.DARK_GRAY).setTextAlignment(TextAlignment.CENTER);
+        Paragraph deptName = new Paragraph("Department of Computer Science and Engineering")
+                .setFont(bold).setFontSize(12).setTextAlignment(TextAlignment.CENTER).setMarginBottom(10);
+        
+        document.add(headerName);
+        document.add(headerTagline);
+        document.add(deptName);
+        document.add(new LineSeparator(new SolidLine(1.5f)).setMarginBottom(15));
+
+      
+        // Faculty Profile
+        document.add(new Paragraph("FACULTY COMPREHENSIVE PROFILE").setFont(bold).setUnderline());
+        Table teacherTable = new Table(UnitValue.createPercentArray(new float[]{15, 35, 15, 35})).useAllAvailableWidth();
+        addInfoCell(teacherTable, "Faculty Name:", bold); addInfoCell(teacherTable, teacher.getName(), normal);
+        addInfoCell(teacherTable, "Designation:", bold); addInfoCell(teacherTable, teacher.getDesignation() != null ? teacher.getDesignation() : "Assistant Professor", normal);
+        addInfoCell(teacherTable, "Employee ID:", bold); addInfoCell(teacherTable, teacher.getEmployeeId(), normal);
+        addInfoCell(teacherTable, "Email Address:", bold); addInfoCell(teacherTable, teacher.getEmail(), normal);
+        document.add(teacherTable);
+
+        // --- KPI TILES ---
+        Map<String, Object> stats = getTeacherStats(teacherId);
+        document.add(new Paragraph("\nCOMPOSITE PERFORMANCE SUMMARY").setFont(bold).setFontSize(14).setFontColor(ColorConstants.RED));
+        Table kpiTable = new Table(UnitValue.createPercentArray(new float[]{25, 25, 25, 25})).useAllAvailableWidth();
+        renderKPICell(kpiTable, "GLOBAL KPI RATING", stats.get("avgRating").toString(), ColorConstants.BLUE);
+        renderKPICell(kpiTable, "AI SENTIMENT SCORE", stats.get("sentimentScore") + "%", ColorConstants.GREEN);
+        renderKPICell(kpiTable, "PEDAGOGICAL POWER", stats.get("pedagogicalPower").toString(), ColorConstants.ORANGE);
+        renderKPICell(kpiTable, "AUDIT SAMPLES", stats.get("totalResponses").toString(), ColorConstants.CYAN);
+        document.add(kpiTable);
+
+        // --- DETAILED AUDIT TABLE ---
+        document.add(new Paragraph("\nDETAILED FEEDBACK AUDIT LOGS").setFont(bold).setMarginTop(10));
+        List<Map<String, Object>> partData = (List<Map<String, Object>>) stats.get("participationTable");
+        Table detailedTable = new Table(UnitValue.createPercentArray(new float[]{30, 15, 25, 15, 15})).useAllAvailableWidth();
+        String[] headers = {"Program Name", "Enrolled", "Feedback Phase", "Ratio", "Rating"};
+        for(String h : headers) detailedTable.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(h).setBold().setFontColor(ColorConstants.WHITE)).setBackgroundColor(ColorConstants.DARK_GRAY));
+
+        for (Map<String, Object> row : partData) {
+            List<Map<String, Object>> phases = (List<Map<String, Object>>) row.get("phaseFullData");
+            for (Map<String, Object> ph : phases) {
+                detailedTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(row.get("programName").toString()).setFontSize(8)));
+                detailedTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(row.get("totalEnrolled").toString()).setFontSize(8)).setTextAlignment(TextAlignment.CENTER));
+                detailedTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(ph.get("phaseName").toString()).setFontSize(8)));
+                detailedTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(ph.get("ratio").toString()).setFontSize(8)));
+                detailedTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(ph.get("rating").toString()).setFontSize(8).setBold()));
+            }
+        }
+        document.add(detailedTable);
+
+        // --- PAGE 2: BAR CHART (P-INDEX) ---
+        document.add(new AreaBreak());
+        document.add(new Paragraph("P-INDEX: PROGRAM PERFORMANCE ANALYTICS").setFont(bold).setFontSize(18).setFontColor(ColorConstants.BLUE));
+        byte[] barImg = createBarChart(partData);
+        document.add(new Image(ImageDataFactory.create(barImg)).scaleToFit(750, 450).setHorizontalAlignment(HorizontalAlignment.CENTER));
+
+        // --- PAGE 3: LINE CHART (F-INDEX) ---
+        document.add(new AreaBreak());
+        document.add(new Paragraph("F-INDEX: FEEDBACK TIMELINE ANALYSIS").setFont(bold).setFontSize(18).setFontColor(ColorConstants.GREEN));
+        List<Map<String, Object>> timeline = (List<Map<String, Object>>) stats.get("cycleTimeline");
+        byte[] lineImg = createLineChart(timeline);
+        document.add(new Image(ImageDataFactory.create(lineImg)).scaleToFit(750, 450).setHorizontalAlignment(HorizontalAlignment.CENTER));
+
+        // --- PAGE 4: RADAR CHART (COMPETENCY) ---
+        document.add(new AreaBreak());
+        document.add(new Paragraph("FACULTY COMPETENCY RADAR (360 DEGREE)").setFont(bold).setFontSize(18).setFontColor(ColorConstants.DARK_GRAY));
+        byte[] radarImg = createRadarChart(partData);
+        document.add(new Image(ImageDataFactory.create(radarImg)).scaleToFit(500, 450).setHorizontalAlignment(HorizontalAlignment.CENTER));
+
+        document.close();
+        byte[] pdfBytes = baos.toByteArray();
+        HttpHeaders h = new HttpHeaders();
+        h.setContentType(MediaType.APPLICATION_PDF);
+        h.setContentDispositionFormData("attachment", "Audit_Report_" + teacher.getName().replace(" ","_") + ".pdf");
+        return ResponseEntity.ok().headers(h).body(pdfBytes);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.internalServerError().build();
+    }
+}
+
+@GetMapping("/teacher/leaderboard/report/all")
+public ResponseEntity<byte[]> generateAllTeachersPerformancePDF() {
+    List<Teacher> allTeachers = teacherRepository.findByStatus(Teacher.Status.APPROVED);
+    if (allTeachers.isEmpty()) return ResponseEntity.noContent().build();
+
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+        PdfWriter writer = new PdfWriter(baos);
+        PdfDocument pdfDoc = new PdfDocument(writer);
+        pdfDoc.setDefaultPageSize(PageSize.A4.rotate());
+        Document document = new Document(pdfDoc);
+
+        PdfFont bold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+        PdfFont normal = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+
+        // --- GLOBAL COVER PAGE ---
+        document.add(new Paragraph("GLOBAL FACULTY PEDAGOGICAL AUDIT REPORT")
+                .setFont(bold).setFontSize(26).setTextAlignment(TextAlignment.CENTER).setMarginTop(200));
+        document.add(new Paragraph("Consolidated Quality Audit: SDG-4 Compliance")
+                .setFontSize(14).setTextAlignment(TextAlignment.CENTER).setItalic());
+        document.add(new Paragraph("MEERUT INSTITUTE OF TECHNOLOGY, MEERUT").setFont(bold).setTextAlignment(TextAlignment.CENTER));
+        
+        List<Teacher> inactiveTeachers = new ArrayList<>();
+
+        // 🟢 LOOP START
+        for (Teacher teacher : allTeachers) {
+            Map<String, Object> stats = getTeacherStats(teacher.getId());
+            List<Map<String, Object>> partData = (List<Map<String, Object>>) stats.get("participationTable");
+
+            // CHECK: Kya teacher ka koi feedback data hai?
+            boolean hasFeedback = false;
+            for (Map<String, Object> prog : partData) {
+                List<Map<String, Object>> phases = (List<Map<String, Object>>) prog.get("phaseFullData");
+                if (!phases.isEmpty()) { hasFeedback = true; break; }
+            }
+
+            if (!hasFeedback) {
+                inactiveTeachers.add(teacher);
+                continue; 
+            }
+
+            // --- ACTIVE TEACHER DETAILED SECTION ---
+            document.add(new AreaBreak()); // Start new section on new page
+            
+            document.add(new Paragraph("MEERUT INSTITUTE OF TECHNOLOGY, MEERUT")
+                    .setFont(bold).setFontSize(20).setFontColor(ColorConstants.BLUE).setTextAlignment(TextAlignment.CENTER));
+            document.add(new Paragraph("National Quality Audit: SDG-4 Pedagogical Excellence Index")
+                    .setFontSize(9).setItalic().setTextAlignment(TextAlignment.CENTER));
+            document.add(new LineSeparator(new SolidLine(1.5f)).setMarginBottom(10));
+
+            Table tTable = new Table(UnitValue.createPercentArray(new float[]{15, 35, 15, 35})).useAllAvailableWidth();
+            addInfoCell(tTable, "Faculty:", bold); 
+            addInfoCell(tTable, teacher.getName(), normal);
+            addInfoCell(tTable, "Employee ID:", bold); 
+            addInfoCell(tTable, teacher.getEmployeeId(), normal);
+            document.add(tTable);
+
+            // KPI TILES
+            Table kpiTable = new Table(UnitValue.createPercentArray(new float[]{25, 25, 25, 25})).useAllAvailableWidth().setMarginTop(10);
+            renderKPICell(kpiTable, "GLOBAL KPI RATING", stats.get("avgRating").toString(), ColorConstants.BLUE);
+            renderKPICell(kpiTable, "AI SENTIMENT SCORE", stats.get("sentimentScore") + "%", ColorConstants.GREEN);
+            renderKPICell(kpiTable, "PEDAGOGICAL POWER", stats.get("pedagogicalPower").toString(), ColorConstants.ORANGE);
+            renderKPICell(kpiTable, "AUDIT SAMPLES", stats.get("totalResponses").toString(), ColorConstants.CYAN);
+            document.add(kpiTable);
+
+            // Detailed Audit Table
+            document.add(new Paragraph("\nDETAILED FEEDBACK AUDIT LOGS").setFont(bold).setFontSize(10));
+            Table detTable = new Table(UnitValue.createPercentArray(new float[]{30, 15, 25, 15, 15})).useAllAvailableWidth();
+            String[] heads = {"Program", "Enrolled", "Phase", "Ratio", "Rating"};
+            
+            for(String h : heads) {
+                detTable.addHeaderCell(new com.itextpdf.layout.element.Cell()
+                    .add(new Paragraph(h).setBold().setFontColor(ColorConstants.WHITE))
+                    .setBackgroundColor(ColorConstants.DARK_GRAY));
+            }
+
+            for (Map<String, Object> row : partData) {
+                List<Map<String, Object>> phases = (List<Map<String, Object>>) row.get("phaseFullData");
+                for (Map<String, Object> ph : phases) {
+                    detTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(row.get("programName").toString()).setFontSize(8)));
+                    detTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(row.get("totalEnrolled").toString()).setFontSize(8)).setTextAlignment(TextAlignment.CENTER));
+                    detTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(ph.get("phaseName").toString()).setFontSize(8)));
+                    detTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(ph.get("ratio").toString()).setFontSize(8)));
+                    detTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(ph.get("rating").toString()).setFontSize(8).setBold()));
+                }
+            }
+            document.add(detTable);
+
+            // Individual Pages for Charts
+            document.add(new AreaBreak());
+            document.add(new Paragraph("P-INDEX PERFORMANCE: " + teacher.getName()).setFont(bold).setFontSize(14));
+            document.add(new Image(ImageDataFactory.create(createBarChart(partData))).scaleToFit(750, 400).setHorizontalAlignment(HorizontalAlignment.CENTER));
+
+            document.add(new AreaBreak());
+            document.add(new Paragraph("F-INDEX TIMELINE: " + teacher.getName()).setFont(bold).setFontSize(14));
+            document.add(new Image(ImageDataFactory.create(createLineChart((List<Map<String, Object>>) stats.get("cycleTimeline")))).scaleToFit(750, 400).setHorizontalAlignment(HorizontalAlignment.CENTER));
+
+            document.add(new AreaBreak());
+            document.add(new Paragraph("COMPETENCY RADAR: " + teacher.getName()).setFont(bold).setFontSize(14));
+            document.add(new Image(ImageDataFactory.create(createRadarChart(partData))).scaleToFit(450, 400).setHorizontalAlignment(HorizontalAlignment.CENTER));
+        }
+
+        // --- 🟢 INACTIVE TEACHERS SUMMARY SECTION ---
+        if (!inactiveTeachers.isEmpty()) {
+            document.add(new AreaBreak());
+            document.add(new Paragraph("PENDING AUDIT & INACTIVE FACULTY SUMMARY")
+                    .setFont(bold).setFontSize(18).setFontColor(ColorConstants.RED).setMarginTop(20));
+            document.add(new Paragraph("The following faculty members have no feedback created or no action performed yet.")
+                    .setFontSize(11).setItalic().setMarginBottom(10));
+
+            Table inactiveTable = new Table(UnitValue.createPercentArray(new float[]{25, 20, 55})).useAllAvailableWidth();
+            inactiveTable.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Faculty Name").setBold()));
+            inactiveTable.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Employee ID").setBold()));
+            inactiveTable.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Status / Assigned Programs").setBold()));
+
+            for (Teacher inTe : inactiveTeachers) {
+                inactiveTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(inTe.getName()).setFontSize(10)));
+                inactiveTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(inTe.getEmployeeId()).setFontSize(10)));
+                
+                List<TeacherAssign> assigns = teacherAssignRepo.findByTeacherId(inTe.getId());
+                if (assigns.isEmpty()) {
+                    inactiveTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("STATUS: No Programs Assigned").setFontColor(ColorConstants.RED).setFontSize(9)));
+                } else {
+                    String progNames = assigns.stream().map(a -> a.getProgram().getTrainingProgram()).collect(Collectors.joining(", "));
+                    inactiveTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("ACTION PENDING | Programs: " + progNames).setFontSize(9)));
+                }
+            }
+            document.add(inactiveTable);
+        }
+
+        document.close();
+        byte[] pdfBytes = baos.toByteArray();
+        HttpHeaders h = new HttpHeaders();
+        h.setContentType(MediaType.APPLICATION_PDF);
+        h.setContentDispositionFormData("attachment", "Global_Faculty_Audit_Report.pdf");
+        return ResponseEntity.ok().headers(h).body(pdfBytes);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.internalServerError().build();
+    }
+}
+
+// --- EXACT DASHBOARD LOGIC HELPER ---
+private Map<String, Object> getTeacherStats(Long teacherId) {
+    Teacher teacher = teacherRepository.findById(teacherId).orElse(null);
+    Map<String, Object> stats = new HashMap<>();
+    if (teacher == null) return stats;
+
+    List<TeacherAssign> assignments = teacherAssignRepo.findByTeacherId(teacher.getId());
+    List<Map<String, Object>> participationTable = new ArrayList<>();
+    List<Map<String, Object>> cycleTimeline = new ArrayList<>();
+    List<Long> allFeedbackIds = new ArrayList<>();
+    long totalEnroll = 0;
+
+    for (TeacherAssign ta : assignments) {
+        Program prog = ta.getProgram();
+        long enroll = enrolledProgramRepo.countByProgramAndStatus(prog, EnrolledProgram.ProgramStatus.APPROVED);
+        totalEnroll += enroll;
+        List<Map<String, Object>> phaseFullData = new ArrayList<>();
+        double pSum = 0; int pCount = 0;
+
+        for (Feedback fb : feedRepo.findByProgramId(prog.getId())) {
+            allFeedbackIds.add(fb.getId());
+            Double avg = answerRepo.getAverageRatingByFeedback(fb.getId());
+            double val = (avg != null) ? avg : 0.0;
+            long part = answerRepo.countUniqueStudentsByFeedbackId(fb.getId());
+
+            phaseFullData.add(Map.of("phaseName", fb.getFeedbackPhase().getPhaseName(), "ratio", part + "/" + enroll, "rating", String.format("%.2f", val)));
+            cycleTimeline.add(Map.of("label", fb.getFeedbackPhase().getPhaseName(), "rating", val));
+            if(val > 0) { pSum += val; pCount++; }
+        }
+        participationTable.add(Map.of("programName", prog.getTrainingProgram(), "totalEnrolled", enroll, "phaseFullData", phaseFullData, "avgPerformance", pCount > 0 ? pSum/pCount : 0.0));
+    }
+
+    long activeStudents = allFeedbackIds.isEmpty() ? 0 : answerRepo.countUniqueStudentsInFeedbackList(allFeedbackIds);
+    long totalPos = 0, totalNeg = 0, totalNeu = 0;
+    double globalSum = 0; int globalEntries = 0;
+
+    for (Long fid : allFeedbackIds) {
+        Double avg = answerRepo.getAverageRatingByFeedback(fid);
+        if (avg != null && avg > 0) { globalSum += avg; globalEntries++; }
+        totalPos += answerRepo.countBySentimentAndFeedback(fid, "POSITIVE");
+        totalNeg += answerRepo.countBySentimentAndFeedback(fid, "NEGATIVE");
+        totalNeu += answerRepo.countBySentimentAndFeedback(fid, "NEUTRAL");
+    }
+
+    double finalAvg = (globalEntries > 0) ? (globalSum / globalEntries) : 0.0;
+    double sentPercent = (totalPos + totalNeg + totalNeu > 0) ? (double) totalPos / (totalPos + totalNeg + totalNeu) * 100 : 0;
+    double power = (finalAvg * 10) + (sentPercent * 0.5);
+
+    stats.put("avgRating", String.format("%.2f", finalAvg));
+    stats.put("pedagogicalPower", Math.round(power * 10) / 10.0);
+    stats.put("sentimentScore", Math.round(sentPercent));
+    stats.put("totalResponses", activeStudents + " / " + totalEnroll);
+    stats.put("participationTable", participationTable);
+    stats.put("cycleTimeline", cycleTimeline);
+    return stats;
+}
+
+// --- JFREECHART HELPERS WITH RATING DIGITS ---
+private byte[] createBarChart(List<Map<String, Object>> data) throws IOException {
+    DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+    for (Map<String, Object> row : data) dataset.addValue((Double)row.get("avgPerformance"), "Rating", (String)row.get("programName"));
+    JFreeChart chart = ChartFactory.createBarChart("", "Programs", "Pedagogical Rating", dataset);
+    CategoryPlot plot = chart.getCategoryPlot();
+    BarRenderer renderer = (BarRenderer) plot.getRenderer();
+    renderer.setDefaultItemLabelGenerator(new StandardCategoryItemLabelGenerator());
+    renderer.setDefaultItemLabelsVisible(true); // Show digits
+    chart.setBackgroundPaint(java.awt.Color.WHITE);
+    return chartToByteArray(chart);
+}
+
+private byte[] createLineChart(List<Map<String, Object>> timeline) throws IOException {
+    DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+    for (int i=0; i<timeline.size(); i++) dataset.addValue((Double)timeline.get(i).get("rating"), "Rating", "P-" + (i+1));
+    JFreeChart chart = ChartFactory.createLineChart("", "Feedback Cycles", "Rating", dataset);
+    CategoryPlot plot = chart.getCategoryPlot();
+    LineAndShapeRenderer renderer = (LineAndShapeRenderer) plot.getRenderer();
+    renderer.setDefaultItemLabelGenerator(new StandardCategoryItemLabelGenerator());
+    renderer.setDefaultItemLabelsVisible(true); // Show digits
+    renderer.setSeriesShapesVisible(0, true);
+    chart.setBackgroundPaint(java.awt.Color.WHITE);
+    return chartToByteArray(chart);
+}
+
+private byte[] createRadarChart(List<Map<String, Object>> data) throws IOException {
+    DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+    for (Map<String, Object> row : data) dataset.addValue((Double)row.get("avgPerformance"), "Proficiency", (String)row.get("programName"));
+    SpiderWebPlot plot = new SpiderWebPlot(dataset);
+    plot.setBaseSeriesPaint(new java.awt.Color(6, 78, 59, 180));
+    return chartToByteArray(new JFreeChart("", JFreeChart.DEFAULT_TITLE_FONT, plot, false));
+}
+
+private byte[] chartToByteArray(JFreeChart chart) throws IOException {
+    BufferedImage img = chart.createBufferedImage(1000, 600);
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    ImageIO.write(img, "png", bos);
+    return bos.toByteArray();
+}
+
+private void addInfoCell(Table table, String text, PdfFont font) {
+    table.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(text != null ? text : "N/A").setFont(font).setFontSize(10)).setBorder(Border.NO_BORDER));
+}
+
+private void renderKPICell(Table table, String label, String value, com.itextpdf.kernel.colors.Color color) {
+    table.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(label).setFontSize(8).setFontColor(ColorConstants.GRAY))
+            .add(new Paragraph(value).setFontSize(22).setBold().setFontColor(color)).setTextAlignment(TextAlignment.CENTER).setPadding(15).setBorder(new com.itextpdf.layout.borders.SolidBorder(0.5f)));
+}
     
 }

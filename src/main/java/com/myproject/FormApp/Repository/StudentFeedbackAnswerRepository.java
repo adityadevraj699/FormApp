@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.myproject.FormApp.Model.Feedback;
+import com.myproject.FormApp.Model.Program;
 import com.myproject.FormApp.Model.Student;
 import com.myproject.FormApp.Model.StudentFeedbackAnswer;
 
@@ -66,4 +67,37 @@ public interface StudentFeedbackAnswerRepository extends JpaRepository<StudentFe
 
     @Query("SELECT COUNT(DISTINCT s.student.id, s.feedback.id) FROM StudentFeedbackAnswer s")
     long countTotalSubmittedFeedbacks();
+
+	long countTotalSubmittedFeedbacksByFeedbackId(Long id);
+
+	@Query("SELECT AVG(CAST(s.answer AS double)) FROM StudentFeedbackAnswer s " +
+       "WHERE s.feedback.id IN (SELECT f.id FROM Feedback f WHERE f.program.id IN " +
+       "(SELECT ta.program.id FROM TeacherAssign ta WHERE ta.teacher.id = :teacherId))")
+Double getGlobalAverageRatingForTeacher(@Param("teacherId") Long teacherId);
+	
+	// StudentFeedbackAnswerRepository.java
+	@Query("SELECT AVG(CAST(s.answer AS double)) FROM StudentFeedbackAnswer s WHERE s.feedback.id IN :feedbackIds")
+	Double getAverageRatingForFeedbacks(@Param("feedbackIds") List<Long> feedbackIds);
+
+	@Query("SELECT COUNT(s) FROM StudentFeedbackAnswer s WHERE s.feedback.id IN :feedbackIds")
+	long countTotalResponsesForFeedbacks(@Param("feedbackIds") List<Long> feedbackIds);
+
+	// Ek specific feedback phase me kitne UNIQUE students ne answer kiya
+	@Query("SELECT COUNT(DISTINCT s.student.id) FROM StudentFeedbackAnswer s WHERE s.feedback.id = :feedbackId")
+	long countUniqueStudentsByFeedbackId(@Param("feedbackId") Long feedbackId);
+
+	// Ek teacher ke saare programs me total kitne UNIQUE students ne participate kiya (Active Students)
+	@Query("SELECT COUNT(DISTINCT s.student.id) FROM StudentFeedbackAnswer s WHERE s.feedback.id IN :feedbackIds")
+	long countUniqueStudentsInFeedbackList(@Param("feedbackIds") List<Long> feedbackIds);
+
+	// Har student ke liye count nikalna ki usne kitne unique feedback phases me participate kiya
+	@Query("SELECT s.student.id, COUNT(DISTINCT s.feedback.id) FROM StudentFeedbackAnswer s WHERE s.feedback.id IN :feedbackIds GROUP BY s.student.id")
+	List<Object[]> countPhasesPerStudent(@Param("feedbackIds") List<Long> feedbackIds);
+
+	@Query("SELECT COUNT(DISTINCT a.feedback) FROM StudentFeedbackAnswer a " +
+	           "WHERE a.feedback.program = :prog AND a.student = :student")
+	    long countUniqueFeedbacksByProgramAndStudent(@Param("prog") Program prog, @Param("student") Student student);
+
+	
+	
 }

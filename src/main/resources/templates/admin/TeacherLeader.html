@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html th:replace="~{Adminbase::layout(~{::main})}" xmlns:th="http://www.thymeleaf.org">
+<body>
+<main class="container-fluid px-4 py-4" style="background-color: #f4f7fa; min-height: 100vh;">
+
+    <div class="row mb-4 align-items-center animate__animated animate__fadeIn">
+        <div class="col-md-7">
+            <h2 class="fw-900 text-dark mb-1 letter-spacing-n1">
+                <i class="bi bi-cpu-fill text-success me-2"></i>Faculty Intelligence Hub
+            </h2>
+            <p class="text-muted small mb-0">National Quality Audit: SDG-4 Pedagogical Excellence Index.</p>
+        </div>
+        <div class="col-md-5 text-md-end">
+            <div class="d-inline-flex gap-2 align-items-center">
+                <a th:href="@{/admin/teacher/leaderboard/report/all}" class="btn btn-primary rounded-pill px-3 py-2 fw-bold shadow-sm border-0 small">
+                    <i class="bi bi-file-earmark-bar-graph me-1"></i> Global Report
+                </a>
+                <div class="d-inline-flex align-items-center bg-white p-2 rounded-pill shadow-sm border border-light-subtle ms-1">
+                    <div class="px-2 border-end">
+                        <span class="badge bg-success rounded-circle p-1" style="width:8px; height:8px; display:inline-block;"></span>
+                        <small class="text-success fw-bold ms-1" style="font-size: 10px;">LIVE</small>
+                    </div>
+                    <div class="px-2">
+                        <span class="fw-800 text-dark x-small" th:text="${#temporals.format(generatedAt, 'HH:mm')}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-xl-3 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="height: calc(100vh - 180px); display: flex; flex-direction: column;">
+                <div class="card-header bg-white border-bottom p-4 text-center">
+                    <h6 class="fw-800 text-dark-navy m-0 text-uppercase ls-1 small">Global Rankings</h6>
+                </div>
+                <div class="list-group list-group-flush scroll-custom" style="overflow-y: auto; flex-grow: 1;">
+                    <div th:each="entry, iter : ${leaderboard}" 
+                         class="list-group-item list-group-item-action border-0 px-4 py-3 leader-item"
+                         th:classappend="${iter.index == 0} ? 'active-rank' : ''"
+                         th:onclick="'updateAnalytics(this, ' + ${iter.index} + ')'" style="cursor: pointer;">
+                        <div class="d-flex align-items-center">
+                            <div class="rank-medal-wrapper me-3">
+                                <div class="rank-medal" th:classappend="'medal-' + ${iter.count}" th:text="${iter.count}"></div>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <div class="fw-bold text-dark text-truncate small" th:text="${entry['teacher'].name}"></div>
+                                <div class="d-flex align-items-center gap-2 mt-1">
+                                    <small class="fw-800 text-success" th:text="${entry['avgRating']}"></small>
+                                    <div class="progress flex-grow-1" style="height: 4px; background: #eee;">
+                                        <div class="progress-bar bg-success" th:style="'width: ' + (${entry['pedagogicalPower']}) + '%'"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-9 col-lg-8" th:if="${topTeacherAnalytics != null}">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="stats-card p-4 rounded-4 shadow-sm border-0 border-top border-4 border-primary bg-white h-100">
+                        <span class="text-muted fw-bold ls-1 text-uppercase x-small">Global KPI Rating</span>
+                        <h2 class="fw-900 text-dark-navy mt-2 mb-0" id="avgRatingDisp" th:text="${topTeacherAnalytics['avgRating']}"></h2>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card p-4 rounded-4 shadow-sm border-0 border-top border-4 border-success bg-white h-100">
+                        <span class="text-muted fw-bold ls-1 text-uppercase x-small">AI Sentiment Score</span>
+                        <h2 class="fw-900 text-success mt-2 mb-0"><span id="sentimentDisp" th:text="${topTeacherAnalytics['sentimentScore']}"></span>%</h2>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card p-4 rounded-4 shadow-sm border-0 border-top border-4 border-success bg-gradient-white-green h-100">
+                        <span class="text-success fw-bold ls-1 text-uppercase x-small">Pedagogical Power</span>
+                        <h2 class="fw-900 text-dark mt-2 mb-0" id="scoreDisp" th:text="${topTeacherAnalytics['pedagogicalPower']}"></h2>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="height: 350px;">
+                        <h6 class="fw-800 mb-4 text-uppercase ls-1 small text-primary">Program Performance (P-Index)</h6>
+                        <div style="height: 250px;"><canvas id="programBarChart"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="height: 350px;">
+                        <h6 class="fw-800 mb-4 text-uppercase ls-1 small text-success">Feedback Timeline (F-Index)</h6>
+                        <div style="height: 250px;"><canvas id="performanceChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+                        <h6 class="fw-800 mb-4 text-uppercase ls-1 small text-info text-center">Program Competency Radar</h6>
+                        <div style="height: 280px;"><canvas id="competencyChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white border-start border-5 border-success">
+                        <div class="row g-4 h-100 align-items-center">
+                            <div class="col-md-6 border-end text-center text-md-start">
+                                <small class="text-muted fw-bold d-block mb-1">Audit Participation</small>
+                                <h3 class="fw-900 text-primary mb-0" id="respDisp" th:text="${topTeacherAnalytics['totalResponses']}"></h3>
+                                <p class="text-muted x-small mb-0">Validated Student Responses</p>
+                            </div>
+                            <div class="col-md-6 text-center text-md-start">
+                                <small class="text-muted fw-bold d-block mb-1">Primary Strength</small>
+                                <span class="badge bg-soft-success text-success px-3 py-2 rounded-pill fw-bold" id="strengthDisp" th:text="${topTeacherAnalytics['topStrength']}"></span>
+                            </div>
+                            <div class="col-12 mt-auto">
+                                <a id="individualReportBtn" th:href="@{/admin/teacher/leaderboard/report/{id}(id=${topTeacherAnalytics['teacher'].id})}" class="btn btn-audit-report w-100 rounded-pill fw-800 py-3 shadow border-0 text-white">
+                                    <i class="bi bi-file-earmark-pdf-fill me-2"></i>Download Audit Report
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 mt-3">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                        <h6 class="fw-800 mb-3 text-uppercase ls-1 small text-success">Detailed Participation Audit</h6>
+                        <div class="table-responsive">
+                            <table class="table align-middle table-hover">
+                                <thead class="bg-light">
+                                    <tr id="tableHeaderRow">
+                                        <th class="small fw-bold">Program Name</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="participationTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:inline="javascript">
+        let pChart = null, fChart = null, rChart = null;
+        const leaderboardData = /*[[${leaderboard}]]*/ [];
+
+        function renderCharts(data) {
+            if (!data) return;
+            const programs = data.programBreakdown || [];
+            const cycles = data.cycleTimeline || [];
+
+            if (pChart) pChart.destroy();
+            if (fChart) fChart.destroy();
+            if (rChart) rChart.destroy();
+
+            const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, labels: { boxWidth: 12 } } } };
+
+            pChart = new Chart(document.getElementById('programBarChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: programs.map((p, i) => 'P-' + (i + 1)),
+                    datasets: [{ label: 'Program', data: programs.map(p => p.avgPerformance), backgroundColor: '#4361ee', borderRadius: 6 }]
+                },
+                options: { ...commonOptions, plugins: { ...commonOptions.plugins, tooltip: { callbacks: { title: (ctx) => programs[ctx[0].dataIndex].programName } } }, scales: { y: { beginAtZero: true, max: 5 } } }
+            });
+
+            fChart = new Chart(document.getElementById('performanceChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: cycles.map((f, i) => 'F-' + (i + 1)),
+                    datasets: [{ label: 'Feedback', data: cycles.map(f => f.rating), borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 }]
+                },
+                options: { ...commonOptions, plugins: { ...commonOptions.plugins, tooltip: { callbacks: { title: (ctx) => cycles[ctx[0].dataIndex].label } } }, scales: { y: { beginAtZero: true, max: 5 } } }
+            });
+
+            rChart = new Chart(document.getElementById('competencyChart').getContext('2d'), {
+                type: 'radar',
+                data: {
+                    labels: programs.map((p, i) => 'P-' + (i + 1)),
+                    datasets: [{ label: 'Performance', data: programs.map(p => p.avgPerformance), backgroundColor: 'rgba(6, 78, 59, 0.15)', borderColor: '#064e3b', borderWidth: 2, pointBackgroundColor: '#10b981' }]
+                },
+                options: { ...commonOptions, scales: { r: { beginAtZero: true, suggestedMax: 5, ticks: { display: false } } } }
+            });
+        }
+
+        function updateAnalytics(element, index) {
+            const entry = leaderboardData[index];
+            document.querySelectorAll('.leader-item').forEach(el => el.classList.remove('active-rank'));
+            element.classList.add('active-rank');
+
+            document.getElementById('avgRatingDisp').innerText = entry.avgRating;
+            document.getElementById('sentimentDisp').innerText = entry.sentimentScore;
+            document.getElementById('scoreDisp').innerText = entry.pedagogicalPower;
+            document.getElementById('respDisp').innerText = entry.totalResponses;
+            document.getElementById('strengthDisp').innerText = entry.topStrength;
+            document.getElementById('individualReportBtn').setAttribute('href', '/admin/teacher/leaderboard/report/' + entry.teacher.id);
+
+            // 🟢 Update Dynamic Participation Table
+            const tbody = document.getElementById('participationTableBody');
+            const theadRow = document.getElementById('tableHeaderRow');
+            tbody.innerHTML = '';
+            while (theadRow.cells.length > 1) theadRow.deleteCell(1);
+
+            let maxPhases = 0;
+            entry.participationTable.forEach(row => { if(row.phases.length > maxPhases) maxPhases = row.phases.length; });
+
+            for(let i=1; i<=maxPhases; i++) {
+                let th = document.createElement('th');
+                th.className = "small fw-bold text-center";
+                th.innerText = "Feedback " + i;
+                theadRow.appendChild(th);
+            }
+
+            entry.participationTable.forEach(row => {
+                let tr = document.createElement('tr');
+                let tdName = document.createElement('td');
+                tdName.className = "small fw-bold";
+                tdName.innerText = row.programName;
+                tr.appendChild(tdName);
+
+                row.phases.forEach(ph => {
+                    let td = document.createElement('td');
+                    td.className = "text-center";
+                    td.innerHTML = `<span class="badge bg-soft-success text-success small">${ph.ratio}</span><br><small class="x-small text-muted" style="font-size:10px">${ph.phaseName}</small>`;
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+
+            renderCharts(entry);
+        }
+
+        window.addEventListener('load', () => {
+            if (leaderboardData && leaderboardData.length > 0) updateAnalytics(document.querySelector('.leader-item'), 0);
+        });
+    </script>
+
+    <style>
+        .fw-900 { font-weight: 900; } .fw-800 { font-weight: 800; }
+        .ls-1 { letter-spacing: 1px; } .x-small { font-size: 0.75rem; }
+        
+        /* 🏅 Medal Styles */
+        .rank-medal { width: 36px; height: 36px; line-height: 32px; text-align: center; border-radius: 50%; background: #fff; font-weight: 900; font-size: 1rem; color: #64748b; border: 3px solid #e2e8f0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .medal-1 { background: linear-gradient(135deg, #ffd700, #ffae00); color: #fff; border-color: #fff; box-shadow: 0 4px 10px rgba(255, 174, 0, 0.4); }
+        .medal-2 { background: linear-gradient(135deg, #e0e0e0, #9e9e9e); color: #fff; border-color: #fff; }
+        .medal-3 { background: linear-gradient(135deg, #f3a683, #d35400); color: #fff; border-color: #fff; }
+
+        /* 🟢 Gradient Style */
+        .bg-gradient-white-green { background: linear-gradient(135deg, #ffffff 0%, #f0fff4 100%); }
+        .active-rank { background-color: #f0fdf4 !important; border-left: 4px solid #10b981 !important; transform: translateX(5px); transition: 0.3s; }
+        
+        /* 🔴 Report Button */
+        .btn-audit-report { background: #064e3b; transition: 0.4s; display: flex; align-items: center; justify-content: center; color: white !important; text-decoration: none; }
+        .btn-audit-report:hover { background: #053a2c !important; transform: translateY(-3px); color: white !important; box-shadow: 0 8px 16px rgba(6, 78, 59, 0.2); }
+        
+        .bg-soft-success { background-color: #e6fcf5; }
+        .scroll-custom::-webkit-scrollbar { width: 4px; } .scroll-custom::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</main>
+</body>
+</html>

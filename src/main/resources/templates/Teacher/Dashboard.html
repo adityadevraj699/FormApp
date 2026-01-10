@@ -25,7 +25,7 @@
 
     <div class="row mb-4 animate__animated animate__fadeIn">
         <div class="col-md-12">
-            <h1 class="fw-black text-dark display-5 mb-1">Scientific Research Node</h1>
+            <h1 class="fw-black text-dark display-5 mb-1">Welcome !!</h1>
             <p class="text-muted fw-bold">Hello, <span th:text="${loggedInTeacher.name}">Teacher</span> | Employee ID: <span th:text="${loggedInTeacher.employeeId}">MIT-000</span></p>
         </div>
     </div>
@@ -33,19 +33,19 @@
     <div class="row g-4 mb-5 animate__animated animate__fadeInUp">
         <div class="col-md-3">
             <div class="global-tile shadow-sm">
-                <small class="text-muted fw-bold text-uppercase">Assigned Nodes</small>
+                <small class="text-muted fw-bold text-uppercase">Assigned Programs</small>
                 <h2 class="fw-black mb-0 text-primary" th:text="${totalPrograms}">0</h2>
             </div>
         </div>
         <div class="col-md-3">
             <div class="global-tile shadow-sm" style="border-left-color: #10b981;">
-                <small class="text-muted fw-bold text-uppercase">Students Managed</small>
+                <small class="text-muted fw-bold text-uppercase">Students Under Managed</small>
                 <h2 class="fw-black mb-0 text-success" th:text="${totalStudents}">0</h2>
             </div>
         </div>
         <div class="col-md-3">
             <div class="global-tile shadow-sm" style="border-left-color: #f59e0b;">
-                <small class="text-muted fw-bold text-uppercase">Total Research Inputs</small>
+                <small class="text-muted fw-bold text-uppercase">Total Sentiment Inputs</small>
                 <h2 class="fw-black mb-0 text-warning" th:text="${totalResponses}">0</h2>
             </div>
         </div>
@@ -83,13 +83,13 @@
                 </div>
                 <div class="col-md-4 text-center">
                     <div class="heavy-card border-bottom border-success border-5 py-4">
-                        <p class="text-muted small fw-bold mb-1">SCORE</p>
+                        <p class="text-muted small fw-bold mb-1">NUMERICAL QUESTION SCORE</p>
                         <h1 class="fw-black mb-0" id="statAvg">0.0</h1>
                     </div>
                 </div>
                 <div class="col-md-4 text-center">
                     <div class="heavy-card border-bottom border-warning border-5 py-4">
-                        <p class="text-muted small fw-bold mb-1">INPUTS</p>
+                        <p class="text-muted small fw-bold mb-1">PROGRAM SENTIMENT INPUTS</p>
                         <h1 class="fw-black mb-0" id="statResponses">0</h1>
                     </div>
                 </div>

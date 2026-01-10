@@ -1,161 +1,189 @@
-<html th:replace="~{Adminbase::layout(~{::main})}">
+<!DOCTYPE html>
+<html th:replace="~{Adminbase::layout(~{::main})}" xmlns:th="http://www.thymeleaf.org">
 <body>
-<main class="container mt-4">
-    <h2>Registered Students</h2>
-    
-   <!-- Bulk Upload Form -->
-<div class="card p-3 mb-4 shadow-sm">
-    <div class="mb-2">
-        <p class="text-muted small">
-            <strong>Note:</strong> Please upload an Excel (.xlsx) file in the following format:<br>
-            <code>S.No | Roll No | Name | Email</code><br>
-            (The first row should contain column headings, and data should start from the selected row.)
-        </p>
+<main class="student-management-wrapper py-4 animate__animated animate__fadeIn">
+    <div class="container-fluid px-md-4">
+        
+        <div class="management-header d-flex justify-content-between align-items-center mb-4 p-4 rounded-4 shadow-sm bg-white">
+            <div>
+                <h2 class="fw-bold mb-1"><i class="bi bi-people-fill me-2 text-primary"></i>Student Management</h2>
+                <p class="text-muted small mb-0">Monitor student activities, manage bulk registrations, and audit status.</p>
+            </div>
+            <div class="stats-badge d-none d-md-block">
+                <span class="badge bg-white text-primary border border-primary-subtle px-4 py-3 rounded-pill shadow-sm">
+                    <i class="bi bi-person-check-fill me-2"></i>Total Registered Students: 
+                    <span th:text="${absoluteTotal}" class="fw-bold fs-6">0</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-xl-4 col-lg-5">
+                <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                    <div class="card-header bg-success bg-opacity-10 border-0 py-3">
+                        <h6 class="card-title mb-0 fw-bold text-success"><i class="bi bi-file-earmark-excel-fill me-2"></i>Bulk Import</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="alert border-0 bg-light-subtle small mb-4 p-3 rounded-3 border-start border-4 border-info">
+                            <strong>Format:</strong> <code class="text-danger">S.No | Roll No | Name | Email</code>
+                        </div>
+
+                        <form th:action="@{/admin/student/RegisterBulkStudent}" method="post" enctype="multipart/form-data">
+                            <div class="upload-zone mb-3 text-center p-4 border border-dashed rounded-4 bg-light">
+                                <i class="bi bi-cloud-arrow-up-fill fs-1 text-muted opacity-50"></i>
+                                <label class="d-block form-label small fw-semibold mt-2">Upload Excel File (.xlsx)</label>
+                                <input type="file" name="file" class="form-control form-control-sm mt-2 shadow-none border-0 bg-white" accept=".xlsx" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted">Data Starts From Row</label>
+                                <input type="number" name="startRow" class="form-control form-control-sm shadow-none" min="2" value="2" required>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100 fw-bold rounded-3 shadow-sm">Process Upload</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-8 col-lg-7">
+                <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                    <div class="card-header bg-primary bg-opacity-10 border-0 py-3">
+                        <h6 class="card-title mb-0 fw-bold text-primary"><i class="bi bi-search me-2"></i>Filter Intelligence</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="@{/admin/student}" method="get" class="row g-3">
+                            <div class="col-md-5">
+                                <label class="form-label small fw-bold text-muted">Status</label>
+                                <select name="status" class="form-select shadow-none border-light-subtle">
+                                    <option value="ALL" th:selected="${selectedStatus == 'ALL'}">All Students</option>
+                                    <option value="APPROVED" th:selected="${selectedStatus == 'APPROVED'}">APPROVED</option>
+                                    <option value="PENDING" th:selected="${selectedStatus == 'PENDING'}">PENDING</option>
+                                    <option value="DISABLED" th:selected="${selectedStatus == 'DISABLED'}">DISABLED</option>
+                                </select>
+                            </div>
+                            <div class="col-md-7">
+                                <label class="form-label small fw-bold text-muted">Quick Search</label>
+                                <div class="input-group">
+                                    <input type="text" name="rollNo" placeholder="Roll Number..." class="form-control shadow-none" th:value="${searchRollNo}">
+                                    <button type="submit" class="btn btn-primary px-4">Search</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 mt-2">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 student-table">
+                            <thead class="bg-light-subtle border-bottom">
+                                <tr>
+                                    <th class="ps-4 py-3 text-uppercase x-small fw-bold text-secondary">Student Identity</th>
+                                    <th class="py-3 text-uppercase x-small fw-bold text-secondary text-center">Contact</th>
+                                    <th class="py-3 text-uppercase x-small fw-bold text-secondary text-center">Status</th>
+                                    <th class="pe-4 py-3 text-uppercase x-small fw-bold text-secondary text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="student : ${students}" class="transition-all">
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle me-3 overflow-hidden d-flex align-items-center justify-content-center bg-gradient-primary shadow-xs" 
+                                                 style="width: 42px; height: 42px; border-radius: 50%;">
+                                                
+                                                <img th:if="${student.profileImage != null and !student.profileImage.isEmpty()}" 
+                                                     th:src="@{${student.profileImage}}" 
+                                                     style="width: 100%; height: 100%; object-fit: cover;">
+                                                
+                                                <span th:unless="${student.profileImage != null and !student.profileImage.isEmpty()}" 
+                                                      class="text-white fw-bold"
+                                                      th:text="${#strings.substring(student.name,0,1)}">S</span>
+                                            </div>
+                                            
+                                            <div>
+                                                <div class="fw-bold text-dark lh-1 mb-1" th:text="${student.name}">Name</div>
+                                                <span class="badge bg-light text-primary border border-primary-subtle x-small" th:text="${student.rollNo}">Roll No</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center small text-muted" th:text="${student.email}">email@domain.com</td>
+                                    <td class="text-center">
+                                        <span th:if="${student.status.toString() == 'APPROVED'}" class="status-pill status-approved">APPROVED</span>
+                                        <span th:if="${student.status.toString() == 'PENDING'}" class="status-pill status-pending">PENDING</span>
+                                        <span th:if="${student.status.toString() == 'DISABLED'}" class="status-pill status-disabled">DISABLED</span>
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <div class="d-flex justify-content-end gap-1">
+                                            <form th:action="@{'/admin/student/updateStatus/' + ${student.id}}" method="post" class="d-inline-flex gap-1">
+                                                <select name="status" class="form-select form-select-sm shadow-none status-select" style="width: auto;">
+                                                    <option th:value="PENDING" th:selected="${student.status.toString() == 'PENDING'}">PENDING</option>
+                                                    <option th:value="APPROVED" th:selected="${student.status.toString() == 'APPROVED'}">APPROVED</option>
+                                                    <option th:value="DISABLED" th:selected="${student.status.toString() == 'DISABLED'}">DISABLED</option>
+                                                </select>
+                                                <button type="submit" class="btn btn-sm btn-outline-primary bg-white"><i class="bi bi-check-lg"></i></button>
+                                            </form>
+                                            <a th:href="@{'/admin/student/details/' + ${student.id}}" class="btn btn-sm btn-primary rounded-2 shadow-none">Details</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="card-footer bg-white border-top-0 py-4 px-4">
+                        <nav class="d-flex justify-content-between align-items-center">
+                            <p class="mb-0 small text-muted">
+                                Showing page <span class="fw-bold" th:text="${currentPage + 1}"></span> of <span th:text="${totalPages}"></span> 
+                                (<span class="fw-bold" th:text="${totalFilteredStudents}"></span> found)
+                            </p>
+                            <ul class="pagination pagination-sm mb-0" th:if="${totalPages > 1}">
+                                <li class="page-item mx-1" th:classappend="${currentPage == 0} ? 'disabled'">
+                                    <a class="page-link rounded border-0 bg-light shadow-none" th:href="@{/admin/student(status=${selectedStatus}, rollNo=${searchRollNo}, page=${currentPage-1})}"><i class="bi bi-chevron-left"></i></a>
+                                </li>
+                                <li class="page-item mx-1" th:each="i : ${#numbers.sequence(0, totalPages-1)}" th:classappend="${i == currentPage} ? 'active'">
+                                    <a class="page-link rounded border-0 px-3 shadow-none" th:href="@{/admin/student(status=${selectedStatus}, rollNo=${searchRollNo}, page=${i})}" th:text="${i + 1}"></a>
+                                </li>
+                                <li class="page-item mx-1" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
+                                    <a class="page-link rounded border-0 bg-light shadow-none" th:href="@{/admin/student(status=${selectedStatus}, rollNo=${searchRollNo}, page=${currentPage+1})}"><i class="bi bi-chevron-right"></i></a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <form th:action="@{/admin/student/RegisterBulkStudent}" 
-          method="post" 
-          enctype="multipart/form-data" 
-          class="row g-3 align-items-end">
-        
-        <div class="col-md-5">
-            <label class="form-label">Upload Excel File (.xlsx)</label>
-            <input type="file" name="file" class="form-control" accept=".xlsx" required>
-        </div>
+    <style>
+        .student-management-wrapper { background-color: #f8f9fc; min-height: 100vh; }
+        .bg-gradient-primary { background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); }
+        .status-pill { padding: 0.35rem 0.85rem; border-radius: 50px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+        .status-approved { background: #ecfdf5; color: #059669; border: 1px solid #10b98133; }
+        .status-pending { background: #fffbeb; color: #d97706; border: 1px solid #f59e0b33; }
+        .status-disabled { background: #fef2f2; color: #dc2626; border: 1px solid #ef444433; }
+        .x-small { font-size: 0.7rem !important; }
+        .upload-zone { border: 2px dashed #dee2e6; transition: 0.3s; }
+        .upload-zone:hover { border-color: #10b981; background: #f0fdf4 !important; }
+        .pagination .active .page-link { background: #4e73df !important; color: white; }
+        .shadow-xs { box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    </style>
 
-        <div class="col-md-3">
-            <label class="form-label">Data Start Row</label>
-            <input type="number" name="startRow" class="form-control" min="2" value="2" required>
-        </div>
-
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-success w-100">Upload</button>
-        </div>
-    </form>
-</div>
-
-    
-
-
-    <!-- Filter & Search Form -->
-    <form th:action="@{/admin/student}" method="get" class="row g-3 mb-3">
-        <div class="col-auto">
-            <select name="status" class="form-select">
-                <option value="ALL" th:selected="${selectedStatus == 'ALL'}">All</option>
-                <option value="APPROVED" th:selected="${selectedStatus == 'APPROVED'}">APPROVED</option>
-                <option value="PENDING" th:selected="${selectedStatus == 'PENDING'}">PENDING</option>
-                <option value="DISABLED" th:selected="${selectedStatus == 'DISABLED'}">DISABLED</option>
-            </select>
-        </div>
-        <div class="col-auto">
-            <input type="text" name="rollNo" placeholder="Search Roll No"
-                   class="form-control" th:value="${searchRollNo}">
-        </div>
-        <div class="col-auto">
-            <button type="submit" class="btn btn-primary">Filter</button>
-        </div>
-    </form>
-
-   <!-- Student Table -->
-    <table border="1" class="table table-striped">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Roll No</th>
-                <th>Email</th>
-                <th>Status</th>
-                <th>Update</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="student : ${students}">
-                <td th:text="${student.name}"></td>
-                <td th:text="${student.rollNo}"></td>
-                <td th:text="${student.email}"></td>
-                <td th:text="${student.status}"></td>
-                <td>
-                    <form th:action="@{'/admin/student/updateStatus/' + ${student.id}}" method="post" style="display:inline-block;">
-                        <select name="status" class="form-select form-select-sm">
-                            <option th:value="PENDING" th:selected="${student.status == 'PENDING'}">PENDING</option>
-                            <option th:value="APPROVED" th:selected="${student.status == 'APPROVED'}">APPROVED</option>
-                            <option th:value="DISABLED" th:selected="${student.status == 'DISABLED'}">DISABLED</option>
-                        </select>
-                        <button type="submit" class="btn btn-sm btn-primary mt-1">Update</button>
-                    </form>
-
-                    <!-- Details Button -->
-                    <a th:href="@{'/admin/student/details/' + ${student.id}}" 
-                       class="btn btn-sm btn-info mt-1">Details</a>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-
-    <!-- Pagination -->
-    <nav th:if="${totalPages > 1}">
-        <ul class="pagination">
-            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                <a class="page-link" 
-                   th:href="@{/admin/student(status=${selectedStatus}, rollNo=${searchRollNo}, page=${currentPage-1})}">
-                   Previous
-                </a>
-            </li>
-            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages-1)}" th:classappend="${i == currentPage} ? 'active'">
-                <a class="page-link" 
-                   th:href="@{/admin/student(status=${selectedStatus}, rollNo=${searchRollNo}, page=${i})}" 
-                   th:text="${i + 1}">1</a>
-            </li>
-            <li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
-                <a class="page-link" 
-                   th:href="@{/admin/student(status=${selectedStatus}, rollNo=${searchRollNo}, page=${currentPage+1})}">
-                   Next
-                </a>
-            </li>
-        </ul>
-    </nav>
-   <script>
-document.addEventListener("DOMContentLoaded", function() {
-    // Agar user ne page number select kiya hai
-    const urlParams = new URLSearchParams(window.location.search);
-    const page = urlParams.get('page');
-    if (page) {
-        const table = document.querySelector("table");
-        if (table) {
-            table.scrollIntoView({ behavior: "smooth" });
-        }
-    }
-});
-</script>
-    
     <input type="hidden" id="serverMessage" th:value="${mgs}">
-
-  <!-- SweetAlert2 -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const serverMessage = document.getElementById("serverMessage")?.value;
-      if (serverMessage && serverMessage.trim() !== "") {
-        const lowerMsg = serverMessage.toLowerCase();
-        const isError = lowerMsg.includes('invalid') || 
-                        lowerMsg.includes('disabled') || 
-                        lowerMsg.includes('pending') || 
-                        lowerMsg.includes('not found');
-        Swal.fire({
-          title: 'Notification',
-          text: serverMessage,
-          icon: isError ? 'error' : 'success',
-          confirmButtonColor: '#2575fc',
-          background: '#f9f9f9',
-          color: '#333',
-          timer: 4000,
-          timerProgressBar: true
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const serverMessage = document.getElementById("serverMessage")?.value;
+            if (serverMessage && serverMessage.trim() !== "") {
+                const isError = /invalid|disabled|not found|error/i.test(serverMessage);
+                Swal.fire({
+                    title: isError ? 'Error!' : 'Successful!',
+                    text: serverMessage,
+                    icon: isError ? 'error' : 'success',
+                    confirmButtonColor: '#4e73df'
+                });
+            }
         });
-      }
-    });
-  </script>
-    
-    
+    </script>
 </main>
-
 </body>
 </html>

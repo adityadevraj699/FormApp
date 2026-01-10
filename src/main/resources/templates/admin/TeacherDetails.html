@@ -1,92 +1,152 @@
-<html th:replace="~{Adminbase::layout(~{::main})}">
+<!DOCTYPE html>
+<html th:replace="~{Adminbase::layout(~{::main})}" xmlns:th="http://www.thymeleaf.org">
 <body>
-<main class="container my-5">
-  <div class="row justify-content-center">
-    <div class="col-md-10">
-      <div class="card shadow-sm">
-        <!-- Card Header -->
-        <div class="card-header bg-primary text-white text-center">
-          <h4 class="fw-bold m-0">Teacher Details</h4>
+<main class="container-fluid py-4 px-md-5 animate__animated animate__fadeIn">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark mb-0">Faculty Audit Profile</h2>
+            <p class="text-muted small mb-0">Reviewing pedagogical performance for <span th:text="${teacher.name}" class="fw-bold text-primary">Teacher Name</span></p>
         </div>
-
-        <!-- Card Body -->
-        <div class="card-body">
-          <div class="row g-4">
-            <div class="col-md-6">
-              <label class="fw-bold">Name:</label>
-              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.name}"></p>
-            </div>
-            <div class="col-md-6">
-              <label class="fw-bold">Employee ID:</label>
-              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.employeeId}"></p>
-            </div>
-
-            <div class="col-md-6">
-              <label class="fw-bold">Email:</label>
-              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.email}"></p>
-            </div>
-            <div class="col-md-6">
-              <label class="fw-bold">Contact No:</label>
-              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.contactNo}"></p>
-            </div>
-
-            <div class="col-md-6">
-              <label class="fw-bold">Gender:</label>
-              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.gender}"></p>
-            </div>
-            <div class="col-md-6">
-              <label class="fw-bold">Address:</label>
-              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.address}"></p>
-            </div>
-
-            <div class="col-md-6">
-              <label class="fw-bold">Department:</label>
-              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.department}"></p>
-            </div>
-            <div class="col-md-6">
-              <label class="fw-bold">Designation:</label>
-              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.designation}"></p>
-            </div>
-
-            <div class="col-md-6">
-              <label class="fw-bold">Qualification:</label>
-              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.qualification}"></p>
-            </div>
-            <div class="col-md-6">
-              <label class="fw-bold">Experience:</label>
-              <p class="form-control-plaintext border p-2 rounded bg-light">
-                <span th:text="${teacher.experience}"></span> years
-              </p>
-            </div>
-
-            <div class="col-md-6">
-              <label class="fw-bold">Role:</label>
-              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.role}"></p>
-            </div>
-            <div class="col-md-6">
-              <label class="fw-bold">Status:</label>
-              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.status}"></p>
-            </div>
-
-            <div class="col-md-12">
-              <label class="fw-bold">Registration Date:</label>
-              <p class="form-control-plaintext border p-2 rounded bg-light" th:text="${teacher.regDate}"></p>
-            </div>
-          </div>
-
-          <!-- Back Button -->
-          <div class="text-center mt-4">
-            <a th:href="@{/admin/teacher}" class="btn btn-secondary fw-bold">
-              <i class="bi bi-arrow-left-circle me-1"></i> Back to Teacher List
+        <div class="d-flex gap-2">
+            <a th:href="@{'/admin/teacher/leaderboard/report/' + ${teacher.id}}" class="btn btn-outline-danger shadow-sm px-3">
+                <i class="bi bi-file-earmark-pdf me-2"></i>Download PDF Report
             </a>
-          </div>
+            <a th:href="@{/admin/teacher}" class="btn btn-light border shadow-sm px-4">
+                <i class="bi bi-arrow-left me-2"></i>Back to List
+            </a>
         </div>
-      </div>
     </div>
-  </div>
 
-  <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-body text-center p-4">
+                    
+                    <div class="mb-3 mx-auto shadow-sm rounded-circle d-flex align-items-center justify-content-center overflow-hidden" 
+                         style="width:120px; height:120px; background-color: #f8f9fa; border: 4px solid #fff;">
+                        
+                        <img th:if="${teacher.profileImage != null and !teacher.profileImage.isEmpty()}" 
+                             th:src="@{${teacher.profileImage}}" 
+                             alt="Profile" 
+                             style="width: 100%; height: 100%; object-fit: cover;">
+                        
+                        <div th:unless="${teacher.profileImage != null and !teacher.profileImage.isEmpty()}" 
+                             class="text-primary fw-bold fs-1">
+                            <span th:text="${#strings.substring(teacher.name,0,1)}">T</span>
+                        </div>
+                    </div>
+
+                    <h4 class="fw-bold mb-1" th:text="${teacher.name}">Teacher Name</h4>
+                    <p class="text-muted small mb-3" th:text="${teacher.designation + ' | ' + teacher.department}">Designation</p>
+                    <span class="badge rounded-pill px-3 py-2" 
+                          th:classappend="${teacher.status.toString() == 'APPROVED' ? 'bg-success' : 'bg-warning'}"
+                          th:text="${teacher.status}">Status</span>
+                </div>
+
+                <div class="card-footer bg-light-subtle border-0 p-4 small">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Faculty ID:</span><span class="fw-bold" th:text="${teacher.employeeId}">ID</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Experience:</span><span class="fw-bold" th:text="${teacher.experience + ' Years'}">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Email:</span><span class="fw-bold" th:text="${teacher.email}">Email</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Joined:</span><span class="fw-bold" th:text="${#temporals.format(teacher.regDate, 'dd MMM yyyy')}">Date</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-primary text-white mb-4 border-0">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-journal-text fs-1 me-3 opacity-50"></i>
+                    <div>
+                        <small class="d-block opacity-75">Active Programs</small>
+                        <h3 class="fw-bold mb-0" th:text="${assignments.size()}">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 border-start border-4 border-primary bg-white h-100">
+                        <small class="text-muted d-block text-uppercase fw-bold x-small">Global KPI Rating</small>
+                        <h3 class="fw-bold mb-0 text-primary mt-1" th:text="${stats.avgRating}">0.0</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 border-start border-4 border-success bg-white h-100">
+                        <small class="text-muted d-block text-uppercase fw-bold x-small">AI Sentiment Score</small>
+                        <h3 class="fw-bold mb-0 text-success mt-1" th:text="${stats.sentimentScore + '%'}">0%</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 border-start border-4 border-orange bg-white h-100">
+                        <small class="text-muted d-block text-uppercase fw-bold x-small">Pedagogical Power</small>
+                        <h3 class="fw-bold mb-0 mt-1" style="color: #fd7e14;" th:text="${stats.pedagogicalPower}">0.0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom border-light d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-list-task me-2 text-primary"></i>Detailed Assignment Audit</h6>
+                    <span class="badge bg-light text-dark border small" th:text="${assignments.size() + ' Modules'}"></span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light-subtle">
+                                <tr class="x-small text-uppercase text-muted fw-bold">
+                                    <th class="ps-4">Program Name</th>
+                                    <th>Branch / Dept</th>
+                                    <th>Semester</th>
+                                    <th class="text-end pe-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="small">
+                                <tr th:each="as : ${assignments}">
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-dark" th:text="${as.program.trainingProgram}">Program</div>
+                                        <small class="text-muted" th:text="${as.program.course}">Course</small>
+                                    </td>
+                                    <td th:text="${as.program.branch}">Branch</td>
+                                    <td><span class="badge bg-soft-primary text-primary" th:text="${as.program.semester + ' Sem'}">Sem</span></td>
+                                    <td class="text-end pe-4">
+                                        <a th:href="@{'/admin/programDetail/' + ${as.program.id}}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                            View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${assignments.isEmpty()}">
+                                    <td colspan="4" class="text-center py-5 text-muted text-uppercase x-small letter-spacing-1">
+                                        No programs assigned to this faculty.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        body { background-color: #f8f9fc; font-family: 'Inter', sans-serif; }
+        .bg-soft-primary { background-color: #eef2ff !important; }
+        .bg-light-subtle { background-color: #f9fafb !important; }
+        .border-orange { border-color: #fd7e14 !important; }
+        .x-small { font-size: 0.72rem !important; letter-spacing: 0.05em; }
+        .card { transition: transform 0.2s ease; }
+        .card:hover { transform: translateY(-2px); }
+        .table thead th { border-top: none; }
+        .letter-spacing-1 { letter-spacing: 1px; }
+    </style>
 </main>
 </body>
 </html>

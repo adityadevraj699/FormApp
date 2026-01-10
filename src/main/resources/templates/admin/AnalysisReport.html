@@ -53,14 +53,23 @@
                             <div class="row align-items-center g-3">
                                 <div class="col-12 col-md-6 border-md-end">
                                     <div class="d-flex align-items-center">
-                                        <div class="bg-light-primary rounded-circle p-3 me-3">
-                                            <i class="bi bi-person-workspace text-primary fs-4"></i>
-                                        </div>
-                                        <div>
-                                            <small class="text-muted d-block small">Faculty Lead</small>
-                                            <h5 class="fw-bold mb-0 text-dark" th:text="${program.teacherAssignments[0].teacher.name}">Expert Name</h5>
-                                        </div>
-                                    </div>
+    <div class="me-3 shadow-sm rounded-circle d-flex align-items-center justify-content-center overflow-hidden bg-light-primary" 
+         style="width: 50px; height: 50px; border: 2px solid #fff;">
+        
+        <img th:if="${program.teacherAssignments[0].teacher.profileImage != null and !program.teacherAssignments[0].teacher.profileImage.isEmpty()}" 
+             th:src="@{${program.teacherAssignments[0].teacher.profileImage}}" 
+             alt="Faculty" 
+             style="width: 100%; height: 100%; object-fit: cover;">
+        
+        <i th:unless="${program.teacherAssignments[0].teacher.profileImage != null and !program.teacherAssignments[0].teacher.profileImage.isEmpty()}" 
+           class="bi bi-person-workspace text-primary fs-4"></i>
+    </div>
+
+    <div>
+        <small class="text-muted d-block small">Faculty Lead</small>
+        <h5 class="fw-bold mb-0 text-dark" th:text="${program.teacherAssignments[0].teacher.name}">Expert Name</h5>
+    </div>
+</div>
                                     <p class="mt-3 mb-0 small text-muted">
                                         <span class="badge bg-light text-dark fw-normal border" th:text="${program.course}">Course</span>
                                         <span class="badge bg-light text-dark fw-normal border" th:text="${program.branch}">Branch</span>
