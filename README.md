@@ -92,7 +92,7 @@ Validated during a live academic training program:
 <table border="0">
   <tr>
     <td width="200px">
-      <img src="https://res.cloudinary.com/ddtcj9ks5/image/upload/v1764436670/profile_zj4v9k.jpg" width="180px" style="border-radius: 20px; border: 3px solid #10b981;" alt="Aditya Kumar"/>
+      <img src="https://res.cloudinary.com/ddtcj9ks5/image/upload/v1764509135/aditya_hacgws.png" width="180px" style="border-radius: 20px; border: 3px solid #10b981;" alt="Aditya Kumar"/>
     </td>
     <td>
       <h3>Aditya Kumar</h3>
