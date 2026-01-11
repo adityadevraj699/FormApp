@@ -1,4 +1,4 @@
-# EduInsight – AI-Powered Pedagogical Intelligence Hub 🚀
+# EduInsight : AI-Powered Feedback Analysis for Quality Education
 ### Supporting UN SDG-4: Quality Education through AI-Driven Feedback Audits
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-green.svg)](https://spring.io/projects/spring-boot)
@@ -59,12 +59,24 @@ $$SEV = \left( \frac{V_R}{E_S} \right) \times 100$$
 
 ---
 
+## 🛡️ Mathematical Validation & SDG-4 Alignment
+
+
+[Image of Kirkpatrick Model of Evaluation levels]
+
+
+The **PPI Formula** is not just an arbitrary calculation; it is a derived metric based on established academic frameworks:
+
+1. **Kirkpatrick’s Level 1 (Reaction):** Research proves that student satisfaction (Sentiment) is a primary indicator of learning effectiveness. PPI gives 50% weightage to this "Student Voice".
+2. **Standardization (MCDM):** In Multi-Criteria Decision Making, weighted averages are used to combine different data types. PPI normalizes 5-star ratings and 100% sentiment into a single 100-point scale for fair comparison.
+3. **SDG-4 Indicator 4.c.1:** UNESCO emphasizes monitoring "Teacher Quality". PPI provides a transparent, data-backed audit score that removes the manual bias found in traditional systems.
+
+---
+
 ## 🏗️ System Architecture & Workflow
 
-
-
 1.  **Feedback Collection:** Multi-layered surveys (Numerical Ratings + Open-ended Text).
-2.  **AI Analysis:** Sentiment Polarity (Positive/Neutral/Negative) and Key-Phrase Extraction.
+2.  **AI Analysis:** Sentiment Polarity (Positive/Neutral/Negative) using NLP models.
 3.  **Smart Deployment Audit:** Real-time AI-backed audit check before teacher-program assignment.
 4.  **Actionable Dashboards:** Visualizing performance trends and participation rates using Chart.js.
 
@@ -75,7 +87,7 @@ $$SEV = \left( \frac{V_R}{E_S} \right) \times 100$$
 Validated during a live academic training program:
 * **90% reduction** in manual feedback processing time.
 * **Objective Evaluation:** Decisions based on the **PPI Centum Score**, not individual bias.
-* **SDG-4 Alignment:** Directly improves classroom quality by identifying critical pedagogical gaps.
+* **Pedagogical Power Index:** Effectively identifies "Exemplary" vs "Improvement Required" faculty nodes.
 
 ---
 
