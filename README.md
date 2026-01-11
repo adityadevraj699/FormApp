@@ -1,4 +1,4 @@
-# EduInsight – AI-Powered Feedback Analysis for Quality Education
+# EduInsight : AI-Powered Feedback Analysis for Quality Education
 ### Supporting UN SDG-4: Quality Education through AI-Driven Feedback Audits
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-green.svg)](https://spring.io/projects/spring-boot)
