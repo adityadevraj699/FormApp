@@ -91,19 +91,23 @@ Validated during a live academic training program:
 
 <table border="0">
   <tr>
-    <td width="200px">
-      <img src="https://res.cloudinary.com/ddtcj9ks5/image/upload/v1764509135/aditya_hacgws.png" width="180px" style="border-radius: 20px; border: 3px solid #10b981;" alt="Aditya Kumar"/>
+    <td width="200px" align="center">
+      <img src="https://res.cloudinary.com/ddtcj9ks5/image/upload/v1764509135/aditya_hacgws.png" 
+           width="160px" 
+           height="160px" 
+           style="border-radius: 50%; border: 4px solid #10b981; object-fit: cover; display: block;" 
+           alt="Aditya Kumar"/>
     </td>
-    <td>
-      <h3>Aditya Kumar</h3>
-      <p><b>Department of Computer Science and Engineering</b><br>
+    <td style="padding-left: 20px;">
+      <h2 style="margin-bottom: 5px; color: #064e3b;">Aditya Kumar</h2>
+      <p style="margin-top: 0;"><b>Department of Computer Science and Engineering</b><br>
       Meerut Institute of Technology, Meerut</p>
       <p>
         <a href="https://github.com/adityadevraj699"><img src="https://img.shields.io/badge/GitHub-adityadevraj699-181717?style=flat&logo=github" alt="GitHub"/></a>
         <a href="https://linkedin.com/in/adityadevraj699"><img src="https://img.shields.io/badge/LinkedIn-adityadevraj699-0A66C2?style=flat&logo=linkedin" alt="LinkedIn"/></a>
         <a href="https://aditya-portfolio-org.vercel.app/"><img src="https://img.shields.io/badge/Portfolio-Visit%20Site-FF4B4B?style=flat&logo=vercel" alt="Portfolio"/></a>
       </p>
-      <p>📧 <a href="mailto:aditya.kumar1.cs.2022@mitmeerut.ac.in">aditya.kumar1.cs.2022@mitmeerut.ac.in</a></p>
+      <p>📧 <a href="mailto:aditya.kumar1.cs.2022@mitmeerut.ac.in" style="text-decoration: none; color: #10b981; font-weight: bold;">aditya.kumar1.cs.2022@mitmeerut.ac.in</a></p>
     </td>
   </tr>
 </table>
