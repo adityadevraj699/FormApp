@@ -1,8 +1,7 @@
-# EduInsight : AI-Powered Feedback Analysis for Quality Education
+# EduInsight – AI-Powered Pedagogical Intelligence Hub 🚀
 ### Supporting UN SDG-4: Quality Education through AI-Driven Feedback Audits
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-green.svg)](https://spring.io/projects/spring-boot)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![UN SDG-4](https://img.shields.io/badge/UN-SDG--4-blue.svg)](https://sdgs.un.org/goals/goal4)
 [![Java](https://img.shields.io/badge/Java-17%2B-orange.svg)](https://www.oracle.com/java/)
 
@@ -19,26 +18,44 @@ A web-based AI-powered system called **EduInsight** was created to automatically
 
 ## 🔬 Mathematical Modeling & Algorithmic Derivation
 
-The core of EduInsight lies in its ability to quantify qualitative data. Below are the mathematical foundations used in the system:
+The core of EduInsight lies in its ability to quantify qualitative data. Below are the mathematical foundations and their simplified logic:
 
 ### 1️⃣ Stakeholder Mean Rating ($\mu$)
 Calculates the consolidated average across multiple evaluation points (Student, HOD, Self).
 $$\mu = \frac{1}{N} \sum_{i=1}^{N} R_i$$
-*Where $R_i$ is the individual rating and $N$ is the total response count.*
+
+> **Simplified Logic:**
+> **$\text{Mean Rating} = \frac{\text{Total Sum of All Ratings}}{\text{Total Number of Responses}}$**
+> *Example: If total ratings sum to 40 from 10 students, the Mean Rating is 4.0.*
+
+---
 
 ### 2️⃣ AI Sentiment Polarity Index ($\sigma$)
 Quantifies qualitative text into a normalized percentage-based positive index using NLP.
 $$\sigma_{pos} = \left( \frac{P}{T} \right) \times 100$$
-*Where $P$ = Count of Positive Labels, $T$ = Total Textual Feedbacks.*
+
+> **Simplified Logic:**
+> **$\text{Positive Sentiment \%} = \left( \frac{\text{Number of Positive Comments}}{\text{Total Number of Written Comments}} \right) \times 100$**
+> *Example: 8 positive comments out of 10 total comments = 80% Sentiment Score.*
+
+---
 
 ### 3️⃣ Innovation: Pedagogical Power Index (PPI)
 The PPI is a weighted metric derived to rank faculty excellence. It rewards both high numerical ratings and positive emotional sentiment.
 $$PPI = (\mu \times 10) + (\sigma_{pos} \times 0.5)$$
-*This formula scales the 5-point rating to a 50-point base and adds up to 50 points from sentiment, resulting in a **Centum Score (0-100)**.*
+
+> **Simplified Logic:**
+> **$\text{Power Index (out of 100)} = (\text{Avg Rating} \times 10) + (\text{Positive Sentiment \%} \times 0.5)$**
+> *Why this? It scales the 5-point rating to 50 points and adds up to 50 points from student sentiment, creating a perfect Centum (100) score.*
+
+---
 
 ### 4️⃣ Student Engagement Value (SEV)
+Measuring the participation and responsiveness gap.
 $$SEV = \left( \frac{V_R}{E_S} \right) \times 100$$
-*Where $V_R$ is Validated Responses and $E_S$ is Total Enrolled Students.*
+
+> **Simplified Logic:**
+> **$\text{Engagement Rate} = \left( \frac{\text{Feedbacks Received}}{\text{Total Students Enrolled}} \right) \times 100$**
 
 ---
 
@@ -46,31 +63,18 @@ $$SEV = \left( \frac{V_R}{E_S} \right) \times 100$$
 
 
 
-1.  **Feedback Collection:** Multi-layered surveys (Numerical + Open-ended Text).
-2.  **Dual-Pipeline Processing:**
-    * **Statistical Pipeline:** Computes Mean, Variance, and Participation Ratios.
-    * **AI Pipeline:** Utilizes LLMs for Sentiment Classification and Key-Phrase Extraction.
-3.  **Smart Deployment Audit:** Admins use a real-time audit tool that cross-references the **PPI score** before assigning teachers to programs.
-4.  **Visualization:** High-fidelity dashboards using Chart.js for web and JFreeChart for PDF generation.
-
----
-
-## 🚀 Key Innovation Features
-
-- **🧠 Smart AI Audit Popups:** Real-time pedagogical audit alerts during administrative tasks.
-- **📊 Multi-Line F-Index Analytics:** Advanced feedback timeline charts for multi-program tracking.
-- **📈 Growth Trend Analysis:** Identifies if teaching quality is "UPWARD", "STABLE", or "DOWNWARD".
-- **🔍 Qualitative Voice Logs:** AI-filtered student suggestions categorized by sentiment.
-- **📄 Professional PDF Engine:** High-resolution audit reports with competency radar maps.
+1.  **Feedback Collection:** Multi-layered surveys (Numerical Ratings + Open-ended Text).
+2.  **AI Analysis:** Sentiment Polarity (Positive/Neutral/Negative) and Key-Phrase Extraction.
+3.  **Smart Deployment Audit:** Real-time AI-backed audit check before teacher-program assignment.
+4.  **Actionable Dashboards:** Visualizing performance trends and participation rates using Chart.js.
 
 ---
 
 ## 📈 Result Analysis & Impact
 
 Validated during a live academic training program:
-* **Stakeholder Consensus:** Average student rating of **4.17** vs HOD rating of **4.0**.
-* **PPI Stability:** Achieved a consistent performance score of **4.25/5**.
-* **Operational Efficiency:** **90% reduction** in manual feedback processing time.
+* **90% reduction** in manual feedback processing time.
+* **Objective Evaluation:** Decisions based on the **PPI Centum Score**, not individual bias.
 * **SDG-4 Alignment:** Directly improves classroom quality by identifying critical pedagogical gaps.
 
 ---
@@ -79,11 +83,11 @@ Validated during a live academic training program:
 
 | Layer | Technologies |
 | :--- | :--- |
-| **Backend** | Java Spring Boot 3.x, Spring Data JPA, Hibernate |
+| **Backend** | Java Spring Boot 3.x, JPA, Hibernate |
 | **Database** | MySQL (Relational Schema) |
 | **Frontend** | Thymeleaf, Bootstrap 5, SweetAlert2 |
-| **AI/NLP** | LLM APIs, Reactive WebClient, Sentiment Analysis |
-| **Reporting** | iTextPDF, JFreeChart, Chart.js |
+| **AI Engine** | LLM-based Sentiment Analysis & Summary |
+| **Visualization**| Chart.js, JFreeChart, iTextPDF |
 
 ---
 
@@ -115,10 +119,10 @@ Validated during a live academic training program:
 ---
 
 ## 📚 References
-1.  **Husain, N., & Khan, M. (2021).** Students' feedback: An effective tool in evaluation. *PubMed*.
-2.  **Aragón, O., et al. (2023).** Beyond the Numbers: Equity in Evaluation. *Springer*.
-3.  **Feng Lin, et al. (2025).** Empower instructors with actionable insights. *AI in Education*.
-4.  **United Nations.** [SDG-4: Quality Education Guidelines](https://sdgs.un.org/goals/goal4).
+1. **Husain, N., & Khan, M. (2021).** Students' feedback: An effective tool in evaluation. *PubMed*.
+2. **Aragón, O., et al. (2023).** Beyond the Numbers: Equity in Evaluation. *Springer*.
+3. **Feng Lin, et al. (2025).** Empower instructors with actionable insights. *AI in Education*.
+4. **United Nations.** [SDG-4: Quality Education Guidelines](https://sdgs.un.org/goals/goal4).
 
 ---
 🔗 **Project Repository:** [https://github.com/adityadevraj699/FormApp](https://github.com/adityadevraj699/FormApp)
