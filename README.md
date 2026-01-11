@@ -4,130 +4,119 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-green.svg)](https://spring.io/projects/spring-boot)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![UN SDG-4](https://img.shields.io/badge/UN-SDG--4-blue.svg)](https://sdgs.un.org/goals/goal4)
+[![Java](https://img.shields.io/badge/Java-17%2B-orange.svg)](https://www.oracle.com/java/)
 
-EduInsight is a next-generation feedback analysis ecosystem designed for educational institutions. It goes beyond simple data collection, utilizing **LLM-based Sentiment Analysis** and **Pedagogical Power Algorithms** to transform student voices into actionable teaching intelligence.
+**EduInsight** is a next-generation feedback analysis ecosystem designed for educational institutions. It utilizes **LLM-based Sentiment Analysis** and proprietary **Pedagogical Power Algorithms** to transform raw student feedback into actionable teaching intelligence.
 
 ---
 
 ## 📄 Abstract
-A web-based AI-powered system called **EduInsight** was created to automatically analyse student feedback in order to assess the quality of instruction. To produce insightful results, the system combines quantitative ratings with AI methods like sentiment analysis, text summarization, and key-phrase extraction. For educators and administrators, it offers interactive dashboards and PDF reports that can be downloaded. EduInsight supports **SDG-4: Quality Education** and enhances efficiency, objectivity, and transparency in teaching evaluation when compared to conventional feedback methods.
+A web-based AI-powered system called **EduInsight** was created to automatically analyse student feedback in order to assess the quality of instruction. To produce insightful results, the system combines quantitative ratings with AI methods like sentiment analysis, text summarization, and key-phrase extraction. For educators and administrators, it offers interactive dashboards and PDF reports. EduInsight supports **SDG-4: Quality Education** and enhances efficiency, objectivity, and transparency in teaching evaluation compared to conventional feedback methods.
 
 **Keywords:** Teaching Evaluation, Automated Feedback Analysis, Language Models, Sentiment Analysis, Educational Quality, SDG-4.
 
 ---
 
-## 📌 Project Strategic Goal
-The core objective of EduInsight is to eliminate the subjectivity and manual effort in faculty evaluations. By integrating **Numerical KPI Mapping** with **AI Sentiment Logs**, the system provides a 360-degree audit of teaching excellence, ensuring institutions meet the global standards of SDG-4.
+## 🔬 Mathematical Modeling & Algorithmic Derivation
+
+The core of EduInsight lies in its ability to quantify qualitative data. Below are the mathematical foundations used in the system:
+
+### 1️⃣ Stakeholder Mean Rating ($\mu$)
+Calculates the consolidated average across multiple evaluation points (Student, HOD, Self).
+$$\mu = \frac{1}{N} \sum_{i=1}^{N} R_i$$
+*Where $R_i$ is the individual rating and $N$ is the total response count.*
+
+### 2️⃣ AI Sentiment Polarity Index ($\sigma$)
+Quantifies qualitative text into a normalized percentage-based positive index using NLP.
+$$\sigma_{pos} = \left( \frac{P}{T} \right) \times 100$$
+*Where $P$ = Count of Positive Labels, $T$ = Total Textual Feedbacks.*
+
+### 3️⃣ Innovation: Pedagogical Power Index (PPI)
+The PPI is a weighted metric derived to rank faculty excellence. It rewards both high numerical ratings and positive emotional sentiment.
+$$PPI = (\mu \times 10) + (\sigma_{pos} \times 0.5)$$
+*This formula scales the 5-point rating to a 50-point base and adds up to 50 points from sentiment, resulting in a **Centum Score (0-100)**.*
+
+### 4️⃣ Student Engagement Value (SEV)
+$$SEV = \left( \frac{V_R}{E_S} \right) \times 100$$
+*Where $V_R$ is Validated Responses and $E_S$ is Total Enrolled Students.*
 
 ---
 
-## 📊 Mathematical Modeling & Equations
+## 🏗️ System Architecture & Workflow
 
-EduInsight uses a proprietary statistical engine to quantify pedagogical quality. Niche diye gaye formulas system ki core logic hain:
 
-### 1️⃣ Mean Pedagogical Rating ($\mu$)
-The average score of all numerical questions submitted by stakeholders (Students, HOD, and Self).
-$$\mu = \frac{\sum_{i=1}^{n} R_i}{n}$$
-*Where $R$ is the individual rating and $n$ is the total number of responses.*
 
-### 2️⃣ AI Sentiment Polarity Score ($\sigma$)
-Quantifying qualitative text into a percentage-based positive index.
-$$\sigma_{pos} = \left( \frac{\text{Count of Positive Feedbacks}}{\text{Total Textual Feedbacks}} \right) \times 100$$
-
-### 3️⃣ Global KPI Rating (P-Index)
-Consolidated performance across multiple training programs.
-$$KPI = \frac{\sum (\text{Program Avg} \times \text{Weightage})}{\text{Total Programs}}$$
-
-### 4️⃣ Pedagogical Power Index (The Final Score)
-This is the ultimate weighted score used for ranking faculty members. It balances numerical data with AI-detected emotional sentiment.
-$$Pedagogical Power = (\mu \times 10) + (\sigma_{pos} \times 0.5)$$
-
-### 5️⃣ Student Engagement Value (SEV)
-Measuring the participation gap.
-$$SEV = \left( \frac{\text{Total Validated Responses}}{\text{Total Enrolled Students}} \right) \times 100$$
+1.  **Feedback Collection:** Multi-layered surveys (Numerical + Open-ended Text).
+2.  **Dual-Pipeline Processing:**
+    * **Statistical Pipeline:** Computes Mean, Variance, and Participation Ratios.
+    * **AI Pipeline:** Utilizes LLMs for Sentiment Classification and Key-Phrase Extraction.
+3.  **Smart Deployment Audit:** Admins use a real-time audit tool that cross-references the **PPI score** before assigning teachers to programs.
+4.  **Visualization:** High-fidelity dashboards using Chart.js for web and JFreeChart for PDF generation.
 
 ---
 
 ## 🚀 Key Innovation Features
 
-- **🧠 Smart AI Audit (SDG-4 Compliance):** Real-time pedagogical audit popups during teacher assignment to help Admins make data-driven deployment decisions.
-- **📊 Multi-Line F-Index Analytics:** Advanced feedback timeline charts that track performance across multiple programs simultaneously.
-- **📈 Pedagogical Power Algorithm:** A proprietary weighted score calculated using the formulas mentioned above.
-- **🔍 AI Sentiment Hub:** Automated extraction of student "Voice" using NLP to categorize feedback into Positive, Neutral, and Negative clusters.
-- **📄 Professional PDF Engine:** Auto-generated, chart-heavy audit reports with bar charts, multi-line trends, and competency radar maps.
-
----
-
-## 🏗️ Technical Architecture & Stack
-
-### Core Frameworks
-* **Backend:** Java Spring Boot 3.x (MVC Architecture)
-* **Data Layer:** Spring Data JPA with Hibernate
-* **Database:** MySQL (Relational Schema Design)
-
-### Intelligence & Rendering
-* **AI Engine:** LLM-based Sentiment Analysis & Keyword Extraction (via WebClient).
-* **Frontend:** Thymeleaf (SSR), Bootstrap 5 (Responsive UI), SweetAlert2.
-* **Charts:** Chart.js (Real-time Web) & JFreeChart (PDF Generation).
-* **Reporting:** iTextPDF (High-fidelity PDF Export).
-
----
-
-## 🔄 System Workflow (Methodology)
-
-1.  **Feedback Collection:** Students share their course feedback through online surveys that include numerical ratings (1-5) and open-ended text responses.
-2.  **Data Processing:** Quantitative feedback is analyzed statistically to find average scores. Qualitative feedback is examined using NLP for sentiment.
-3.  **AI-Driven Analysis:** Large Language Models (LLMs) extract meaningful insights by identifying sentiment polarity and pointing out key areas for improvement.
-4.  **Audit Integration:** Admin uses the **Smart Deployment** tool to verify faculty fit before assignment based on the **Pedagogical Power Index**.
-5.  **Visualization:** Teachers view results via interactive dashboards featuring bar charts, pie charts, and line graphs.
+- **🧠 Smart AI Audit Popups:** Real-time pedagogical audit alerts during administrative tasks.
+- **📊 Multi-Line F-Index Analytics:** Advanced feedback timeline charts for multi-program tracking.
+- **📈 Growth Trend Analysis:** Identifies if teaching quality is "UPWARD", "STABLE", or "DOWNWARD".
+- **🔍 Qualitative Voice Logs:** AI-filtered student suggestions categorized by sentiment.
+- **📄 Professional PDF Engine:** High-resolution audit reports with competency radar maps.
 
 ---
 
 ## 📈 Result Analysis & Impact
 
-The system was assessed during a live academic training program with **6 students, 1 professor, and 1 Head of Department (HOD)**.
-
-* **Quantitative Results:** Average student rating of **4.17**, HOD rating of **4.0**, and professor self-assessment of **5.0**.
-* **Performance Stability:** The system led to an overall teaching performance score of **4.25 out of 5**.
-* **Efficiency:** **90% Reduction** in manual feedback processing time.
-* **SDG-4 Alignment:** Directly improves classroom quality by identifying pedagogical gaps.
-
----
-
-## 👥 User Roles
-
-### 1️⃣ Admin Strategic Panel
-* **Smart Deployment:** Assign teachers using AI-backed "Pedagogical Readiness" alerts.
-* **System Audit:** Monitor global KPI ratings and participation gaps.
-
-### 2️⃣ Faculty Intelligence Hub (Teacher)
-* **Insight Projection:** Dynamic dashboards showing performance trends (Improving/Declining).
-* **Voice Logs:** Access to the top 3 AI-filtered qualitative insights.
-
-### 3️⃣ Student Portal
-* **Qualitative Submission:** Submit structured ratings and unstructured textual feedback.
+Validated during a live academic training program:
+* **Stakeholder Consensus:** Average student rating of **4.17** vs HOD rating of **4.0**.
+* **PPI Stability:** Achieved a consistent performance score of **4.25/5**.
+* **Operational Efficiency:** **90% reduction** in manual feedback processing time.
+* **SDG-4 Alignment:** Directly improves classroom quality by identifying critical pedagogical gaps.
 
 ---
 
-## 🔮 Future Scope
-* **Explainable AI (XAI):** Integrating transparency in sentiment decisions.
-* **Multimodal Analysis:** Including voice and facial expression feedback.
-* **Longitudinal Studies:** Evaluating long-term teaching impact over multiple semesters.
+## 🛠️ Technology Stack
 
----
-
-## 📚 References
-1.  **Husain, N., & Khan, M. (2021).** Students' feedback: An effective tool in teachers' evaluation system. *PubMed*.
-2.  **Aragón, O., et al. (2023).** Beyond the Numbers: How Directors and Chairs Interpret Student Feedback. *Journal of Academic Ethics*.
-3.  **Feng Lin, et al. (2025).** Empower instructors with actionable insights: Mine and visualize student written feedback. *Computers and Education: Artificial Intelligence*.
-4.  **United Nations.** SDG-4: Ensure inclusive and equitable quality education.
+| Layer | Technologies |
+| :--- | :--- |
+| **Backend** | Java Spring Boot 3.x, Spring Data JPA, Hibernate |
+| **Database** | MySQL (Relational Schema) |
+| **Frontend** | Thymeleaf, Bootstrap 5, SweetAlert2 |
+| **AI/NLP** | LLM APIs, Reactive WebClient, Sentiment Analysis |
+| **Reporting** | iTextPDF, JFreeChart, Chart.js |
 
 ---
 
 ## 👨‍💻 Author & Research Credit
 
-**Aditya Kumar** *Department of Computer Science and Engineering* **Meerut Institute of Technology, Meerut** 📧 [aditya.kumar1.cs.2022@mitmeerut.ac.in](mailto:aditya.kumar1.cs.2022@mitmeerut.ac.in)  
-🔗 [GitHub Project Repository](https://github.com/adityadevraj699/FormApp)
+<table border="0">
+  <tr>
+    <td width="200px">
+      <img src="https://res.cloudinary.com/ddtcj9ks5/image/upload/v1764436670/profile_zj4v9k.jpg" width="180px" style="border-radius: 20px; border: 3px solid #10b981;" alt="Aditya Kumar"/>
+    </td>
+    <td>
+      <h3>Aditya Kumar</h3>
+      <p><b>Department of Computer Science and Engineering</b><br>
+      Meerut Institute of Technology, Meerut</p>
+      <p>
+        <a href="https://github.com/adityadevraj699"><img src="https://img.shields.io/badge/GitHub-adityadevraj699-181717?style=flat&logo=github" alt="GitHub"/></a>
+        <a href="https://linkedin.com/in/adityadevraj699"><img src="https://img.shields.io/badge/LinkedIn-adityadevraj699-0A66C2?style=flat&logo=linkedin" alt="LinkedIn"/></a>
+        <a href="https://aditya-portfolio-org.vercel.app/"><img src="https://img.shields.io/badge/Portfolio-Visit%20Site-FF4B4B?style=flat&logo=vercel" alt="Portfolio"/></a>
+      </p>
+      <p>📧 <a href="mailto:aditya.kumar1.cs.2022@mitmeerut.ac.in">aditya.kumar1.cs.2022@mitmeerut.ac.in</a></p>
+    </td>
+  </tr>
+</table>
 
 ---
+
+## 📚 References
+1.  **Husain, N., & Khan, M. (2021).** Students' feedback: An effective tool in evaluation. *PubMed*.
+2.  **Aragón, O., et al. (2023).** Beyond the Numbers: Equity in Evaluation. *Springer*.
+3.  **Feng Lin, et al. (2025).** Empower instructors with actionable insights. *AI in Education*.
+4.  **United Nations.** [SDG-4: Quality Education Guidelines](https://sdgs.un.org/goals/goal4).
+
+---
+🔗 **Project Repository:** [https://github.com/adityadevraj699/FormApp](https://github.com/adityadevraj699/FormApp)
+
 © 2026 EduInsight Project | Developed for Academic Excellence and SDG-4 Compliance.
