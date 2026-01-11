@@ -717,7 +717,8 @@ public String showTeacherLeaderBoard(Model model) {
         List<TeacherAssign> assignments = teacherAssignRepo.findByTeacherId(teacher.getId());
         
         List<Map<String, Object>> programBreakdown = new ArrayList<>(); 
-        List<Map<String, Object>> cycleTimeline = new ArrayList<>();   
+        // 🟢 Naya Structure: Program wise list of ratings
+        Map<String, List<Double>> programTimeline = new LinkedHashMap<>(); 
         List<Map<String, Object>> participationTable = new ArrayList<>();
         
         List<Long> allFeedbackIds = new ArrayList<>();
@@ -732,8 +733,8 @@ public String showTeacherLeaderBoard(Model model) {
             row.put("programName", prog.getTrainingProgram());
             row.put("totalEnrolled", progEnrolled);
             
-            // Dynamic list for this specific program's feedbacks
             List<Map<String, String>> phaseData = new ArrayList<>();
+            List<Double> currentProgRatings = new ArrayList<>();
             
             double progSum = 0;
             int progCount = 0;
@@ -746,16 +747,13 @@ public String showTeacherLeaderBoard(Model model) {
                 
                 long cycleParticipated = answerRepo.countUniqueStudentsByFeedbackId(fb.getId());
                 
-                // Phase name aur ratio store karein
                 Map<String, String> phaseInfo = new HashMap<>();
                 phaseInfo.put("phaseName", fb.getFeedbackPhase().getPhaseName());
                 phaseInfo.put("ratio", cycleParticipated + " / " + progEnrolled);
                 phaseData.add(phaseInfo);
 
-                cycleTimeline.add(Map.of(
-                    "label", prog.getTrainingProgram() + " (" + fb.getFeedbackPhase().getPhaseName() + ")",
-                    "rating", safeVal
-                ));
+                // 🟢 Rating ko current program ki list mein add karein
+                currentProgRatings.add(safeVal);
 
                 if (safeVal > 0) {
                     progSum += safeVal;
@@ -765,6 +763,9 @@ public String showTeacherLeaderBoard(Model model) {
             
             row.put("phases", phaseData); 
             participationTable.add(row);
+            
+            // 🟢 Program wise ratings ko timeline map mein save karein
+            programTimeline.put(prog.getTrainingProgram(), currentProgRatings);
 
             programBreakdown.add(Map.of(
                 "programName", prog.getTrainingProgram(),
@@ -772,7 +773,7 @@ public String showTeacherLeaderBoard(Model model) {
             ));
         }
 
-        // --- Metrics Calculation (Rest is same as your previous code) ---
+        // --- Metrics Calculation (Baki same hai) ---
         long totalUniqueActiveStudents = 0;
         long totalPos = 0, totalNeg = 0, totalNeu = 0;
         double globalRatingSum = 0;
@@ -802,7 +803,8 @@ public String showTeacherLeaderBoard(Model model) {
         stats.put("sentimentScore", Math.round(sentimentPercent));
         stats.put("totalResponses", totalUniqueActiveStudents + " / " + totalTeacherEnrolledStudents);
         stats.put("programBreakdown", programBreakdown);
-        stats.put("cycleTimeline", cycleTimeline);
+        // 🟢 Ab timeline map jayega list nahi
+        stats.put("cycleTimeline", programTimeline); 
         stats.put("participationTable", participationTable); 
         stats.put("topStrength", (finalGlobalAvg > 4.0) ? "High Student Engagement" : "Consistent Delivery");
 
@@ -819,7 +821,6 @@ public String showTeacherLeaderBoard(Model model) {
 
     return "admin/TeacherLeader";
 }
-   
    
 
 
@@ -862,20 +863,60 @@ public String showTeacherDetails(@PathVariable Long id, Model model) {
     
     
  // ---------------------- TEACHER ASSIGN ----------------------
-    @GetMapping("/teacherManage")
-    public String showTeacherAssignForm(Model model) {
-        if (!isLoggedIn()) return redirectIfNotLoggedIn();
+@GetMapping("/teacherManage")
+public String showTeacherAssignForm(Model model) {
+    if (!isLoggedIn()) return redirectIfNotLoggedIn();
 
-        List<Teacher> teachers = teacherRepository.findByStatus(Teacher.Status.APPROVED);
+    List<Teacher> teachers = teacherRepository.findByStatus(Teacher.Status.APPROVED);
+    List<Program> programs = programRepo.findAll();
 
-        List<Program> programs = programRepo.findAll();
+    // 🟢 Map to store analytics for each teacher
+    Map<Long, Map<String, Object>> teacherAnalyticsMap = new HashMap<>();
 
-        model.addAttribute("teachers", teachers);
-        model.addAttribute("programs", programs);
-        model.addAttribute("teacherAssign", new TeacherAssign());
-
-        return "admin/TeacherManage"; // Ye html file ka naam
+    for (Teacher t : teachers) {
+        Map<String, Object> stats = new HashMap<>();
+        
+        // Teacher ke purane assignments dhoondein
+        List<TeacherAssign> pastAssigns = teacherAssignRepo.findByTeacherId(t.getId());
+        
+        if (pastAssigns.isEmpty()) {
+            stats.put("status", "NO_ASSIGNMENT");
+            stats.put("summary", "New Faculty: No programs assigned yet. Primary audit pending.");
+        } else {
+            // Stats fetch karein (Humara helper method use karke)
+            Map<String, Object> performance = getTeacherStats(t.getId());
+            
+            // Check karein ki feedback hua hai ya nahi (totalResponses string "0 / X" format mein hota hai)
+            String responses = performance.get("totalResponses").toString();
+            if (responses.startsWith("0 /")) {
+                stats.put("status", "PENDING_FEEDBACK");
+                stats.put("summary", "Assignment Active: Programs assigned but no student feedback received yet.");
+            } else {
+                stats.put("status", "AUDITED");
+                stats.put("avgRating", performance.get("avgRating"));
+                stats.put("sentiment", performance.get("sentimentScore") + "%");
+                stats.put("power", performance.get("pedagogicalPower"));
+                
+                // 🟢 AI Summary based on SDG-4 Goals
+                double power = Double.parseDouble(performance.get("pedagogicalPower").toString());
+                String aiSummary;
+                if (power >= 85) aiSummary = "Exemplary Performance: Strongly supports SDG-4 targets for quality pedagogy.";
+                else if (power >= 70) aiSummary = "Proficient: Consistent delivery. Good fit for advanced modules.";
+                else aiSummary = "Improvement Required: Pedagogical gaps identified. Recommend mentoring before complex assignments.";
+                
+                stats.put("summary", aiSummary);
+            }
+        }
+        teacherAnalyticsMap.put(t.getId(), stats);
     }
+
+    model.addAttribute("teachers", teachers);
+    model.addAttribute("programs", programs);
+    model.addAttribute("teacherAnalytics", teacherAnalyticsMap); // 🟢 Frontend ko analytics bhejein
+    model.addAttribute("teacherAssign", new TeacherAssign());
+
+    return "admin/TeacherManage";
+}
 
     @PostMapping("/teacherManage")
     public String saveTeacherAssign(@RequestParam Long teacherId,
@@ -1491,12 +1532,47 @@ public String saveFeedback(@RequestParam Long programId,
         TeacherAssign assign = teacherAssignRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid assignment ID: " + id));
 
-        List<Teacher> teachers = teacherRepository.findAllByStatus(Teacher.Status.APPROVED);
+        List<Teacher> teachers = teacherRepository.findByStatus(Teacher.Status.APPROVED);
         List<Program> programs = programRepo.findAll();
+
+        // 🟢 Step 1: Analytics Map taiyar karein (Same as teacherManage)
+        Map<Long, Map<String, Object>> teacherAnalyticsMap = new HashMap<>();
+
+        for (Teacher t : teachers) {
+            Map<String, Object> stats = new HashMap<>();
+            List<TeacherAssign> pastAssigns = teacherAssignRepo.findByTeacherId(t.getId());
+            
+            if (pastAssigns.isEmpty()) {
+                stats.put("status", "NO_ASSIGNMENT");
+                stats.put("summary", "New Faculty: Primary audit pending. No historical pedagogical data found.");
+            } else {
+                // Humara updated helper method call karein jo Map<String, Object> return karta hai
+                Map<String, Object> performance = getTeacherStats(t.getId());
+                
+                String responses = performance.get("totalResponses").toString();
+                if (responses.startsWith("0 /")) {
+                    stats.put("status", "PENDING_FEEDBACK");
+                    stats.put("summary", "Audit in Progress: Historical assignments found but student feedback is yet to be recorded.");
+                } else {
+                    stats.put("status", "AUDITED");
+                    stats.put("avgRating", performance.get("avgRating"));
+                    stats.put("sentiment", performance.get("sentimentScore") + "%");
+                    stats.put("power", performance.get("pedagogicalPower"));
+                    
+                    double power = Double.parseDouble(performance.get("pedagogicalPower").toString());
+                    String aiSummary = (power >= 80) ? "Exemplary Match: Faculty demonstrates high pedagogical competence for SDG-4." 
+                                     : (power >= 60 ? "Qualified: Suitable for standard delivery. Recommend periodic monitoring." 
+                                     : "Caution: Significant pedagogical gaps detected in previous audits.");
+                    stats.put("summary", aiSummary);
+                }
+            }
+            teacherAnalyticsMap.put(t.getId(), stats);
+        }
 
         model.addAttribute("assign", assign);
         model.addAttribute("teachers", teachers);
         model.addAttribute("programs", programs);
+        model.addAttribute("teacherAnalytics", teacherAnalyticsMap); // 🟢 JavaScript ke liye data
 
         return "admin/edit-assignTeacher";
     }
@@ -2268,13 +2344,20 @@ public ResponseEntity<byte[]> generateTeacherPerformancePDF(@PathVariable("teach
         byte[] barImg = createBarChart(partData);
         document.add(new Image(ImageDataFactory.create(barImg)).scaleToFit(750, 450).setHorizontalAlignment(HorizontalAlignment.CENTER));
 
-        // --- PAGE 3: LINE CHART (F-INDEX) ---
+     // --- PAGE 3: LINE CHART (F-INDEX) ---
         document.add(new AreaBreak());
-        document.add(new Paragraph("F-INDEX: FEEDBACK TIMELINE ANALYSIS").setFont(bold).setFontSize(18).setFontColor(ColorConstants.GREEN));
-        List<Map<String, Object>> timeline = (List<Map<String, Object>>) stats.get("cycleTimeline");
-        byte[] lineImg = createLineChart(timeline);
-        document.add(new Image(ImageDataFactory.create(lineImg)).scaleToFit(750, 450).setHorizontalAlignment(HorizontalAlignment.CENTER));
+        document.add(new Paragraph("F-INDEX: MULTI-PROGRAM FEEDBACK TIMELINE")
+                .setFont(bold).setFontSize(18).setFontColor(ColorConstants.GREEN));
 
+        // 🟢 Casting fixed: List ki jagah Map use karein
+        Map<String, List<Double>> timelineMap = (Map<String, List<Double>>) stats.get("cycleTimeline");
+
+        // Naya method call
+        byte[] lineImg = createLineChart(timelineMap); 
+
+        document.add(new Image(ImageDataFactory.create(lineImg))
+                .scaleToFit(750, 450)
+                .setHorizontalAlignment(HorizontalAlignment.CENTER));
         // --- PAGE 4: RADAR CHART (COMPETENCY) ---
         document.add(new AreaBreak());
         document.add(new Paragraph("FACULTY COMPETENCY RADAR (360 DEGREE)").setFont(bold).setFontSize(18).setFontColor(ColorConstants.DARK_GRAY));
@@ -2388,8 +2471,12 @@ public ResponseEntity<byte[]> generateAllTeachersPerformancePDF() {
 
             document.add(new AreaBreak());
             document.add(new Paragraph("F-INDEX TIMELINE: " + teacher.getName()).setFont(bold).setFontSize(14));
-            document.add(new Image(ImageDataFactory.create(createLineChart((List<Map<String, Object>>) stats.get("cycleTimeline")))).scaleToFit(750, 400).setHorizontalAlignment(HorizontalAlignment.CENTER));
+         // Casting ko List se badal kar Map karein kyunki humne getTeacherStats ko update kiya hai
+            Map<String, List<Double>> timelineMap = (Map<String, List<Double>>) stats.get("cycleTimeline");
 
+            document.add(new Image(ImageDataFactory.create(createLineChart(timelineMap)))
+                    .scaleToFit(750, 400)
+                    .setHorizontalAlignment(HorizontalAlignment.CENTER));
             document.add(new AreaBreak());
             document.add(new Paragraph("COMPETENCY RADAR: " + teacher.getName()).setFont(bold).setFontSize(14));
             document.add(new Image(ImageDataFactory.create(createRadarChart(partData))).scaleToFit(450, 400).setHorizontalAlignment(HorizontalAlignment.CENTER));
@@ -2436,7 +2523,7 @@ public ResponseEntity<byte[]> generateAllTeachersPerformancePDF() {
     }
 }
 
-// --- EXACT DASHBOARD LOGIC HELPER ---
+// --- CORRECTED DASHBOARD LOGIC HELPER ---
 private Map<String, Object> getTeacherStats(Long teacherId) {
     Teacher teacher = teacherRepository.findById(teacherId).orElse(null);
     Map<String, Object> stats = new HashMap<>();
@@ -2444,7 +2531,10 @@ private Map<String, Object> getTeacherStats(Long teacherId) {
 
     List<TeacherAssign> assignments = teacherAssignRepo.findByTeacherId(teacher.getId());
     List<Map<String, Object>> participationTable = new ArrayList<>();
-    List<Map<String, Object>> cycleTimeline = new ArrayList<>();
+    
+    // 🟢 CHANGES HERE: List ki jagah LinkedHashMap use karein multi-line data ke liye
+    Map<String, List<Double>> programTimelineMap = new LinkedHashMap<>(); 
+    
     List<Long> allFeedbackIds = new ArrayList<>();
     long totalEnroll = 0;
 
@@ -2452,22 +2542,43 @@ private Map<String, Object> getTeacherStats(Long teacherId) {
         Program prog = ta.getProgram();
         long enroll = enrolledProgramRepo.countByProgramAndStatus(prog, EnrolledProgram.ProgramStatus.APPROVED);
         totalEnroll += enroll;
+        
         List<Map<String, Object>> phaseFullData = new ArrayList<>();
+        List<Double> currentProgramRatings = new ArrayList<>(); // 🟢 Ek specific program ki list
+        
         double pSum = 0; int pCount = 0;
+        List<Feedback> feedbacks = feedRepo.findByProgramId(prog.getId());
 
-        for (Feedback fb : feedRepo.findByProgramId(prog.getId())) {
+        for (Feedback fb : feedbacks) {
             allFeedbackIds.add(fb.getId());
             Double avg = answerRepo.getAverageRatingByFeedback(fb.getId());
-            double val = (avg != null) ? avg : 0.0;
+            double safeVal = (avg != null) ? avg : 0.0;
             long part = answerRepo.countUniqueStudentsByFeedbackId(fb.getId());
 
-            phaseFullData.add(Map.of("phaseName", fb.getFeedbackPhase().getPhaseName(), "ratio", part + "/" + enroll, "rating", String.format("%.2f", val)));
-            cycleTimeline.add(Map.of("label", fb.getFeedbackPhase().getPhaseName(), "rating", val));
-            if(val > 0) { pSum += val; pCount++; }
+            phaseFullData.add(Map.of(
+                "phaseName", fb.getFeedbackPhase().getPhaseName(), 
+                "ratio", part + "/" + enroll, 
+                "rating", String.format("%.2f", safeVal)
+            ));
+
+            // 🟢 Rating ko current program ki list mein add karein
+            currentProgramRatings.add(safeVal);
+
+            if(safeVal > 0) { pSum += safeVal; pCount++; }
         }
-        participationTable.add(Map.of("programName", prog.getTrainingProgram(), "totalEnrolled", enroll, "phaseFullData", phaseFullData, "avgPerformance", pCount > 0 ? pSum/pCount : 0.0));
+        
+        participationTable.add(Map.of(
+            "programName", prog.getTrainingProgram(), 
+            "totalEnrolled", enroll, 
+            "phaseFullData", phaseFullData, 
+            "avgPerformance", pCount > 0 ? pSum/pCount : 0.0
+        ));
+
+        // 🟢 Program name ke against ratings ki list map mein save karein
+        programTimelineMap.put(prog.getTrainingProgram(), currentProgramRatings);
     }
 
+    // --- Metrics Calculation ---
     long activeStudents = allFeedbackIds.isEmpty() ? 0 : answerRepo.countUniqueStudentsInFeedbackList(allFeedbackIds);
     long totalPos = 0, totalNeg = 0, totalNeu = 0;
     double globalSum = 0; int globalEntries = 0;
@@ -2489,7 +2600,10 @@ private Map<String, Object> getTeacherStats(Long teacherId) {
     stats.put("sentimentScore", Math.round(sentPercent));
     stats.put("totalResponses", activeStudents + " / " + totalEnroll);
     stats.put("participationTable", participationTable);
-    stats.put("cycleTimeline", cycleTimeline);
+    
+    // 🟢 AB YEH MAP RETURN KAREGA (Error fixed)
+    stats.put("cycleTimeline", programTimelineMap); 
+    
     return stats;
 }
 
@@ -2506,16 +2620,47 @@ private byte[] createBarChart(List<Map<String, Object>> data) throws IOException
     return chartToByteArray(chart);
 }
 
-private byte[] createLineChart(List<Map<String, Object>> timeline) throws IOException {
+private byte[] createLineChart(Map<String, List<Double>> timelineMap) throws IOException {
     DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-    for (int i=0; i<timeline.size(); i++) dataset.addValue((Double)timeline.get(i).get("rating"), "Rating", "P-" + (i+1));
-    JFreeChart chart = ChartFactory.createLineChart("", "Feedback Cycles", "Rating", dataset);
+
+    // 1. Har Program (Key) ke liye data points add karein
+    for (Map.Entry<String, List<Double>> entry : timelineMap.entrySet()) {
+        String programName = entry.getKey();
+        List<Double> ratings = entry.getValue();
+        
+        for (int i = 0; i < ratings.size(); i++) {
+            // dataset.addValue(Value, Series_Name, Category_Name)
+            // Series_Name hi line ka naam (Legend) banta hai
+            dataset.addValue(ratings.get(i), programName, "Phase " + (i + 1));
+        }
+    }
+
+    // 2. Chart Create karein
+    JFreeChart chart = ChartFactory.createLineChart(
+            "",                      // Chart Title
+            "Feedback Phases",       // X-Axis Label
+            "Rating Score",          // Y-Axis Label
+            dataset                  // Dataset
+    );
+
+    // 3. Visual Styling
     CategoryPlot plot = chart.getCategoryPlot();
     LineAndShapeRenderer renderer = (LineAndShapeRenderer) plot.getRenderer();
+    
+    // Sabhi lines (Series) ke liye settings apply karein
+    for (int i = 0; i < dataset.getRowCount(); i++) {
+        renderer.setSeriesShapesVisible(i, true);      // Dots (Shapes) dikhayein
+        renderer.setSeriesStroke(i, new java.awt.BasicStroke(2.5f)); // Line thodi moti
+    }
+
     renderer.setDefaultItemLabelGenerator(new StandardCategoryItemLabelGenerator());
-    renderer.setDefaultItemLabelsVisible(true); // Show digits
-    renderer.setSeriesShapesVisible(0, true);
+    renderer.setDefaultItemLabelsVisible(true); // Digits dikhayein
+    
     chart.setBackgroundPaint(java.awt.Color.WHITE);
+    
+    // Legend ko bottom par set karein taaki graph area bada dikhe
+    chart.getLegend().setFrame(org.jfree.chart.block.BlockBorder.NONE);
+    
     return chartToByteArray(chart);
 }
 
@@ -2542,5 +2687,5 @@ private void renderKPICell(Table table, String label, String value, com.itextpdf
     table.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(label).setFontSize(8).setFontColor(ColorConstants.GRAY))
             .add(new Paragraph(value).setFontSize(22).setBold().setFontColor(color)).setTextAlignment(TextAlignment.CENTER).setPadding(15).setBorder(new com.itextpdf.layout.borders.SolidBorder(0.5f)));
 }
-    
+
 }

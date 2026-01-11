@@ -1,91 +1,176 @@
-<html th:replace="~{Adminbase::layout(~{::main})}">
+<!DOCTYPE html>
+<html th:replace="~{Adminbase::layout(~{::main})}" xmlns:th="http://www.thymeleaf.org">
 <body>
-<main>
-  <div class="container my-5">
+<main class="container py-5 animate__animated animate__fadeIn">
+    
     <div class="row justify-content-center">
-      <div class="col-md-6">
-        <div class="card shadow-sm">
+        <div class="col-md-8 col-lg-5">
+            <div class="card border-0 shadow-emerald rounded-4 overflow-hidden">
+                
+                <div class="card-header border-0 py-4 px-4 d-flex justify-content-between align-items-center bg-emerald-gradient">
+                    <div>
+                        <h4 class="text-white mb-0 fw-900 text-uppercase ls-1">Smart Deployment</h4>
+                        <p class="text-white-50 small mb-0 fw-bold">SDG-4 Quality Audit Active</p>
+                    </div>
+                    <a th:href="@{/admin/assignTeacher-manage}" class="btn btn-emerald-light btn-sm rounded-pill px-3 fw-bold shadow-sm">
+                        <i class="bi bi-eye-fill me-1"></i> View Details
+                    </a>
+                </div>
 
-           <!-- Card Header -->
-      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h4 class="fw-bold m-0">Assign Teacher to Program</h4>
-        <a th:href="@{/admin/assignTeacher-manage}" class="btn btn-light btn-sm fw-bold">
-          <i class="bi bi-plus-circle me-1"></i> Assign Teacher
-        </a>
-      </div>
+                <div class="card-body p-4 p-md-5 bg-white">
+                    <form th:action="@{/admin/teacherManage}" method="post" id="assignmentForm">
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-emerald-dark small text-uppercase ls-1">1. Faculty Node</label>
+                            <div class="input-group shadow-sm rounded-3 overflow-hidden border-emerald-light">
+                                <span class="input-group-text bg-emerald-soft border-0 text-emerald"><i class="bi bi-person-check-fill"></i></span>
+                                <select class="form-select border-0 py-3 ps-0 shadow-none bg-white" id="teacherSelect" name="teacherId" required onchange="triggerAIAudit(this)">
+                                    <option value="" disabled selected>-- Choose Faculty Member --</option>
+                                    <option th:each="t : ${teachers}" th:value="${t.id}" th:text="${t.name}"></option>
+                                </select>
+                            </div>
+                        </div>
 
-          <!-- Card Body -->
-          <div class="card-body">
-            <form th:action="@{/admin/teacherManage}" method="post">
+                        <div class="mb-5">
+                            <label class="form-label fw-bold text-emerald-dark small text-uppercase ls-1">2. Target Program</label>
+                            <div class="input-group shadow-sm rounded-3 overflow-hidden border-emerald-light">
+                                <span class="input-group-text bg-emerald-soft border-0 text-emerald"><i class="bi bi-journal-check"></i></span>
+                                <select class="form-select border-0 py-3 ps-0 shadow-none bg-white" id="programSelect" name="programId" required>
+                                    <option value="" disabled selected>-- Choose Academic Program --</option>
+                                    <option th:each="p : ${programs}" th:value="${p.id}" th:text="${p.trainingProgram}"></option>
+                                </select>
+                            </div>
+                        </div>
 
-              <!-- Teacher Select -->
-              <div class="mb-4">
-                <label for="teacherSelect" class="form-label fw-bold">Select Teacher</label>
-                <select class="form-select" id="teacherSelect" name="teacherId" required>
-                  <option value="">-- Select Teacher --</option>
-                  <option th:each="t : ${teachers}" 
-                          th:value="${t.id}" 
-                          th:text="${t.name}"></option>
-                </select>
-              </div>
-
-              <!-- Program Select -->
-              <div class="mb-4">
-                <label for="programSelect" class="form-label fw-bold">Select Program</label>
-                <select class="form-select" id="programSelect" name="programId" required>
-                  <option value="">-- Select Program --</option>
-                  <option th:each="p : ${programs}" 
-                          th:value="${p.id}" 
-                          th:text="${p.trainingProgram}"></option>
-                </select>
-              </div>
-
-              <!-- Submit Button -->
-              <div class="d-grid">
-                <button type="submit" class="btn btn-success btn-lg fw-bold">
-                  <i class="bi bi-save2 me-2"></i> Assign Teacher
-                </button>
-              </div>
-
-            </form>
-          </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-emerald btn-lg rounded-pill fw-900 py-3 shadow-lg hover-up border-0">
+                                <i class="bi bi-shield-fill-check me-2"></i> AUTHORIZE DEPLOYMENT
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <p class="text-muted small fw-medium"><i class="bi bi-leaf-fill text-success me-1"></i> Pedagogical readiness verified against SDG-4 compliance.</p>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 
-  <!-- Hidden input for server message -->
-  <input type="hidden" id="serverMessage" th:value="${serverMessage}">
+    <input type="hidden" id="serverMessage" th:value="${serverMessage}">
 
-  <!-- SweetAlert2 -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --emerald-main: #10b981;
+            --emerald-dark: #064e3b;
+            --emerald-light: #d1fae5;
+            --emerald-soft: #ecfdf5;
+        }
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const serverMessage = document.getElementById("serverMessage")?.value;
-      if (serverMessage && serverMessage.trim() !== "") {
-        const lowerMsg = serverMessage.toLowerCase();
-        const isError = lowerMsg.includes('invalid') || 
-                        lowerMsg.includes('disabled') || 
-                        lowerMsg.includes('pending') || 
-                        lowerMsg.includes('not found');
+        .fw-900 { font-weight: 900; }
+        .ls-1 { letter-spacing: 1px; }
+        
+        .bg-emerald-gradient { background: linear-gradient(135deg, #059669 0%, #10b981 100%); }
+        .bg-emerald-soft { background-color: var(--emerald-soft); }
+        .text-emerald { color: var(--emerald-main); }
+        .text-emerald-dark { color: var(--emerald-dark); }
+        .border-emerald-light { border: 1px solid var(--emerald-light); }
+        
+        .shadow-emerald { box-shadow: 0 20px 40px rgba(16, 185, 129, 0.15); }
+        
+        .btn-emerald { background-color: var(--emerald-main); color: white; }
+        .btn-emerald:hover { background-color: #059669; color: white; }
+        .btn-emerald-light { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); }
+        .btn-emerald-light:hover { background: rgba(255,255,255,0.3); color: white; }
 
-        Swal.fire({
-          title: 'Notification',
-          text: serverMessage,
-          icon: isError ? 'error' : 'success',
-          confirmButtonColor: '#2575fc',
-          background: '#f9f9f9',
-          color: '#333',
-          timer: 4000,
-          timerProgressBar: true
+        .hover-up { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .hover-up:hover { transform: translateY(-4px); }
+
+        /* SweetAlert Emerald Overrides */
+        .swal2-popup { border-radius: 25px !important; }
+        .audit-tile-emerald { background: #f0fdf4; border-radius: 15px; padding: 15px; border: 1px solid #bbf7d0; }
+        .ai-box-emerald { background: #064e3b; color: #ecfdf5; border-radius: 20px; padding: 20px; border-left: 6px solid #10b981; }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:inline="javascript">
+        const analyticsData = /*[[${teacherAnalytics}]]*/ {};
+
+        function triggerAIAudit(selectElement) {
+            const teacherId = selectElement.value;
+            const stats = analyticsData[teacherId];
+
+            if (!stats) return;
+
+            let htmlContent = "";
+            let confirmText = "Accept & Proceed";
+            let icon = "info";
+
+            if (stats.status === "NO_ASSIGNMENT") {
+                htmlContent = `
+                    <div class="text-start">
+                        <span class="badge bg-success mb-2 px-3">New Profile</span>
+                        <p class="small text-muted">${stats.summary}</p>
+                    </div>`;
+            } else if (stats.status === "PENDING_FEEDBACK") {
+                htmlContent = `
+                    <div class="text-start">
+                        <span class="badge bg-warning text-dark mb-2 px-3">Audit Ongoing</span>
+                        <p class="small text-muted">${stats.summary}</p>
+                    </div>`;
+            } else {
+                icon = stats.power >= 70 ? "success" : "warning";
+                htmlContent = `
+                    <div class="text-start mt-2">
+                        <div class="row text-center g-2 mb-3">
+                            <div class="col-4"><div class="audit-tile-emerald"><small class="d-block text-muted">KPI</small><b class="text-success">${stats.avgRating}</b></div></div>
+                            <div class="col-4"><div class="audit-tile-emerald"><small class="d-block text-muted">Sent.</small><b class="text-success">${stats.sentiment}</b></div></div>
+                            <div class="col-4"><div class="audit-tile-emerald"><small class="d-block text-muted">Power</small><b class="text-emerald-dark">${stats.power}</b></div></div>
+                        </div>
+                        <div class="ai-box-emerald shadow-lg">
+                            <small class="text-emerald fw-bold d-block mb-1"><i class="bi bi-robot me-1"></i> SDG-4 AI INSIGHT</small>
+                            <p class="small mb-0 italic" style="line-height:1.5">"${stats.summary}"</p>
+                        </div>
+                    </div>`;
+            }
+
+            Swal.fire({
+                title: '<span style="color:#064e3b">Pedagogical Re-Audit</span>',
+                html: htmlContent,
+                icon: icon,
+                showCancelButton: true,
+                confirmButtonText: confirmText,
+                cancelButtonText: 'Reject & Unselect',
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#6b7280',
+                reverseButtons: true,
+                allowOutsideClick: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+                    Toast.fire({ icon: 'success', title: 'Audit Verified' });
+                } else {
+                    selectElement.value = "";
+                    const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+                    Toast.fire({ icon: 'error', title: 'Selection Reset' });
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const serverMessage = document.getElementById("serverMessage")?.value;
+            if (serverMessage && serverMessage.trim() !== "") {
+                const lowerMsg = serverMessage.toLowerCase();
+                const isError = /invalid|error|fail|pending/i.test(lowerMsg);
+                Swal.fire({
+                    title: isError ? 'Audit Error' : 'Success',
+                    text: serverMessage,
+                    icon: isError ? 'error' : 'success',
+                    confirmButtonColor: '#10b981'
+                });
+            }
         });
-      }
-    });
-  </script>
-
+    </script>
 </main>
 </body>
 </html>
-
-
