@@ -26,7 +26,8 @@ $$\mu = \frac{1}{N} \sum_{i=1}^{N} R_i$$
 
 > **Simplified Logic:**
 > **$\text{Mean Rating} = \frac{\text{Total Sum of All Ratings}}{\text{Total Number of Responses}}$**
-> *Example: If total ratings sum to 40 from 10 students, the Mean Rating is 4.0.*
+>
+> **Example:** > If total ratings sum to 40 from 10 students, the Mean Rating is **4.0**.
 
 ---
 
@@ -36,7 +37,8 @@ $$\sigma_{pos} = \left( \frac{P}{T} \right) \times 100$$
 
 > **Simplified Logic:**
 > **$\text{Positive Sentiment \%} = \left( \frac{\text{Number of Positive Comments}}{\text{Total Number of Written Comments}} \right) \times 100$**
-> *Example: 8 positive comments out of 10 total comments = 80% Sentiment Score.*
+>
+> **Example:** > 8 positive comments out of 10 total comments = **80% Sentiment Score**.
 
 ---
 
@@ -46,7 +48,8 @@ $$PPI = (\mu \times 10) + (\sigma_{pos} \times 0.5)$$
 
 > **Simplified Logic:**
 > **$\text{Power Index (out of 100)} = (\text{Avg Rating} \times 10) + (\text{Positive Sentiment \%} \times 0.5)$**
-> *Why this? It scales the 5-point rating to 50 points and adds up to 50 points from student sentiment, creating a perfect Centum (100) score.*
+>
+> **Example:** > If a teacher has a **4.0 Rating** and **80% Sentiment**, PPI = $(4.0 \times 10) + (80 \times 0.5) = 40 + 40 =$ **80/100**.
 
 ---
 
@@ -56,6 +59,8 @@ $$SEV = \left( \frac{V_R}{E_S} \right) \times 100$$
 
 > **Simplified Logic:**
 > **$\text{Engagement Rate} = \left( \frac{\text{Feedbacks Received}}{\text{Total Students Enrolled}} \right) \times 100$**
+>
+> **Example:** > 15 feedbacks from 20 enrolled students = **75% Engagement**.
 
 ---
 
